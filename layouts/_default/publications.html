@@ -1,0 +1,114 @@
+{{ define "main" }}
+<main class="container-fluid publications-page">
+  <div class="container py-5">
+    <h1 class="text-center mb-5">{{ .Title }}</h1>
+    {{ .Content }}
+  </div>
+</main>
+
+<style>
+.publications-page {
+  min-height: 70vh;
+  padding-top: 2rem;
+}
+
+.publications-page h1 {
+  font-weight: 700;
+  color: var(--heading-color, #2c3e50);
+  font-size: 2.5rem;
+  margin-bottom: 3rem;
+}
+
+.publications-page h2 {
+  font-weight: 600;
+  color: var(--heading-color, #2c3e50);
+  font-size: 1.75rem;
+  margin-top: 3rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--primary-color, #007bff);
+}
+
+.publications-page ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.publications-page li {
+  background: var(--card-bg, #ffffff);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+  border-left: 4px solid var(--primary-color, #007bff);
+}
+
+.publications-page li:hover {
+  transform: translateX(5px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+.publications-page li strong {
+  color: var(--heading-color, #2c3e50);
+  font-size: 1.1rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.publications-page li em {
+  color: var(--text-muted, #6c757d);
+  font-style: normal;
+  font-weight: 500;
+}
+
+.publications-page a {
+  color: var(--primary-color, #007bff);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.publications-page a:hover {
+  color: var(--primary-hover, #0056b3);
+  text-decoration: underline;
+}
+
+/* Dark theme support */
+[data-theme="dark"] .publications-page h1,
+[data-theme="dark"] .publications-page h2 {
+  color: var(--heading-color-dark, #ffffff);
+}
+
+[data-theme="dark"] .publications-page li {
+  background: var(--card-bg-dark, #2d2d2d);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .publications-page li:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .publications-page li strong {
+  color: var(--heading-color-dark, #ffffff);
+}
+
+[data-theme="dark"] .publications-page li em {
+  color: var(--text-muted-dark, #a0a0a0);
+}
+
+@media (max-width: 768px) {
+  .publications-page h1 {
+    font-size: 2rem;
+  }
+
+  .publications-page h2 {
+    font-size: 1.5rem;
+  }
+
+  .publications-page li {
+    padding: 1.25rem;
+  }
+}
+</style>
+{{ end }}

@@ -1,0 +1,88 @@
+{{ $sectionID := replace (lower .section.name) " " "-"  }}
+{{ if .section.id }}
+  {{ $sectionID = .section.id }}
+{{ end }}
+
+{{ $author:= site.Data.author }}
+{{ if (index site.Data site.Language.Lang).author }}
+  {{ $author = (index site.Data site.Language.Lang).author }}
+{{ end }}
+
+<div class="container anchor p-lg-5 about-section" id="{{ $sectionID }}">
+  <div class="about-content-wrapper">
+    {{/* Profile Photo - floated left with text wrap */}}
+    {{ if $author.image }}
+      {{ $authorImage := resources.Get $author.image }}
+      {{ if $authorImage }}
+        <div class="profile-photo-wrapper">
+          {{ $processedImage := $authorImage.Resize "400x q95" }}
+          <img src="{{ $processedImage.RelPermalink }}" alt="{{ $author.name }}" class="profile-photo">
+        </div>
+      {{ end }}
+    {{ end }}
+
+    {{/* Name and Designation */}}
+    <h3 class="author-name">{{ $author.name }}</h3>
+    {{ if .designation }}
+    <h5 class="designation-line">
+      {{ .designation }}
+      {{ if .company }}
+      {{ i18n "at"}} <a href="{{ .company.url }}" title="{{ .company.name }}" target="_blank" rel="noopener">{{ .company.name }}</a>
+      {{ end }}
+    </h5>
+    {{ end }}
+
+    {{/* Summary - text wraps around photo */}}
+    <div class="summary-content text-justify">
+      {{ .summary | markdownify }}
+    </div>
+
+    {{/* Clear float before links */}}
+    <div style="clear: both;"></div>
+
+    {{/* Social Links */}}
+    <div class="text-container mt-4">
+      <ul class="social-link d-flex">
+        {{ range .socialLinks }}
+        <li>
+          {{ if eq .name "Email" }}
+            <a href="mailto:{{ .url }}" title="{{ .name }}" target="_blank" rel="{{.rel | default "noopener"}}"><i class="{{ .icon }}"></i></a>
+          {{ else if eq .name (i18n "phone") }}
+            <a href="tel:{{ .url }}" title="{{ .name }}" target="_blank" rel="{{.rel | default "noopener"}}"><i class="{{ .icon }}"></i></a>
+          {{ else }}
+            <a href="{{ .url }}" title="{{ .name }}" target="_blank" rel="{{.rel | default "noopener"}}"><i class="{{ .icon }}"></i></a>
+          {{ end }}
+        </li>
+        {{ end }}
+      </ul>
+    </div>
+
+    {{/* Resume and Resource Links */}}
+    {{ if .resume }}
+    <a href="{{ .resume | relURL }}" title="{{ i18n "resume"}}" target="#"
+      ><button class="btn btn-dark">{{ i18n "resume"}}</button></a
+    >
+    {{ end }}
+    {{ range .resourceLinks }}
+    <a href="{{ .url | relURL }}" title="{{ .title }}" target="#"
+      ><button class="btn btn-dark">{{ .title }}</button></a
+    >
+    {{ end }}
+  </div>
+
+  {{/* Badges/Soft Skills - only if present */}}
+  {{ if or (.softSkills) (.badges) }}
+  <div class="row mt-4">
+    <div class="col-12">
+      <div class="row">
+        {{ range .badges }}
+          {{ partial "misc/badge.html" . }}
+        {{ end }}
+        {{ range .softSkills }}
+          {{ partial "misc/soft-skills.html" . }}
+        {{ end }}
+      </div>
+    </div>
+  </div>
+  {{ end }}
+</div>

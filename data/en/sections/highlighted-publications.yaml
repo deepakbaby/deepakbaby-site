@@ -1,0 +1,40 @@
+section:
+  name: Featured Publications
+  id: publications
+  template: sections/highlighted-publications.html
+  enable: true
+  weight: 5
+  showOnNavbar: true
+  moreText: "View all publications"
+  moreUrl: "/publications/"
+
+publications:
+- title: "A convolutional neural-network model of human cochlear mechanics and filter tuning for real-time applications"
+  publishedIn:
+    name: Nature Machine Intelligence
+    date: February 2021
+    url: https://www.nature.com/natmachintell/
+  authors:
+  - name: D. Baby
+  - name: A. Van Den Broucke
+  - name: S. Verhulst
+  paper:
+    summary: "A hybrid approach combining convolutional neural networks with computational neuroscience to yield a real-time end-to-end model for human cochlear mechanics, including level-dependent filter tuning (CoNNear). The model accurately simulates human cochlear frequency selectivity and its dependence on sound intensity."
+    url: https://www.nature.com/articles/s42256-020-00286-8
+  categories: ["neuroscience", "deep-learning"]
+  tags: ["Neural Networks", "Cochlear Model", "Real-time Processing"]
+
+- title: "A convolutional neural-network framework for modelling auditory sensory cells and synapses"
+  publishedIn:
+    name: Nature Communications Biology
+    date: July 2021
+    url: https://www.nature.com/commsbio/
+  authors:
+  - name: F. Drakopoulos
+  - name: D. Baby
+  - name: S. Verhulst
+  paper:
+    summary: "A CNN framework for modelling inner hair cells and auditory nerve fibers, enabling real-time simulation of the complete auditory periphery for next-generation hearing aids and cochlear implants."
+    url: https://www.nature.com/articles/s42003-021-02341-5
+  categories: ["neuroscience", "deep-learning"]
+  tags: ["Neural Networks", "Auditory Model", "Hearing"]

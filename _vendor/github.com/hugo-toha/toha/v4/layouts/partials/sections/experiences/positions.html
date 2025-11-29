@@ -1,0 +1,57 @@
+<div class="col-10 col-lg-8">
+    <div class="experience-entry-heading">
+        {{/* Column 1: Logo */}}
+        {{ $logoImage:= resources.Get .company.logo}}
+        {{ $darkLogoImage:= resources.Get .company.darkLogo}}
+        {{ if $logoImage }}
+        <div class="exp-logo-col"> 
+            <img class="company-logo light-logo" src="{{ $logoImage.RelPermalink }}" alt="{{ .name }}" />
+            {{ if $darkLogoImage }}
+            <img class="company-logo dark-logo" src="{{ $darkLogoImage.RelPermalink }}" alt="{{ .name }}" />
+            {{ end }}
+        </div>
+        {{ end }}
+
+        {{/* Column 2: Company name and location */}}
+        <div class="exp-info-col">
+            <h5 class="company-name">{{ if .company.url }}<a href={{.company.url}} title="{{ .company.name }}" target="_blank" rel="noopener">{{ .company.name }}</a>{{ else }}{{ .company.name }}{{ end }}</h5>
+            {{ if .company.location }}
+            <p class="company-location text-muted mb-0">
+                <i class="fa-solid fa-location-dot"></i> {{ .company.location }}
+            </p>
+            {{ end }}
+        </div>
+
+        {{/* Column 3: Dates - pushed to right */}}
+        {{ $oldestPosition := index (last 1 .positions) 0}}
+        {{ $mostRecentPosition := index (first 1 .positions) 0}}
+        <div class="exp-dates-col">
+            <p class="experience-dates text-muted mb-0">
+                {{ $oldestPosition.start }} - {{ if $mostRecentPosition.end }}{{ $mostRecentPosition.end }}{{ else }}{{ i18n "present" }}{{ end }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Add company overview -->
+    {{ if .company.overview }}
+    <p class="mt-2">{{ .company.overview | markdownify }}</p>
+    {{ end }}
+    <!-- Add the positions information -->
+    <div class="positions">
+    {{ range $index,$position:= .positions }}
+        <div class="company-heading">
+            <h5 class="designation">{{ $position.designation }}</h5>
+            <p class="text-muted">{{ $position.start }} - {{if $position.end }} {{ $position.end }} {{else}} {{ i18n "present" }} {{end}}</p>
+        </div>
+        <!-- Add the responsibilities handled at this position -->
+        {{ if $position.responsibilities }}
+            <h6 class="text-heading">{{ i18n "responsibilities" }}</h6>
+            <ul class="justify-content-around">
+                {{ range $position.responsibilities }}
+                    <li>{{ . | markdownify }}</li>
+                {{ end }}
+            </ul>
+        {{ end }}
+    {{ end }}
+    </div>
+</div>

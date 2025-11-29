@@ -1,0 +1,135 @@
+# Publications data imported from starter-academic repository
+# Source: https://github.com/deepakbaby/starter-academic
+
+highlighted:
+  - title: "A convolutional neural-network model of human cochlear mechanics and filter tuning for real-time applications"
+    author: "D. Baby, A. Van Den Broucke, S. Verhulst"
+    journal: "Nature Machine Intelligence"
+    year: 2021
+    url: "https://www.nature.com/articles/s42256-020-00286-8"
+    doi: "10.1038/s42256-020-00286-8"
+    code: "https://github.com/HearingTechnology/CoNNear_cochlea"
+    preprint: "https://arxiv.org/abs/2004.14832"
+
+  - title: "A convolutional neural-network framework for modelling auditory sensory cells and synapses"
+    author: "F. Drakopoulos, D. Baby, S. Verhulst"
+    journal: "Nature Communications Biology"
+    year: 2021
+    url: "https://www.nature.com/articles/s42003-021-02341-5"
+    doi: "10.1038/s42003-021-02341-5"
+    code: "https://github.com/HearingTechnology/CoNNear_IHC-ANF"
+    preprint: "https://www.biorxiv.org/content/10.1101/2020.11.25.388546v1.full"
+
+articles:
+  - title: "Joint Denoising and Dereverberation Using Exemplar-Based Sparse Representations and Decaying Norm Constraint"
+    author: "D. Baby, H. Van hamme"
+    journal: "IEEE/ACM Transactions on Audio, Speech and Language Processing"
+    year: 2017
+    url: "https://ieeexplore.ieee.org/document/8016372"
+    doi: "10.1109/TASLP.2017.2744261"
+
+  - title: "Coupled Dictionaries for Exemplar-Based Speech Enhancement and Automatic Speech Recognition"
+    author: "D. Baby, T. Virtanen, J.F. Gemmeke, H. Van hamme"
+    journal: "IEEE/ACM Transactions on Audio, Speech and Language Processing"
+    year: 2015
+    url: "https://ieeexplore.ieee.org/document/7138598"
+    doi: "10.1109/TASLP.2015.2450491"
+
+  - title: "Automated speech analysis to improve TMS-based language mapping: Algorithm and proof of concept"
+    author: "L. Seynaeve, D. Baby, H. Van hamme, S. De Vleeschouwer, P. Dupont, W. Van Paesschen"
+    journal: "Brain Stimulation"
+    year: 2019
+    url: "https://www.sciencedirect.com/science/article/pii/S1935861X19303663"
+
+conferences_and_workshops:
+  - title: "Speech Dereverberation using Variational Autoencoders"
+    author: "D. Baby, H. Bourlard"
+    booktitle: "IEEE ICASSP, Toronto, Canada"
+    year: 2021
+    url: "https://ieeexplore.ieee.org/document/9414439"
+
+  - title: "Hearing-Impaired Bio-Inspired Cochlear Models for Real-Time Auditory Applications"
+    author: "A. Van Den Broucke, D. Baby, S. Verhulst"
+    booktitle: "INTERSPEECH, Shanghai, China"
+    year: 2020
+    url: "https://www.isca-speech.org/archive/Interspeech_2020/pdfs/2818.pdf"
+    doi: "10.21437/Interspeech.2020-2818"
+
+  - title: "SERGAN: Speech Enhancement using Relativistic Generative Adversarial Networks with Gradient Penalty"
+    author: "D. Baby, S. Verhulst"
+    booktitle: "IEEE ICASSP, Brighton, UK"
+    year: 2019
+    url: "https://ieeexplore.ieee.org/document/8682049"
+
+  - title: "Real-Time Audio Processing on a Raspberry Pi using Deep Neural Networks"
+    author: "F. Drakopoulos, D. Baby, S. Verhulst"
+    booktitle: "23rd International Congress on Acoustics (ICA), Aachen, Germany"
+    year: 2019
+
+  - title: "Biophysically-inspired Features Improve the Generalizability of Neural Network-based Speech Enhancement Systems"
+    author: "D. Baby, S. Verhulst"
+    booktitle: "INTERSPEECH, Hyderabad, India"
+    year: 2018
+    url: "https://www.isca-speech.org/archive/Interspeech_2018/pdfs/1237.pdf"
+    doi: "10.21437/Interspeech.2018-1237"
+
+  - title: "Supervised Speech Dereverberation in Noisy Environments using Exemplar-based Sparse Representations"
+    author: "D. Baby, H. Van hamme"
+    booktitle: "IEEE ICASSP, Shanghai, China"
+    year: 2016
+    url: "https://ieeexplore.ieee.org/document/7471656"
+    doi: "10.1109/ICASSP.2016.7471656"
+
+  - title: "Exemplar-based speech enhancement for deep neural network based automatic speech recognition"
+    author: "D. Baby, J.F. Gemmeke, T. Virtanen, H. Van hamme"
+    booktitle: "IEEE ICASSP, Brisbane, Australia"
+    year: 2015
+    url: "https://ieeexplore.ieee.org/document/7178819"
+    doi: "10.1109/ICASSP.2015.7178819"
+
+  - title: "Investigating Modulation Spectrogram Features for Deep Neural Network-Based Automatic Speech Recognition"
+    author: "D. Baby, H. Van hamme"
+    booktitle: "INTERSPEECH, Dresden, Germany"
+    year: 2015
+    url: "https://www.isca-speech.org/archive/interspeech_2015/papers/i15_2479.pdf"
+
+  - title: "Noise Robust Exemplar Matching for Speech Enhancement: Applications to Automatic Speech Recognition"
+    author: "E. Yilmaz, D. Baby, H. Van hamme"
+    booktitle: "INTERSPEECH, Dresden, Germany"
+    year: 2015
+    url: "https://www.isca-speech.org/archive/interspeech_2015/papers/i15_0688.pdf"
+
+  - title: "Hybrid input spaces for exemplar-based noise robust speech recognition using coupled dictionaries"
+    author: "D. Baby, H. Van hamme"
+    booktitle: "23rd European Signal Processing Conference (EUSIPCO), Nice, France"
+    year: 2015
+    url: "https://ieeexplore.ieee.org/document/7362669"
+    doi: "10.1109/EUSIPCO.2015.7362669"
+
+  - title: "Noise robust exemplar matching with coupled dictionaries for single-channel speech enhancement"
+    author: "E. Yilmaz, D. Baby, H. Van hamme"
+    booktitle: "23rd European Signal Processing Conference (EUSIPCO), Nice, France"
+    year: 2015
+    url: "https://ieeexplore.ieee.org/document/7362508"
+    doi: "10.1109/EUSIPCO.2015.7362508"
+
+  - title: "Exemplar-based noise robust automatic speech recognition using modulation spectrogram features"
+    author: "D. Baby, T. Virtanen, J.F. Gemmeke, T. Barker, H. Van hamme"
+    booktitle: "IEEE Spoken Language Technology Workshop (SLT), South Lake Tahoe, USA"
+    year: 2014
+    url: "https://ieeexplore.ieee.org/document/7078628"
+    doi: "10.1109/SLT.2014.7078628"
+
+  - title: "Coupled dictionary training for exemplar-based speech enhancement"
+    author: "D. Baby, T. Virtanen, T. Barker, H. Van hamme"
+    booktitle: "IEEE ICASSP, Florence, Italy"
+    year: 2014
+    url: "https://ieeexplore.ieee.org/document/6854127"
+    doi: "10.1109/ICASSP.2014.6854127"
+
+  - title: "Ordered Orthogonal Matching Pursuit"
+    author: "D. Baby, S.R.B. Pillai"
+    booktitle: "National Conference on Communications (NCC), Kharagpur, India"
+    year: 2012
+    url: "https://ieeexplore.ieee.org/document/6176775"
+    doi: "10.1109/NCC.2012.6176775"

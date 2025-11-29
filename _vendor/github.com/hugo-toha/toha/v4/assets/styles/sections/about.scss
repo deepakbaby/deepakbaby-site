@@ -1,0 +1,320 @@
+@use 'sass:map';
+
+$progress-bar-colors: (
+  'blue': #048dff,
+  'yellow': #eebb4d,
+  'pink': #ed63d2,
+  'green': #2dca73,
+  'sky': #00c9e3,
+  'orange': #ff7c7c,
+);
+
+@mixin circular-progress-bar-color() {
+  @each $color, $value in $progress-bar-colors {
+    &.#{$color} {
+      .circular-progress-bar {
+        border-color: $value;
+      }
+    }
+  }
+}
+
+@mixin circular-progress-animation-breakpoints() {
+  $progress: 0;
+  $duration: 0;
+  $delay: 1.8;
+
+  @for $i from 0 through 20 {
+    .circular-progress-percentage-#{$progress} {
+      animation: circular-loading-#{$progress} #{$duration}s linear forwards 1.8s;
+    }
+    .circular-progress-percentage-#{$progress}-delay {
+        animation-delay: #{$delay}s;
+    }
+    $progress: $progress + 5;
+    $duration: $duration + 0.18;
+    $delay: $duration + 1.8;
+  }
+}
+
+@mixin circular-progress-animation-keyframes($progress, $degree, $keyframes) {
+  @for $i from 0 through $keyframes {
+    @keyframes circular-loading-#{$progress} {
+      0% {
+        transform: rotate(0);
+      }
+      100% {
+        transform: rotate(#{$degree}deg);
+      }
+    }
+    $progress: $progress + 5;
+    $degree: $degree + 18;
+  }
+}
+
+.about-section {
+  /* Add gap below navbar */
+  padding-top: 2rem;
+  margin-top: 1rem;
+
+  /* Profile photo with text wrap */
+  .about-content-wrapper {
+    overflow: hidden; /* Contains floated elements */
+  }
+
+  .profile-photo-wrapper {
+    float: left;
+    width: 250px;
+    margin: 0 2rem 1.5rem 0;
+    shape-outside: margin-box;
+  }
+
+  .profile-photo {
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    object-fit: cover;
+    aspect-ratio: 1;
+  }
+
+  .profile-photo:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18), 0 6px 12px rgba(0, 0, 0, 0.12);
+  }
+
+  .author-name {
+    margin-bottom: 0.5rem;
+  }
+
+  .designation-line {
+    margin-bottom: 1.5rem;
+    color: get-light-color('muted-text-color');
+  }
+
+  .summary-content {
+    line-height: 1.8;
+    
+    p {
+      margin-bottom: 1rem;
+    }
+
+    a {
+      color: get-light-color('accent-color');
+      text-decoration: none;
+      
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .social-link {
+    list-style: none;
+    padding: 0.2rem;
+
+    a {
+      font-size: 1.5rem;
+      color: get-light-color('text-color');
+      padding: 0.5rem;
+
+      &:hover {
+        color: get-light-color('accent-color');
+        @include transition();
+      }
+    }
+  }
+
+  .circular-progress {
+    width: 150px;
+    height: 150px;
+    line-height: 150px;
+    background: none;
+    margin: 0 auto;
+    box-shadow: none;
+    position: relative;
+
+    &::after {
+      content: '';
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 12px solid get-light-color('bg-primary');
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    span {
+      width: 50%;
+      height: 100%;
+      overflow: hidden;
+      position: absolute;
+      top: 0;
+      z-index: 1;
+    }
+
+    .circular-progress-bar {
+      width: 100%;
+      height: 100%;
+      background: none;
+      border-width: 12px;
+      border-style: solid;
+      position: absolute;
+      top: 0;
+    }
+
+    .circular-progress-left {
+      left: 0;
+
+      .circular-progress-bar {
+        left: 100%;
+        border-top-right-radius: 80px;
+        border-bottom-right-radius: 80px;
+        border-left: 0;
+        transform-origin: center left;
+      }
+    }
+    .circular-progress-right {
+      right: 0;
+
+      .circular-progress-bar {
+        left: -100%;
+        border-top-left-radius: 80px;
+        border-bottom-left-radius: 80px;
+        border-right: 0;
+        transform-origin: center right;
+      }
+    }
+    .circular-progress-value {
+      width: 90%;
+      height: 90%;
+      padding: 1rem;
+      border-radius: 50%;
+      background: get-light-color('text-color');
+      font-size: 1rem;
+      color: get-light-color('bg-primary');
+      line-height: initial;
+      text-align: center;
+      position: absolute;
+      top: 5%;
+      left: 5%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    @include circular-progress-bar-color();
+    @include circular-progress-animation-breakpoints();
+    @include circular-progress-animation-keyframes($progress: 0, $degree: 0, $keyframes: 20);
+  }
+
+  @include media('<=large') {
+    .circular-progress {
+      margin-bottom: 20px;
+    }
+  }
+
+  @include media('<=medium') {
+    .about-section.container {
+      max-width: 100%;
+    }
+
+    .circular-progress {
+      width: 135px;
+      height: 135px;
+    }
+  }
+  @include media('<=small') {
+    .circular-progress {
+      width: 150px;
+      height: 150px;
+    }
+
+    .circular-progress .circular-progress-value {
+      font-size: 1rem;
+    }
+  }
+  @include media('<=tiny') {
+    .col-6 {
+      flex: auto;
+      max-width: 100%;
+    }
+
+    .social-link {
+      flex-wrap: wrap;
+    }
+    .certificate-badge {
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+    .circular-progress {
+      width: 200px;
+      height: 200px;
+
+      .circular-progress-left .circular-progress-bar {
+        border-top-right-radius: 100px;
+        border-bottom-right-radius: 100px;
+      }
+      .circular-progress-right .circular-progress-bar {
+        border-top-left-radius: 100px;
+        border-bottom-left-radius: 100px;
+      }
+    }
+  }
+
+  /* Responsive - stack photo on mobile */
+  @include media('<=small') {
+    .profile-photo-wrapper {
+      float: none;
+      width: 180px;
+      margin: 0 auto 1.5rem auto;
+      display: block;
+    }
+
+    .author-name,
+    .designation-line {
+      text-align: center;
+    }
+  }
+}
+
+html[data-theme='dark'] {
+  .about-section {
+    .profile-photo {
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .profile-photo:hover {
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4), 0 6px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .designation-line {
+      color: get-dark-color('muted-text-color');
+    }
+
+    .summary-content a {
+      color: get-dark-color('accent-color');
+    }
+
+    .social-link {
+      a {
+        color: get-dark-color('text-color');
+
+        &:hover {
+          color: get-dark-color('accent-color');
+        }
+      }
+    }
+
+    .circular-progress {
+      &::after {
+        border: 12px solid get-dark-color('bg-primary');
+      }
+
+      .circular-progress-value {
+        background: get-dark-color('inverse-text-color');
+        color: get-dark-color('text-color');
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{{/* Override scripts partial - add our removal script */}}
+<link rel="stylesheet" href="{{ "css/remove-hero-immediate.css" | relURL }}">
+<script src="{{ "js/immediate-hide.js" | relURL }}"></script>
+
+<style>
+/* Final fallback - hide hero */
+#home, .home, .container-fluid.home { display: none !important; visibility: hidden !important; height: 0 !important; }
+nav a[href="#home"] { display: none !important; }
+</style>
+<script>
+(function(){
+  var h=document.getElementById('home');
+  if(h)h.remove();
+  document.querySelectorAll('.home').forEach(function(e){e.remove();});
+  document.querySelectorAll('a[href="#home"]').forEach(function(a){
+    var p=a.parentElement;
+    while(p&&!p.classList.contains('nav-item'))p=p.parentElement;
+    if(p)p.remove();
+  });
+})();
+</script>
+

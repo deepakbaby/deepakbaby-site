@@ -1,0 +1,241 @@
+.experiences-section {
+  @include section-title-adjustment();
+
+  padding-bottom: 1rem;
+
+  ul {
+    padding-left: 1rem;
+    & > li {
+      margin-left: 0;
+      color: get-light-color('text-color');
+    }
+  }
+
+  .designation {
+    font-weight: 600;
+  }
+
+  .circle {
+    padding: 13px 20px;
+    border-radius: 50%;
+    background-color: get-light-color('accent-color');
+    color: get-light-color('text-over-accent-color');
+    max-height: 50px;
+    z-index: 2;
+  }
+
+  .timeline {
+    margin-top: 1.5rem !important;
+
+    .vertical-line {
+      align-self: stretch;
+
+      &::after {
+        content: '';
+        position: relative;
+        border-left: 3px solid get-light-color('accent-color');
+        z-index: 1;
+        height: 100%;
+        left: -23px;
+      }
+      &:nth-child(even)::after {
+        left: -26px;
+      }
+    }
+    .horizontal-line {
+      div {
+        padding: 0;
+        height: 40px;
+      }
+      hr {
+        border-top: 3px solid get-light-color('accent-color');
+        margin: 0;
+        top: 17px;
+        position: relative;
+        opacity: 1;
+      }
+      .timeline-side-div {
+        display: flex;
+        overflow: hidden;
+      }
+      .corner {
+        border: 3px solid get-light-color('accent-color');
+        width: 100%;
+        position: relative;
+        border-radius: 15px;
+      }
+    }
+    .row {
+      &:nth-child(2n) {
+        div {
+          &:nth-child(1) .corner {
+            left: 50%;
+            top: -50%;
+          }
+          &:nth-child(3) .corner {
+            left: -50%;
+            top: calc(50% - 3px);
+          }
+        }
+      }
+      &:nth-child(4n) {
+        div {
+          &:nth-child(1) .corner {
+            left: 50%;
+            top: calc(50% - 3px);
+          }
+          &:nth-child(3) .corner {
+            left: -50%;
+            top: -50%;
+          }
+        }
+      }
+    }
+  }
+
+  /* 3-column layout: Logo | Company Name + Location | Dates */
+  .experience-entry-heading {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    gap: 1.5rem !important;
+    width: 100%;
+  }
+
+  /* Column 1: Logo */
+  .exp-logo-col {
+    flex-shrink: 0 !important;
+    width: 80px;
+  }
+
+  .company-logo {
+    max-width: 80px !important;
+    max-height: 80px !important;
+    width: auto;
+    height: auto;
+    object-fit: contain !important;
+  }
+
+  /* Column 2: Company name and location */
+  .exp-info-col {
+    flex-grow: 1 !important;
+    min-width: 0;
+
+    .company-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .company-location {
+      font-size: 0.9rem;
+    }
+  }
+
+  /* Column 3: Dates - pushed to right */
+  .exp-dates-col {
+    flex-shrink: 0 !important;
+    text-align: right;
+    white-space: nowrap;
+    margin-left: auto;
+
+    .experience-dates {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+  }
+
+  /* Spacing between company header and positions */
+  .experience-entry-heading {
+    margin-bottom: 1.25rem !important;
+  }
+
+  .positions {
+    margin-top: 0.75rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+
+    .company-heading {
+      margin-top: 0.5rem;
+    }
+  }
+
+  .company-heading {
+    h5 {
+      display: inline;
+      margin-right: 0.25em;
+    }
+    p {
+      display: inline;
+    }
+  }
+
+  @include media('<=medium') {
+    .container {
+      max-width: 100%;
+    }
+  }
+
+  @include media('<=small') {
+    .container {
+      padding-left: 0px;
+      padding-right: 0px;
+    }
+    .timeline {
+      .vertical-line {
+        visibility: hidden;
+      }
+      .horizontal-line {
+        visibility: hidden;
+      }
+    }
+
+    /* Responsive: stack on mobile */
+    .experience-entry-heading {
+      flex-direction: column !important;
+      gap: 0.75rem !important;
+    }
+
+    .exp-logo-col {
+      width: auto;
+    }
+
+    .exp-dates-col {
+      text-align: left;
+      margin-left: 0;
+    }
+  }
+}
+
+html[data-theme='dark'] {
+  .experiences-section {
+    ul {
+      & > li {
+        color: get-dark-color('text-color');
+      }
+    }
+    .positions {
+      border-top-color: rgba(255, 255, 255, 0.1);
+    }
+    .circle {
+      background-color: get-dark-color('accent-color');
+      color: get-dark-color('text-over-accent-color');
+    }
+
+    .timeline {
+      .vertical-line {
+        &::after {
+          border-left: 3px solid get-dark-color('accent-color');
+        }
+      }
+      .horizontal-line {
+        hr {
+          border-top: 3px solid get-dark-color('accent-color');
+        }
+        .corner {
+          border: 3px solid get-dark-color('accent-color');
+        }
+      }
+    }
+  }
+}

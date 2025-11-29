@@ -1,0 +1,128 @@
+{{ if site.Data.publications.highlighted }}
+  <h2>Highlighted Publications</h2>
+  <ul>
+    {{ range site.Data.publications.highlighted }}
+      <li>
+        <strong>{{ .title }}</strong>
+        <div class="publication-meta">
+          {{ .author }}{{ if .year }}, {{ .year }}{{ end }}
+        </div>
+        {{ with .url }}
+          <div class="publication-links">
+            <a href="{{ . }}" target="_blank" rel="noopener noreferrer">View Publication <i class="fas fa-external-link-alt"></i></a>
+          </div>
+        {{ end }}
+      </li>
+    {{ end }}
+  </ul>
+{{ end }}
+
+{{ if site.Data.publications.patents }}
+  <h2>Patents</h2>
+  <ul>
+    {{ range site.Data.publications.patents }}
+      <li>
+        <strong>{{ .title }}</strong>
+        <div class="publication-meta">
+          {{ .author }}{{ if .year }}, {{ .year }}{{ end }}
+          {{ if .patent_number }}<span class="patent-number">({{ .patent_number }})</span>{{ end }}
+        </div>
+        {{ with .url }}
+          <div class="publication-links">
+            <a href="{{ . }}" target="_blank" rel="noopener noreferrer">View Patent <i class="fas fa-external-link-alt"></i></a>
+          </div>
+        {{ end }}
+      </li>
+    {{ end }}
+  </ul>
+{{ end }}
+
+{{ if site.Data.publications.articles }}
+  <h2>Journal Articles</h2>
+  <ul>
+    {{ range site.Data.publications.articles }}
+      <li>
+        <strong>{{ .title }}</strong>
+        <div class="publication-meta">
+          {{ .author }}{{ if .journal }}, <em>{{ .journal }}</em>{{ end }}{{ if .year }}, {{ .year }}{{ end }}
+        </div>
+        {{ with .url }}
+          <div class="publication-links">
+            <a href="{{ . }}" target="_blank" rel="noopener noreferrer">View Article <i class="fas fa-external-link-alt"></i></a>
+          </div>
+        {{ end }}
+      </li>
+    {{ end }}
+  </ul>
+{{ end }}
+
+{{ if site.Data.publications.preprints }}
+  <h2>Preprints</h2>
+  <ul>
+    {{ range site.Data.publications.preprints }}
+      <li>
+        <strong>{{ .title }}</strong>
+        <div class="publication-meta">
+          {{ .author }}{{ if .archive }}, {{ .archive }}{{ end }}{{ if .id }} {{ .id }}{{ end }}{{ if .year }}, {{ .year }}{{ end }}
+        </div>
+        {{ with .url }}
+          <div class="publication-links">
+            <a href="{{ . }}" target="_blank" rel="noopener noreferrer">View Preprint <i class="fas fa-external-link-alt"></i></a>
+          </div>
+        {{ end }}
+      </li>
+    {{ end }}
+  </ul>
+{{ end }}
+
+{{ if site.Data.publications.conferences_and_workshops }}
+  <h2>Conferences & Workshops</h2>
+  <ul>
+    {{ range site.Data.publications.conferences_and_workshops }}
+      <li>
+        <strong>{{ .title }}</strong>
+        <div class="publication-meta">
+          {{ .author }}{{ if .booktitle }}, <em>{{ .booktitle }}</em>{{ end }}{{ if .year }}, {{ .year }}{{ end }}
+        </div>
+        {{ with .url }}
+          <div class="publication-links">
+            <a href="{{ . }}" target="_blank" rel="noopener noreferrer">View Paper <i class="fas fa-external-link-alt"></i></a>
+          </div>
+        {{ end }}
+      </li>
+    {{ end }}
+  </ul>
+{{ end }}
+
+<style>
+.publication-meta {
+  color: var(--text-color, #495057);
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.6;
+}
+
+.patent-number {
+  font-weight: 600;
+  color: var(--primary-color, #007bff);
+}
+
+.publication-links {
+  margin-top: 0.5rem;
+}
+
+.publication-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.publication-links i {
+  font-size: 0.85rem;
+}
+
+[data-theme="dark"] .publication-meta {
+  color: var(--text-color-dark, #e0e0e0);
+}
+</style>

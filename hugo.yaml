@@ -1,7 +1,7 @@
-baseURL: https://hugo-toha.github.io
+baseURL: https://deepakbaby.in
 
 languageCode: bn
-title: "John's Blog"
+title: "Deepak Baby"
 
 # Use Hugo modules to add theme
 module:
@@ -23,7 +23,7 @@ languages:
   en:
     languageCode: en
     languageName: English
-    title: "John's Blog"
+    title: "Deepak Baby"
     weight: 1
   bn:
     languageCode: bn
@@ -57,8 +57,8 @@ enableEmoji: true
 
 # Site parameters
 params:
-  # Background image of the landing page
-  background: /images/site/background.jpg
+  # Background image of the landing page - DISABLED
+  # background: /images/site/background.jpg
   # Background image of the landing page for dark theme
   #darkBackground: /images/site/background.jpg
 
@@ -70,7 +70,7 @@ params:
     favicon: /images/site/favicon.png
 
   # GitHub repo of your site
-  gitRepo: https://github.com/hugo-toha/hugo-toha.github.io
+  gitRepo: https://github.com/deepakbaby/deepakbaby-site
   # Default branch of your Git repo
   gitBranch: main
 
@@ -117,7 +117,7 @@ params:
 
     # Enable & configure "Notes" features
     notes:
-      enable: true
+      enable: false
 
     # Enable comment feature. There, should be only one of them.
     comment:
@@ -155,7 +155,7 @@ params:
 
     # Enable Analytics
     analytics:
-      enabled: true
+      enabled: false
       services:
         # Google Analytics
         google:

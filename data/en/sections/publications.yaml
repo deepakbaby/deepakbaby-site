@@ -1,82 +1,178 @@
 # section information
+# NOTE: This section is disabled. Featured publications are shown via highlighted-publications.yaml
+# All publications are shown on the /publications/ page
 section:
   name: Publications
-  id: publications
-  enable: true
+  id: all-publications
+  enable: false
   weight: 6
-  showOnNavbar: true
+  showOnNavbar: false
   # Can optionally hide the title in sections
   # hideTitle: true
 
-# filter buttons
-buttons:
-- name: All
-  filter: "all"
-- name: "Machine Learning"
-  filter: "machinelearning"
-- name: "Image Processing"
-  filter: "image-processing"
-- name: Security
-  filter: "security"
-
 # your publications
 publications:
-- title: An Example Paper on Machine Learning
+# Nature Publications
+- title: "A convolutional neural-network model of human cochlear mechanics and filter tuning for real-time applications"
   publishedIn:
-    name: 2020 IEEE Region Symposium (TENSYMP)
-    date: 7 June 2020
-    url: https://example.com
+    name: Nature Machine Intelligence
+    date: February 2021
+    url: https://www.nature.com/natmachintell/
   authors:
-  - name: Dr. Madman
-    url: https://example.com
-  - name: Dr. Lessmad
-    url: https://example.com
-  - name: Dr. Moremad
-    url: https://example.com
-  - name: Dr. Goodman
-    url: https://example.com
+  - name: D. Baby
+  - name: A. Van Den Broucke
+  - name: S. Verhulst
   paper:
-    summary: Voluptate in id id voluptate laboris. Minim mollit aliquip sit aliqua ut exercitation voluptate eiusmod consequat pariatur sunt enim veniam. Velit esse tempor laboris anim tempor officia. Magna non labore duis do esse sit do ipsum culpa. Officia consequat id non duis culpa dolor. Excepteur magna non nostrud cupidatat aute aliqua aliquip.
-    url: https://example.com
-  categories: ["machinelearning","image-processing"]
-  tags: ["Machine Learning", "Autonomous Driving", "Computer Vision"]
+    summary: "A hybrid approach combining convolutional neural networks with computational neuroscience to yield a real-time end-to-end model for human cochlear mechanics, including level-dependent filter tuning (CoNNear)."
+    url: https://www.nature.com/articles/s42256-020-00286-8
+  categories: ["neuroscience", "deep-learning"]
+  tags: ["Neural Networks", "Cochlear Model", "Real-time Processing"]
 
-- title: An Sample Paper on Image Processing
+- title: "A convolutional neural-network framework for modelling auditory sensory cells and synapses"
   publishedIn:
-    name: 2020 IEEE Region Symposium (TENSYMP)
-    date: 7 June 2020
-    url: https://example.com
+    name: Nature Communications Biology
+    date: July 2021
+    url: https://www.nature.com/commsbio/
   authors:
-  - name: Dr. Madman
-    url: https://example.com
-  - name: Dr. Lessmad
-    url: https://example.com
-  - name: Dr. Moremad
-    url: https://example.com
-  - name: Dr. Goodman
-    url: https://example.com
+  - name: F. Drakopoulos
+  - name: D. Baby
+  - name: S. Verhulst
   paper:
-    summary: Ullamco magna minim cupidatat Lorem ea ex aliqua fugiat et. Dolor quis cillum ea duis irure et commodo aliquip consectetur ullamco labore ut anim nisi. Commodo reprehenderit est consectetur tempor adipisicing occaecat exercitation amet do aliquip dolor do irure. Labore officia ut magna pariatur reprehenderit et ex sit sunt. Magna proident ullamco adipisicing sit.
-    url: https://example.com
-  categories: ["image-processing"]
-  tags: ["Image Processing", "Computer Vision"]
+    summary: "A CNN framework for modelling inner hair cells and auditory nerve fibers, enabling real-time simulation of the auditory periphery."
+    url: https://www.nature.com/articles/s42003-021-02341-5
+  categories: ["neuroscience", "deep-learning"]
+  tags: ["Neural Networks", "Auditory Model", "Hearing"]
 
-- title: An Example Paper on Security
+# Journal Articles
+- title: "Joint Denoising and Dereverberation Using Exemplar-Based Sparse Representations and Decaying Norm Constraint"
   publishedIn:
-    name: 2020 IEEE Region Symposium (TENSYMP)
-    date: 7 June 2020
-    url: https://example.com
+    name: IEEE/ACM Transactions on Audio, Speech and Language Processing
+    date: October 2017
+    url: https://ieeexplore.ieee.org/
   authors:
-  - name: Dr. Madman
-    url: https://example.com
-  - name: Dr. Lessmad
-    url: https://example.com
-  - name: Dr. Moremad
-    url: https://example.com
-  - name: Dr. Goodman
-    url: https://example.com
+  - name: D. Baby
+  - name: H. Van hamme
   paper:
-    summary: Dolor ad cupidatat pariatur nulla ipsum ex ullamco nisi anim ullamco. Dolore elit esse in exercitation minim aliqua. Amet velit incididunt magna laboris. Proident reprehenderit deserunt ad officia duis dolor. Tempor nostrud ullamco ullamco sint deserunt cupidatat irure minim consectetur nulla adipisicing sunt.
-    url: https://example.com
-  categories: ["security"]
-  tags: ["Machine Learning", "Autonomous Driving", "Machine Vision"]
+    summary: "Novel approximation of noisy reverberant speech using nonnegative matrix deconvolution with decaying norm constraint for joint denoising and dereverberation."
+    url: https://ieeexplore.ieee.org/document/8016372
+  categories: ["speech-enhancement"]
+  tags: ["Speech Enhancement", "Dereverberation", "NMF"]
+
+- title: "Coupled Dictionaries for Exemplar-Based Speech Enhancement and Automatic Speech Recognition"
+  publishedIn:
+    name: IEEE/ACM Transactions on Audio, Speech and Language Processing
+    date: November 2015
+    url: https://ieeexplore.ieee.org/
+  authors:
+  - name: D. Baby
+  - name: T. Virtanen
+  - name: J.F. Gemmeke
+  - name: H. Van hamme
+  paper:
+    summary: "Efficient method using coupled dictionaries for speech enhancement, introducing modulation spectrogram features for exemplar-based tasks."
+    url: https://ieeexplore.ieee.org/document/7138598
+  categories: ["speech-enhancement", "speech-recognition"]
+  tags: ["Speech Enhancement", "ASR", "NMF"]
+
+# Conference Papers
+- title: "Speech Dereverberation using Variational Autoencoders"
+  publishedIn:
+    name: IEEE ICASSP 2021
+    date: June 2021
+    url: https://2021.ieeeicassp.org/
+  authors:
+  - name: D. Baby
+  - name: H. Bourlard
+  paper:
+    summary: "Using variational autoencoders for single-channel speech dereverberation."
+    url: https://ieeexplore.ieee.org/document/9414439
+  categories: ["speech-enhancement", "deep-learning"]
+  tags: ["VAE", "Dereverberation", "Deep Learning"]
+
+- title: "SERGAN: Speech Enhancement using Relativistic Generative Adversarial Networks with Gradient Penalty"
+  publishedIn:
+    name: IEEE ICASSP 2019
+    date: May 2019
+    url: https://2019.ieeeicassp.org/
+  authors:
+  - name: D. Baby
+  - name: S. Verhulst
+  paper:
+    summary: "Speech enhancement using relativistic GANs with gradient penalty for improved audio quality."
+    url: https://ieeexplore.ieee.org/document/8682049
+  categories: ["speech-enhancement", "deep-learning"]
+  tags: ["GAN", "Speech Enhancement", "Deep Learning"]
+
+- title: "Biophysically-inspired Features Improve the Generalizability of Neural Network-based Speech Enhancement Systems"
+  publishedIn:
+    name: INTERSPEECH 2018
+    date: September 2018
+    url: https://www.interspeech2018.org/
+  authors:
+  - name: D. Baby
+  - name: S. Verhulst
+  paper:
+    summary: "Using biophysically-inspired auditory features to improve neural network-based speech enhancement generalization."
+    url: https://www.isca-speech.org/archive/Interspeech_2018/pdfs/1237.pdf
+  categories: ["speech-enhancement", "deep-learning"]
+  tags: ["Speech Enhancement", "Neural Networks", "Auditory Features"]
+
+- title: "Supervised Speech Dereverberation in Noisy Environments using Exemplar-based Sparse Representations"
+  publishedIn:
+    name: IEEE ICASSP 2016
+    date: March 2016
+    url: https://ieeexplore.ieee.org/
+  authors:
+  - name: D. Baby
+  - name: H. Van hamme
+  paper:
+    summary: "Exemplar-based sparse representations for supervised speech dereverberation in noisy environments."
+    url: https://ieeexplore.ieee.org/document/7471656
+  categories: ["speech-enhancement"]
+  tags: ["Dereverberation", "NMF", "Speech Enhancement"]
+
+- title: "Exemplar-based speech enhancement for deep neural network based automatic speech recognition"
+  publishedIn:
+    name: IEEE ICASSP 2015
+    date: April 2015
+    url: https://ieeexplore.ieee.org/
+  authors:
+  - name: D. Baby
+  - name: J.F. Gemmeke
+  - name: T. Virtanen
+  - name: H. Van hamme
+  paper:
+    summary: "Exemplar-based speech enhancement as preprocessing for DNN-based ASR systems."
+    url: https://ieeexplore.ieee.org/document/7178819
+  categories: ["speech-enhancement", "speech-recognition"]
+  tags: ["Speech Enhancement", "DNN", "ASR"]
+
+- title: "Coupled dictionary training for exemplar-based speech enhancement"
+  publishedIn:
+    name: IEEE ICASSP 2014
+    date: May 2014
+    url: https://ieeexplore.ieee.org/
+  authors:
+  - name: D. Baby
+  - name: T. Virtanen
+  - name: T. Barker
+  - name: H. Van hamme
+  paper:
+    summary: "Novel coupled dictionary method for exemplar-based speech enhancement with improved signal-to-distortion ratio."
+    url: https://ieeexplore.ieee.org/document/6854127
+  categories: ["speech-enhancement"]
+  tags: ["Speech Enhancement", "NMF", "Dictionary Learning"]
+
+- title: "Ordered Orthogonal Matching Pursuit"
+  publishedIn:
+    name: National Conference on Communications (NCC)
+    date: February 2012
+    url: https://ieeexplore.ieee.org/
+  authors:
+  - name: D. Baby
+  - name: S.R.B. Pillai
+  paper:
+    summary: "Extension to greedy algorithms in compressed sensing with ordered orthogonal matching pursuit."
+    url: https://ieeexplore.ieee.org/document/6176775
+  categories: ["signal-processing"]
+  tags: ["Compressed Sensing", "Signal Processing", "Algorithms"]
