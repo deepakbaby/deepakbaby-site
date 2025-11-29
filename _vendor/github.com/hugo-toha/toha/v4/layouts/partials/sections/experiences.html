@@ -32,3 +32,60 @@
    {{ end }}
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                      'July', 'August', 'September', 'October', 'November', 'December'];
+  
+  function parseDate(dateStr) {
+    if (!dateStr || dateStr.trim() === '') return new Date();
+    const parts = dateStr.trim().split(' ');
+    if (parts.length === 2) {
+      const month = monthNames.indexOf(parts[0]);
+      const year = parseInt(parts[1]);
+      if (month !== -1 && !isNaN(year)) {
+        return new Date(year, month, 1);
+      }
+    }
+    // Try parsing as year only
+    const year = parseInt(dateStr);
+    if (!isNaN(year)) {
+      return new Date(year, 0, 1);
+    }
+    return new Date();
+  }
+  
+  function calculateDuration(startDate, endDate) {
+    let months = (endDate.getFullYear() - startDate.getFullYear()) * 12;
+    months += endDate.getMonth() - startDate.getMonth();
+    if (months < 0) months = 0;
+    
+    const years = Math.floor(months / 12);
+    const remainingMonths = months % 12;
+    
+    let result = '';
+    if (years > 0) {
+      result += years + ' yr' + (years > 1 ? 's' : '');
+    }
+    if (remainingMonths > 0) {
+      if (result) result += ' ';
+      result += remainingMonths + ' mo' + (remainingMonths > 1 ? 's' : '');
+    }
+    if (!result) result = '< 1 mo';
+    
+    return result;
+  }
+  
+  document.querySelectorAll('.position-duration').forEach(function(el) {
+    const startStr = el.getAttribute('data-start');
+    const endStr = el.getAttribute('data-end');
+    
+    const startDate = parseDate(startStr);
+    const endDate = endStr ? parseDate(endStr) : new Date();
+    
+    const duration = calculateDuration(startDate, endDate);
+    el.textContent = duration;
+  });
+});
+</script>

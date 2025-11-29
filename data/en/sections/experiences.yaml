@@ -21,8 +21,11 @@ experiences:
     # company overview
     # overview: KBC Group N.V. is a Belgian universal multi-channel bank-insurer, focusing on private clients and small and medium-sized enterprises in Belgium, Bulgaria, Czech Republic, Hungary, and Slovakia..
   positions:
+  - designation: Senior Data Scientist
+    start: November 2025
   - designation: Data Scientist
     start: January 2025
+    end: November 2025
     # don't provide end date if you are currently working there. It will be replaced by "Present"
     # end: Dec 2020
     # give some points about what was your responsibilities at the company.

@@ -36,22 +36,35 @@
     {{ if .company.overview }}
     <p class="mt-2">{{ .company.overview | markdownify }}</p>
     {{ end }}
-    <!-- Add the positions information -->
-    <div class="positions">
-    {{ range $index,$position:= .positions }}
-        <div class="company-heading">
-            <h5 class="designation">{{ $position.designation }}</h5>
-            <p class="text-muted">{{ $position.start }} - {{if $position.end }} {{ $position.end }} {{else}} {{ i18n "present" }} {{end}}</p>
-        </div>
-        <!-- Add the responsibilities handled at this position -->
-        {{ if $position.responsibilities }}
-            <h6 class="text-heading">{{ i18n "responsibilities" }}</h6>
-            <ul class="justify-content-around">
-                {{ range $position.responsibilities }}
-                    <li>{{ . | markdownify }}</li>
+    <!-- Add the positions information with LinkedIn-style timeline -->
+    <div class="positions-timeline">
+    {{ $totalPositions := len .positions }}
+    {{ range $index, $position := .positions }}
+        <div class="position-entry {{ if eq $index 0 }}first{{ end }} {{ if eq $index (sub $totalPositions 1) }}last{{ end }}">
+            <div class="timeline-marker">
+                <div class="timeline-dot"></div>
+                {{ if lt $index (sub $totalPositions 1) }}
+                <div class="timeline-line"></div>
                 {{ end }}
-            </ul>
-        {{ end }}
+            </div>
+            <div class="position-content">
+                <div class="position-header">
+                    <h5 class="designation">{{ $position.designation }}</h5>
+                    <p class="position-dates text-muted">
+                        {{ $position.start }} - {{if $position.end }} {{ $position.end }} {{else}} {{ i18n "present" }} {{end}}
+                        <span class="position-duration" data-start="{{ $position.start }}" data-end="{{ if $position.end }}{{ $position.end }}{{ else }}{{ end }}"></span>
+                    </p>
+                </div>
+                <!-- Add the responsibilities handled at this position -->
+                {{ if $position.responsibilities }}
+                    <ul class="position-responsibilities">
+                        {{ range $position.responsibilities }}
+                            <li>{{ . | markdownify }}</li>
+                        {{ end }}
+                    </ul>
+                {{ end }}
+            </div>
+        </div>
     {{ end }}
     </div>
 </div>
