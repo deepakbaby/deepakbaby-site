@@ -8,7 +8,7 @@
   {{ $author = (index site.Data site.Language.Lang).author }}
 {{ end }}
 
-<div class="container anchor p-lg-5 about-section" id="{{ $sectionID }}">
+<div class="container anchor pt-lg-5 pb-lg-3 about-section" id="{{ $sectionID }}">
   <div class="about-content-wrapper">
     {{/* Profile Photo - floated left with text wrap */}}
     {{ if $author.image }}
@@ -41,8 +41,8 @@
     <div style="clear: both;"></div>
 
     {{/* Social Links */}}
-    <div class="text-container mt-4">
-      <ul class="social-link d-flex">
+    <div class="text-container mt-3 mb-0">
+      <ul class="social-link d-flex mb-0">
         {{ range .socialLinks }}
         <li>
           {{ if eq .name "Email" }}
