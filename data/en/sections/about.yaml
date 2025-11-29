@@ -8,7 +8,7 @@ section:
   template: sections/about.html
 
 # your designation
-designation: Data Scientist
+designation: Senior Data Scientist
 # your company information
 company:
   name: "KBC Bank & Verzekering" 
@@ -20,7 +20,7 @@ company:
 
 # a summary about you
 summary: |
-  Dr. Deepak Baby is a Data Scientist at KBC Bank Belgium, specializing in developing advanced data-driven solutions for banking and insurance applications. His expertise spans machine learning, speech processing, and neural network architectures. Previously, he served as an Applied Scientist at Amazon Alexa AGI, where he led research and development initiatives for speech recognition models that power Alexa services. During his tenure, he contributed to continuous learning technologies that enable Alexa models to adapt and improve over time, and participated in early-stage development of Nova Sonic LLM.
+  Dr. Deepak Baby is a Senior Data Scientist at KBC Bank Belgium, specializing in developing advanced data-driven solutions for banking and insurance applications. His expertise spans machine learning, speech processing, and neural network architectures. Previously, he served as an Applied Scientist at Amazon Alexa AGI, where he led research and development initiatives for speech recognition models that power Alexa services. During his tenure, he contributed to continuous learning technologies that enable Alexa models to adapt and improve over time, and participated in early-stage development of Nova Sonic LLM.
   
   His academic background includes post-doctoral research positions at leading institutions. At [Idiap Research Institute](http://www.idiap.ch/en) with [Prof. Hervé Bourlard](http://people.idiap.ch/bourlard) (May 2019 - June 2020), he advanced speech enhancement techniques using variational and adversarial auto-encoders. As a post-doctoral researcher at [Ghent University](https://www.ugent.be/en) with [Prof. Sarah Verhulst](https://scholar.google.be/citations?user=gm5wuzUAAAAJ&hl=en&oi=ao) (February 2017 - April 2019), he developed neural network-based machine learning strategies for hearing restoration, resulting in publications in Nature Machine Intelligence and Nature Communications, as well as a patent that secured $1M in ERC funding for a startup venture.
   
