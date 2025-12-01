@@ -125,20 +125,15 @@ params:
     comment:
       enable: true
       services:
-        # Option 1: Disqus (Allows anonymous comments without login!)
-        # Setup instructions:
-        # 1. Sign up at https://disqus.com (free)
-        # 2. Create a new site at https://disqus.com/admin/create/
-        # 3. Get your site's shortname (e.g., "yoursite")
-        # 4. In Disqus admin, go to Settings > Community > Enable "Allow guest commenting"
-        # 5. Replace "your-disqus-shortname" below with your actual shortname
-        disqus:
-          shortName: "your-disqus-shortname"  # Replace with your Disqus shortname
-        # Option 2: Utterances (Requires GitHub login - disabled for anonymous comments)
-        # utteranc:
-        #   repo: deepakbaby/deepakbaby-site
-        #   issueTerm: "title"
-        #   theme: "github-light"
+        # Option 1: Utterances (Uses GitHub Issues - requires GitHub login)
+        # Setup: Install utterances-bot app at https://github.com/apps/utterances
+        utteranc:
+          repo: deepakbaby/deepakbaby-site
+          issueTerm: "title"  # Options: url, title, og:title, pathname
+          theme: "github-light"  # Options: github-light, github-dark, github-dark-orange, icy-dark, dark-blue, photon-dark
+        # Option 2: Disqus (Alternative - allows anonymous comments)
+        # disqus:
+        #   shortName: "your-disqus-shortname"
         # Option 3: Giscus (Requires GitHub login - disabled for anonymous comments)
         # giscus:
         #   repo: deepakbaby/deepakbaby-site
