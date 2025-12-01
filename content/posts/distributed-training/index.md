@@ -1,7 +1,8 @@
 ---
 title: "Distributed Training Techniques: DDP, Pipeline Parallelism, and FSDP"
-date: 2025-11-30
+date: 2025-12-01
 draft: false
+hero: dt.png
 tags: ["deep learning", "distributed training", "DDP", "FSDP", "pipeline parallelism", "PyTorch"]
 categories: ["Machine Learning"]
 description: "A comprehensive guide to distributed training techniques in ML - understanding Data Distributed Parallel (DDP), Pipeline Parallelism, and Fully Sharded Data Parallel (FSDP) with their pros and cons."
@@ -41,7 +42,7 @@ Distributed training employs different parallelism strategies:
 | **Pipeline Parallelism** | Model stages across devices | Deep models with many sequential layers |
 | **Hybrid (3D Parallelism)** | Combination of above | Extremely large models (100B+ parameters) |
 
-      
+{{< vs 2>}}
 This post dives deep into three fundamental approaches: **DDP**, **Pipeline Parallelism**, and **FSDP**.
 
 ---
@@ -258,6 +259,15 @@ FSDP is the right choice when:
 | **Best For** | Small-Medium models | Sequential models | Large models |
 
 ## Choosing the Right Strategy
+{{< mermaid align="center" >}}
+graph LR;
+    A[Model] --> B{Fit on single GPU?}
+    B --> |YES| G[Use DDP]
+    B --> |NO| C{Do you have fast interconnect?}
+    C --> |YES| E[Use FSDP]
+    C --> |NO| F[Use Pipeline Parallel]
+{{< /mermaid >}}
+
 
 ```
                           Does model fit on single GPU?

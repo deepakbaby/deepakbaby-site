@@ -1,6 +1,6 @@
 ---
 title: "Rich Content"
-date: 2020-06-08T08:06:25+06:00
+date: 2000-06-08T08:06:25+06:00
 description: Sample post with multiple images, embedded video etc.
 menu:
   sidebar:
