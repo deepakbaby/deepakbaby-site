@@ -123,10 +123,34 @@ params:
 
     # Enable comment feature. There, should be only one of them.
     comment:
-      enable: false
+      enable: true
       services:
-        disqus:
-          shortName: toha-example-site
+        # Option 1: Utterances (Configured - uses GitHub Issues)
+        # Setup complete! Just install the utterances-bot app on your repo.
+        utteranc:
+          repo: deepakbaby/deepakbaby-site
+          issueTerm: "title"  # Options: url, title, og:title, pathname
+          theme: "github-light"  # Options: github-light, github-dark, github-dark-orange, icy-dark, dark-blue, photon-dark
+        # Option 2: Giscus (Alternative - requires GitHub Discussions + app installation)
+        # To use Giscus:
+        # 1. Enable Discussions in your GitHub repo settings
+        # 2. Visit https://giscus.app and install the Giscus app when prompted
+        # 3. Get repoID and categoryID from giscus.app after setup
+        # giscus:
+        #   repo: deepakbaby/deepakbaby-site
+        #   repoID: ""  # Get this from https://giscus.app after setup
+        #   category: "General"
+        #   categoryID: ""  # Get this from https://giscus.app after setup
+        #   theme: "light"
+        #   map: "url"
+        #   reaction: "1"
+        #   metadata: "0"
+        #   inputPosition: "bottom"
+        #   crossOrigin: "anonymous"
+        # Option 3: Disqus (Alternative - requires Disqus account)
+        # disqus:
+        #   shortName: toha-example-site
+        # Option 4: Valine (Requires LeanCloud account)
         # valine:
         #   appId: HTV6askWxVo3vOxlqjjaq2hd-MsYXbMMI
         #   appKey: pVrT3C85KGIuk27t07eh6bUC
@@ -135,21 +159,7 @@ params:
         #   lang: en
         #   recordIP: true
         #   enableQQ: true
-        # utteranc:
-        #   repo: github.com/hugo-toha/hugo-toha.github.io
-        #   issueTerm: title
-        #   theme: github-light
-        # giscus:
-        #   repo: your-repo/name
-        #   repoID: your-repo-id
-        #   category: your-category
-        #   categoryID: your-category-id
-          # theme: light
-          # map: url
-          # reaction: 1
-          # metadata: 0
-          # inputPosition: bottom
-          # crossOrigin: anonymous
+        # Option 5: Commento (Self-hosted or cloud)
         # commento:
         #   serverURL: cdn.commento.io
         #   autoInit: true

@@ -1,0 +1,66 @@
+/* Comments Section Styling */
+.comments-section-wrapper {
+  margin-top: 3rem;
+  margin-bottom: 2rem;
+  padding: 2rem 0;
+  border-top: 2px solid rgba(128, 128, 128, 0.2);
+}
+
+.comments-heading {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: var(--heading-color, #2c3e50);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.comments-heading i {
+  color: var(--primary-color, #007bff);
+}
+
+.comments-content {
+  background: var(--card-bg, #ffffff);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-top: 1rem;
+}
+
+/* Utterances/Giscus styling improvements */
+.comments-content #comments-container,
+.comments-content #disqus_thread,
+.comments-content #giscus_thread {
+  max-width: 100%;
+}
+
+/* Make sure comment widgets are properly contained */
+.comments-content .utterances {
+  max-width: 100% !important;
+  margin: 0 auto;
+}
+
+/* Improve readability and spacing */
+.comments-content > div {
+  line-height: 1.6;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .comments-section-wrapper {
+    margin-top: 2rem;
+    padding: 1.5rem 0;
+  }
+  
+  .comments-heading {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .comments-content {
+    padding: 1.5rem;
+    border-radius: 8px;
+  }
+}
+
