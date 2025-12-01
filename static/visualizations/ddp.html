@@ -61,78 +61,96 @@
             min-height: 0;
         }
 
-        /* Left Side - Training Data */
+        /* Left Side - Training Data and Model */
         .data-section {
             position: relative;
             width: 250px;
             z-index: 10;
             flex-shrink: 0;
-            margin-top: 100px; /* Push down to align with model */
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
 
         .data-source {
             width: 100%;
-            height: 100px;
+            min-height: 250px;
             background: #111;
             border: 1px solid #444;
             border-radius: 8px;
             display: flex;
-            align-items: center;
-            justify-content: center;
+            flex-direction: column;
+            padding: 15px;
             color: #ffffff;
             font-weight: 600;
             font-size: 18px;
             box-shadow: none;
-            margin-bottom: 30px;
+        }
+
+        .data-source-label {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffffff;
         }
 
         .data-batches {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 10px;
+            flex: 1;
         }
 
         .batch {
             width: 100%;
-            height: 50px;
+            height: 45px;
             background: #222;
             border: 1px solid #666;
-            border-radius: 8px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #fff;
             font-size: 14px;
             font-weight: 600;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            box-shadow: none;
             opacity: 0;
-            transform: translateX(-30px);
+            transform: translateY(-10px);
             transition: all 0.5s ease;
             position: relative;
         }
 
         .batch.visible {
             opacity: 1;
-            transform: translateX(0);
+            transform: translateY(0);
+        }
+
+        .batch.moved {
+            opacity: 0.3;
+            filter: grayscale(100%);
+            background: #111 !important;
+            border-color: #333 !important;
+            color: #666 !important;
         }
 
         .batch.moving {
-            position: absolute;
-            z-index: 100;
-            transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1);
-            background: #333;
-            color: #fff;
-            border: 1px solid #fff;
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+            position: absolute !important;
+            z-index: 1000 !important;
+            background: #333 !important;
+            color: #fff !important;
+            border: 1px solid #fff !important;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2) !important;
+            transform: none !important;
+            margin: 0 !important;
         }
 
-        /* Center - Initial Model */
+        /* Model below Training Data */
         .model-section {
             position: relative;
             z-index: 8;
             flex-shrink: 0;
-            margin: 0 40px;
-            margin-top: 150px; /* Align vertically */
+            width: 250px;
         }
 
         .initial-model {
@@ -146,7 +164,8 @@
 
         .dnn-container {
             position: relative;
-            width: 280px;
+            width: 100%;
+            max-width: 250px;
             height: 180px;
             background: rgba(20, 20, 20, 0.95);
             border: 1px solid #444;
@@ -515,7 +534,7 @@
         /* Model Cloning Animation */
         .model-clone {
             position: absolute;
-            width: 280px;
+            width: 250px;
             height: 180px;
             background: rgba(20, 20, 20, 0.95);
             border: 1px solid #666;
@@ -618,35 +637,37 @@
         <div class="animation-area" id="animationArea">
             <div class="status" id="status">Ready</div>
             
-            <!-- Left Side: Training Data -->
+            <!-- Left Side: Training Data and Model -->
             <div class="data-section">
-                <div class="data-source" id="dataSource">Training Data</div>
-                <div class="data-batches" id="dataBatches">
-                    <div class="batch" id="batch0">Batch 0</div>
-                    <div class="batch" id="batch1">Batch 1</div>
-                    <div class="batch" id="batch2">Batch 2</div>
+                <div class="data-source" id="dataSource">
+                    <div class="data-source-label">Training Data</div>
+                    <div class="data-batches" id="dataBatches">
+                        <div class="batch" id="batch0">Batch 0</div>
+                        <div class="batch" id="batch1">Batch 1</div>
+                        <div class="batch" id="batch2">Batch 2</div>
+                    </div>
                 </div>
-            </div>
-            
-            <!-- Center: Initial Model -->
-            <div class="model-section">
-                <div class="initial-model" id="initialModel">
-                    <div class="dnn-container" id="initialDnnContainer">
-                        <div class="dnn-layers" id="initialDnnLayers">
-                            <div class="dnn-layer" id="layer0">
-                                <div class="neuron" id="n0-0"></div>
-                                <div class="neuron" id="n0-1"></div>
-                                <div class="neuron" id="n0-2"></div>
-                            </div>
-                            <div class="dnn-layer" id="layer1">
-                                <div class="neuron" id="n1-0"></div>
-                                <div class="neuron" id="n1-1"></div>
-                                <div class="neuron" id="n1-2"></div>
-                                <div class="neuron" id="n1-3"></div>
-                            </div>
-                            <div class="dnn-layer" id="layer2">
-                                <div class="neuron" id="n2-0"></div>
-                                <div class="neuron" id="n2-1"></div>
+                
+                <!-- Model below Training Data -->
+                <div class="model-section">
+                    <div class="initial-model" id="initialModel">
+                        <div class="dnn-container" id="initialDnnContainer">
+                            <div class="dnn-layers" id="initialDnnLayers">
+                                <div class="dnn-layer" id="layer0">
+                                    <div class="neuron" id="n0-0"></div>
+                                    <div class="neuron" id="n0-1"></div>
+                                    <div class="neuron" id="n0-2"></div>
+                                </div>
+                                <div class="dnn-layer" id="layer1">
+                                    <div class="neuron" id="n1-0"></div>
+                                    <div class="neuron" id="n1-1"></div>
+                                    <div class="neuron" id="n1-2"></div>
+                                    <div class="neuron" id="n1-3"></div>
+                                </div>
+                                <div class="dnn-layer" id="layer2">
+                                    <div class="neuron" id="n2-0"></div>
+                                    <div class="neuron" id="n2-1"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -921,7 +942,7 @@
              
             // Reset all elements
             document.querySelectorAll('.batch').forEach(el => {
-                el.classList.remove('visible', 'moving');
+                el.classList.remove('visible', 'moving', 'moved');
                 el.style.position = 'relative';
                 el.style.left = '';
                 el.style.top = '';
@@ -929,6 +950,7 @@
                 el.style.opacity = ''; // Restore opacity logic to CSS default
                 el.style.transform = ''; // Clear transform overrides
                 el.style.transition = ''; // Clear transition overrides
+                el.style.filter = ''; // Clear filter for grayscale
             });
             document.getElementById('initialModel').classList.remove('visible');
             document.querySelectorAll('.gpu-dnn').forEach(el => {
@@ -996,10 +1018,10 @@
             }
             if (stepIndex >= 4) {
                 show('.gpu-batch');
-                // Hide source batches as they moved
+                // Grey out source batches as they moved (keep them visible)
                 document.querySelectorAll('.batch').forEach(el => {
                     el.style.transition = 'none';
-                    el.style.opacity = '0';
+                    el.classList.add('moved');
                     void el.offsetWidth;
                     el.style.transition = '';
                 });
@@ -1167,8 +1189,8 @@
                 clone.classList.add('visible');
 
                 // Move to target
-                clone.style.left = (targetRect.left - areaRect.left + (targetRect.width - 280)/2) + 'px'; // Center horizontally
-                clone.style.top = (targetRect.top - areaRect.top + (targetRect.height - 180)/2) + 'px'; // Center vertically
+                clone.style.left = (targetRect.left - areaRect.left + (targetRect.width - sourceRect.width)/2) + 'px'; // Center horizontally
+                clone.style.top = (targetRect.top - areaRect.top + (targetRect.height - sourceRect.height)/2) + 'px'; // Center vertically
                 clone.style.transform = 'scale(0.6)'; // Shrink to fit GPU DNN size
 
                 setTimeout(() => {
@@ -1201,41 +1223,62 @@
             const gpuBatch = document.getElementById(`gpuBatch${batchIndex}`);
             const areaRect = document.getElementById('animationArea').getBoundingClientRect();
             
-            // Create clone
+            // Ensure batch is visible before cloning
+            if (!batch.classList.contains('visible')) {
+                batch.classList.add('visible');
+            }
+            
+            // Reset any transforms that might interfere
+            batch.style.transform = '';
+            batch.style.opacity = '1';
+            
+            // Get source position (from inside training data box)
+            const batchRect = batch.getBoundingClientRect();
+            
+            // Create clone with same styling
             const clone = batch.cloneNode(true);
             clone.classList.add('moving');
+            clone.classList.remove('visible'); // Remove visible class to reset transform
             clone.id = `clone-batch-${batchIndex}`;
-            clone.style.opacity = '1'; // Force visible
             
-            // Source position relative to animation container
-            const batchRect = batch.getBoundingClientRect();
+            // Calculate positions relative to animation area
             const startLeft = batchRect.left - areaRect.left;
             const startTop = batchRect.top - areaRect.top;
             
-            // Set initial position
+            // Set clone initial position to match batch
+            clone.style.position = 'absolute';
             clone.style.left = startLeft + 'px';
             clone.style.top = startTop + 'px';
             clone.style.width = batchRect.width + 'px';
             clone.style.height = batchRect.height + 'px';
+            clone.style.opacity = '1';
+            clone.style.transform = 'none'; // Reset transform for movement
+            clone.style.zIndex = '1000';
             
-            // Add to DOM
+            // Add to animation area (not inside data-source)
             document.getElementById('animationArea').appendChild(clone);
             
-            // Trigger reflow
+            // Trigger reflow to ensure clone is positioned
             void clone.offsetWidth;
 
-            // Hide original immediately after clone is placed
-            batch.style.opacity = '0';
+            // Grey out original batch in training data box instead of hiding
+            batch.classList.add('moved');
 
-            // Calculate target position
+            // Calculate target position (GPU batch location)
             const gpuBatchRect = gpuBatch.getBoundingClientRect();
             const endLeft = gpuBatchRect.left - areaRect.left;
             const endTop = gpuBatchRect.top - areaRect.top;
 
-            // Animate to target
-            clone.style.left = endLeft + 'px';
-            clone.style.top = endTop + 'px';
+            // Animate clone moving from training data to GPU
+            requestAnimationFrame(() => {
+                clone.style.transition = 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1)';
+                clone.style.left = endLeft + 'px';
+                clone.style.top = endTop + 'px';
+                clone.style.width = gpuBatchRect.width + 'px';
+                clone.style.height = gpuBatchRect.height + 'px';
+            });
             
+            // After animation completes, show GPU batch and remove clone
             setTimeout(() => {
                 clone.remove();
                 gpuBatch.classList.add('visible');
@@ -1365,8 +1408,11 @@
                         document.querySelectorAll('.gpu-batch').forEach(el => el.classList.remove('visible'));
                         document.querySelectorAll('.update-indicator').forEach(el => el.classList.remove('active'));
                         
-                        // Show source batches again ("Fetch next batch")
-                        document.querySelectorAll('.batch').forEach(el => el.style.opacity = '1');
+                        // Show source batches again ("Fetch next batch") - remove greyed out state
+                        document.querySelectorAll('.batch').forEach(el => {
+                            el.classList.remove('moved');
+                            el.style.opacity = '1';
+                        });
                         
                         setTimeout(() => executeStep(4), 500);
                     }, 2000);
