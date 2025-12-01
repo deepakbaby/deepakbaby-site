@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <title>Pipeline Parallelism - Dark Theme</title>
     <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
         body {
             font-family: 'Segoe UI', sans-serif;
             background: #0a0a0a;
@@ -11,25 +17,24 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin: 0;
-            padding: 20px;
-            overflow-x: hidden;
+            justify-content: center;
+            overflow: auto;
         }
         h1 { margin-bottom: 10px; color: #fff; }
         
         /* Layout */
         .container {
             position: relative;
-            width: 95%;
-            max-width: 1800px;
-            height: 850px;
-            border: 1px solid #333;
+            width: 100%;
+            max-width: 100vw;
+            aspect-ratio: 16 / 9;
+            max-height: 100vh;
             background: #141414;
-            border-radius: 15px;
+            border-radius: 0;
             padding: 20px;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            box-shadow: none;
         }
         
         .info-panel {
@@ -130,8 +135,8 @@
             display: flex;
             flex-direction: column;
             position: relative;
-            border: 1px solid #333;
-            border-radius: 10px;
+            border: none;
+            border-radius: 0;
             background: #000;
             padding: 20px;
         }
