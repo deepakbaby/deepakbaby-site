@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pipeline Parallelism - Dark Theme</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0a0a0a;
+            color: #eee;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        h1 { margin-bottom: 10px; color: #fff; }
+        
+        /* Layout */
+        .container {
+            position: relative;
+            width: 95%;
+            max-width: 1800px;
+            height: 850px;
+            border: 1px solid #333;
+            background: #141414;
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+        }
+        
+        .info-panel {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .status-box { font-size: 18px; font-weight: bold; color: #0f0; }
+        .description { font-size: 14px; color: #aaa; max-width: 800px; }
+
+        /* Animation Area Main Flex */
+        #animationArea {
+            flex: 1;
+            position: relative;
+            overflow: visible;
+            display: flex;
+            gap: 30px;
+            padding: 10px;
+        }
+
+        /* Left: Source Column (Data + Model) */
+        .source-column {
+            width: 320px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        /* Training Data Block */
+        .training-data-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #ccc;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 5px;
+            margin-bottom: 5px;
+        }
+
+        .data-box {
+            border: 2px solid #fff;
+            background: #1a1a1a;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            min-height: 60px;
+        }
+
+        .data-batch {
+            width: 60px;
+            height: 40px;
+            background: #333;
+            border: 1px solid #666;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 12px;
+            font-weight: bold;
+            position: relative;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        /* Model Section (Inside Source Column) */
+        .initial-model-box {
+            width: 100%;
+            height: 250px;
+            border: none;
+            border-radius: 12px;
+            background: rgba(20, 20, 20, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            position: relative;
+        }
+
+        /* Right: Pipeline/GPU Section */
+        .pipeline-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            border: 1px solid #333;
+            border-radius: 10px;
+            background: #000;
+            padding: 20px;
+        }
+
+        .pipeline-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            flex: 1;
+            position: relative;
+            margin-top: 20px;
+        }
+
+        /* GPU Boxes */
+        .gpu-container {
+            position: relative; /* Changed from absolute */
+            width: 260px;
+            height: 350px;
+            border: 2px solid #444;
+            border-radius: 8px;
+            background: #1a1a1a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .gpu-title {
+            font-weight: bold; 
+            margin-bottom: 10px; 
+            color: #ccc;
+            font-size: 14px;
+            background: #333;
+            padding: 5px 15px;
+            border-radius: 15px;
+            z-index: 5;
+        }
+        
+        .gpu-minibatch-container {
+            display: none;
+        }
+
+        .minibatch-box {
+            width: 40px;
+            height: 30px;
+            background: #333;
+            border: 1px solid #00ffff;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 10px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        #gpu0 { border-color: #00ccff; box-shadow: 0 0 10px rgba(0,204,255,0.1); }
+        #gpu1 { border-color: #00ff99; box-shadow: 0 0 10px rgba(0,255,153,0.1); }
+        #gpu2 { border-color: #ffcc00; box-shadow: 0 0 10px rgba(255,204,0,0.1); }
+        
+        /* Initial Model Internal Structure */
+        .dnn-structure-horizontal {
+             display: flex;
+             position: relative;
+             flex-direction: row; /* Horizontal */
+             align-items: center;
+             justify-content: space-around;
+             height: 100%;
+             width: 100%;
+        }
+
+        /* DNN Layers Visuals - Default Vertical Stack of Neurons */
+        .dnn-layer {
+            display: flex;
+            flex-direction: column; /* Vertical stack of neurons */
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            padding: 5px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 4px;
+        }
+        
+        /* GPU Layers are vertical usually, let's keep them vertical inside GPU */
+        .gpu-stage-container {
+            position: relative;
+            flex-direction: row; /* Arrange Input-Weight-Output Horizontally */
+            display: flex;
+            align-items: center;
+        }
+
+        .gpu-stage-container .dnn-layer {
+            flex-direction: column;
+            background: transparent;
+            gap: 4px;
+        }
+
+        .neuron {
+            width: 24px; 
+            height: 24px;
+            border-radius: 50%;
+            background: #777;
+            border: 1px solid #aaa;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .neuron.active {
+            background: #00ffff;
+            box-shadow: 0 0 8px #00ffff;
+            border-color: #fff;
+            animation: neuronPulse 0.6s ease 1;
+        }
+        
+        .neuron.gradient {
+            background: #ff3333;
+            box-shadow: 0 0 8px #ff3333;
+            border-color: #fff;
+            animation: neuronPulse 0.6s ease 1;
+        }
+        
+        .neuron.lit-hold.active {
+            background: #00ffff;
+            box-shadow: 0 0 8px #00ffff;
+            border-color: #fff;
+            animation: none; 
+        }
+        
+        .neuron.lit-hold.gradient {
+            background: #ff3333;
+            box-shadow: 0 0 8px #ff3333;
+            border-color: #fff;
+            animation: none;
+        }
+        
+        .neuron.input-node { border-color: #888; }
+        
+        @keyframes neuronPulse {
+            0% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.5); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.5; }
+        }
+
+        .weight-matrix {
+            width: 30px; 
+            height: 60px; /* Taller for vertical separation in landscape model */
+            border: 1px solid #555;
+            background: #2a2a2a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #888;
+            margin: 0 5px;
+            position: relative;
+            z-index: 4;
+        }
+        
+        .weight-label {
+            font-size: 24px;
+            font-weight: bold;
+            color: #aaa;
+            background: #222;
+            padding: 5px 10px;
+            border: 1px solid #555;
+            border-radius: 4px;
+            z-index: 4;
+            position: relative;
+            min-width: 40px;
+            text-align: center;
+        }
+        
+        .gpu-stage-container {
+            position: relative;
+            flex-direction: row; /* Arrange Input-Weight-Output Horizontally */
+            display: flex;
+            align-items: center;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+        
+        .active-batch-slot {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 180px;
+            height: 35px;
+            background: #111;
+            border: 1px solid #444;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #888;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+            transition: all 0.3s;
+            z-index: 10;
+        }
+        
+        .active-batch-slot.filled {
+            border-color: #00ffff;
+            color: #fff;
+            background: #003333;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+        
+        .active-batch-slot.filled-grad {
+            border-color: #ff3333;
+            color: #fff;
+            background: #330000;
+            box-shadow: 0 0 10px rgba(255, 51, 51, 0.3);
+        }
+
+        .weight-label.active {
+            color: var(--h-color);
+            border-color: var(--h-color);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            transition: all 0.3s;
+        }
+        
+        .activation-label {
+            color: var(--h-color) !important;
+        }
+
+        /* Connections */
+        .connection {
+            position: absolute;
+            background: #555;
+            height: 1px;
+            transform-origin: 0 50%;
+            opacity: 0.3;
+            z-index: 1;
+        }
+        
+        .gpu-connection {
+            position: absolute;
+            background: #555;
+            height: 1px;
+            transform-origin: 0 50%;
+            opacity: 0.3;
+            z-index: 6; 
+        }
+        
+        .gpu-connection.active {
+            background: #00ffff;
+            opacity: 0.8;
+            height: 2px;
+            box-shadow: 0 0 4px #00ffff;
+            transition: all 0.2s;
+        }
+        
+        .gpu-connection.backward {
+            background: #ff3333;
+            opacity: 0.8;
+            height: 2px;
+            box-shadow: 0 0 4px #ff3333;
+            transition: all 0.2s;
+        }
+        
+        /* Micro-batches */
+        .batch-act {
+             position: absolute;
+             display: flex; 
+             flex-direction: column; 
+             gap: 2px;
+             padding: 4px;
+             border: 1px dashed #00ffff;
+             background: rgba(0, 50, 50, 0.5);
+             border-radius: 4px;
+             z-index: 30;
+             transition: all 1.0s ease-in-out;
+             align-items: center;
+        }
+        
+        .batch-grad {
+             border-color: #ff3333;
+             background: rgba(50, 0, 0, 0.5);
+        }
+        
+        .flying-shard {
+            position: absolute;
+            background: #2a2a2a;
+            border: 2px solid #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 100;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+            pointer-events: none;
+            transition: all 1.5s ease-in-out;
+        }
+
+        .flying-batch {
+            position: absolute;
+            background: #333;
+            border: 1px solid #00ffff;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 100;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+            transition: all 1.0s ease-in-out;
+        }
+
+        /* Links between GPUs */
+        .gpu-link {
+            position: absolute;
+            height: 4px;
+            background: #333;
+            z-index: 0;
+        }
+        .gpu-link.active {
+            background: linear-gradient(90deg, #333, var(--h-color), #333);
+            background-size: 200% 100%;
+            animation: flowLink 1s linear infinite;
+        }
+        .gpu-link.backward {
+            background: linear-gradient(90deg, #333, var(--h-color), #333);
+            background-size: 200% 100%;
+            animation: flowLinkRev 1s linear infinite;
+        }
+        
+        @keyframes flowLink { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+        @keyframes flowLinkRev { 0% { background-position: -100% 0; } 100% { background-position: 100% 0; } }
+
+        /* Grid for Utilization */
+        .timeline-container {
+            width: 100%;
+            padding: 10px;
+            background: #111;
+            border-top: 1px solid #333;
+            margin-top: auto;
+        }
+
+        .util-grid {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .util-row { display: flex; gap: 2px; }
+        .util-cell {
+            width: 25px;
+            height: 20px;
+            background: #222;
+            border: 1px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            color: #555;
+        }
+        .util-cell.fwd { background: #004444; color: #00ffff; border-color: #00aaaa; }
+        .util-cell.bwd { background: #440000; color: #ff3333; border-color: #aa0000; }
+        .util-cell.bubble { background: #222; border: 1px dashed #444; }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        button {
+            padding: 10px 20px;
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover { background: #444; transform: translateY(-2px); }
+        .play-btn { background: #006633; border-color: #009944; }
+        .step-btn { background: #004488; border-color: #0066cc; }
+        
+        .arrow-right {
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            font-size: 24px;
+            color: #555;
+            z-index: 2;
+        }
+        
+        .legend {
+            display: flex; 
+            gap: 15px; 
+            font-size: 12px; 
+            color: #888;
+            margin-top: 10px;
+            justify-content: flex-end;
+        }
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+        .dot { width: 10px; height: 10px; }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="info-panel">
+            <div>
+                <h1>Pipeline Parallelism (GPipe)</h1>
+                <div class="description" id="stepDescription">Model partitioned across 3 GPUs. Micro-batches flow through stages.</div>
+            </div>
+            <div class="status-box" id="status">Ready</div>
+        </div>
+
+        <div id="animationArea">
+            <!-- Left Column: Data & Model -->
+            <div class="source-column">
+                <!-- Training Data -->
+                <div class="training-data-container">
+                    <div class="section-title">Training Data</div>
+                    <div class="data-box" id="dataQueue">
+                        <div class="data-batch" id="mb0">MB 0</div>
+                        <div class="data-batch" id="mb1">MB 1</div>
+                        <div class="data-batch" id="mb2">MB 2</div>
+                        <div class="data-batch" id="mb3">MB 3</div>
+                    </div>
+                </div>
+
+                <!-- Full Model -->
+                <div class="training-data-container"> <!-- Reusing container style for Model title wrapper -->
+                    <div class="section-title">Full Model (4 Layers)</div>
+                    <div id="initialModel" class="initial-model-box">
+                        <div id="initialDnnStructure" class="dnn-structure-horizontal">
+                             <!-- Layers inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: GPUs / Pipeline -->
+            <div class="pipeline-section">
+                <div class="pipeline-container">
+                    <div id="gpu0" class="gpu-container">
+                        <div class="gpu-title">GPU 0 (Layers 0-1)</div>
+                        <div class="active-batch-slot" id="slot0"></div>
+                        <div class="gpu-stage-container" id="stage0"></div>
+                        <div class="arrow-right">→</div>
+                    </div>
+                    
+                    <div id="gpu1" class="gpu-container">
+                        <div class="gpu-title">GPU 1 (Layers 1-2)</div>
+                        <div class="active-batch-slot" id="slot1"></div>
+                        <div class="gpu-stage-container" id="stage1"></div>
+                        <div class="arrow-right">→</div>
+                    </div>
+                    
+                    <div id="gpu2" class="gpu-container">
+                        <div class="gpu-title">GPU 2 (Layers 2-3)</div>
+                        <div class="active-batch-slot" id="slot2"></div>
+                        <div class="gpu-stage-container" id="stage2"></div>
+                    </div>
+                </div>
+
+                <!-- Utilization Timeline (Bottom of Right) -->
+                <div class="timeline-container">
+                    <div style="color: #888; font-size: 12px; margin-bottom: 5px;">Device Utilization Timeline</div>
+                    <div class="util-grid" id="timelineGrid">
+                        <!-- Rows for GPU 0, 1, 2 -->
+                    </div>
+                    <div class="legend">
+                         <div class="legend-item"><div class="dot" style="background:#004444; border:1px solid #00ffff"></div> Forward</div>
+                         <div class="legend-item"><div class="dot" style="background:#440000; border:1px solid #ff3333"></div> Backward</div>
+                         <div class="legend-item"><div class="dot" style="background:#222; border:1px solid #666"></div> Idle</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="prev-btn" onclick="prevStep()">⏮ Previous</button>
+            <button class="play-btn" onclick="playAnimation()">▶ Play</button>
+            <button class="step-btn" onclick="nextStep()">⏭ Next Step</button>
+            <button class="reset-btn" onclick="resetAnimation()">↻ Reset</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Setup & Helpers ---
+        const steps = [
+            { name: "Initial Setup", desc: "Model loaded and ready for partitioning.", duration: 1500 },
+            { name: "Partitioning", desc: "Model layers partitioned across GPU 0, 1, and 2.", duration: 2500 },
+            { name: "Time 1: Fwd", duration: 2000 },
+            { name: "Time 2: Fwd", duration: 2000 },
+            { name: "Time 3: Fwd", duration: 2000 },
+            { name: "Time 4: Fwd", duration: 2000 },
+            { name: "Time 5: Fwd", duration: 2000 },
+            { name: "Time 6: Fwd", duration: 2000 },
+            { name: "Time 7: Bwd", duration: 2000 },
+            { name: "Time 8: Bwd", duration: 2000 },
+            { name: "Time 9: Bwd", duration: 2000 },
+            { name: "Time 10: Bwd", duration: 2000 },
+            { name: "Time 11: Bwd", duration: 2000 },
+            { name: "Time 12: Bwd", duration: 2000 }
+        ];
+        
+        let currentStep = 0;
+        let isPlaying = false;
+        let animationInterval = null;
+        let isPartitioned = false;
+
+        const batchColors = {
+            0: '#00ffff', // Cyan
+            1: '#ff00ff', // Magenta
+            2: '#ffff00', // Yellow
+            3: '#00ff00'  // Lime
+        };
+
+        function createConnections() {
+            // Only draw initial model connections if not partitioned
+            if (isPartitioned) return; 
+            
+            const container = document.getElementById('initialDnnStructure');
+            // Clear old
+            document.querySelectorAll('.connection').forEach(e => e.remove());
+
+            const layers = [
+                document.getElementById('layerIn'),
+                document.getElementById('layer0'),
+                document.getElementById('layer1'),
+                document.getElementById('layer2')
+            ];
+            
+            // Only proceed if layers exist (might not be created yet)
+            if (!layers[0]) return;
+
+            for(let l=0; l<layers.length-1; l++) {
+                const src = layers[l].querySelectorAll('.neuron');
+                const tgt = layers[l+1].querySelectorAll('.neuron');
+                
+                src.forEach(s => {
+                    tgt.forEach(t => {
+                        createLine(container, s, t, 'connection');
+                    });
+                });
+            }
+        }
+
+        function createLine(container, e1, e2, className, id=null) {
+            const r1 = e1.getBoundingClientRect();
+            const r2 = e2.getBoundingClientRect();
+            const cR = container.getBoundingClientRect();
+
+            // Center points relative to container
+            const x1 = r1.left + r1.width/2 - cR.left;
+            const y1 = r1.top + r1.height/2 - cR.top;
+            const x2 = r2.left + r2.width/2 - cR.left;
+            const y2 = r2.top + r2.height/2 - cR.top;
+
+            const length = Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2));
+            const angle = Math.atan2(y2-y1, x2-x1) * 180 / Math.PI;
+
+            const line = document.createElement('div');
+            line.className = className;
+            if(id) line.id = id;
+            line.style.width = length + 'px';
+            line.style.left = x1 + 'px';
+            line.style.top = y1 + 'px';
+            // Transform origin to left center to rotate around start point correctly
+            line.style.transformOrigin = '0 50%';
+            line.style.transform = `translateY(-50%) rotate(${angle}deg)`;
+            
+            container.appendChild(line);
+            return line;
+        }
+        
+        // Initial Model Creation
+        function init() {
+            const container = document.getElementById('initialDnnStructure');
+            container.innerHTML = '';
+            
+            // Update data queue colors
+            for(let b=0; b<4; b++) {
+                const mb = document.getElementById(`mb${b}`);
+                if(mb) {
+                    mb.style.borderColor = batchColors[b];
+                    mb.style.color = batchColors[b];
+                    mb.style.boxShadow = `0 0 5px ${batchColors[b]}40`; // low opacity glow
+                }
+            }
+            
+            const layerConfigs = [
+                { id: 'layerIn', nodes: 4, label: 'Input' },
+                { id: 'layer0', nodes: 5, label: 'L1' },
+                { id: 'layer1', nodes: 5, label: 'L2' },
+                { id: 'layer2', nodes: 4, label: 'Output' }
+            ];
+            
+            // Model is Horizontal in middle column
+            layerConfigs.forEach((conf, i) => {
+                const layer = document.createElement('div');
+                layer.id = conf.id;
+                layer.className = 'dnn-layer';
+                
+                for(let n=0; n<conf.nodes; n++) {
+                    const neuron = document.createElement('div');
+                    neuron.className = 'neuron';
+                    if(i===0) neuron.classList.add('input-node');
+                    layer.appendChild(neuron);
+                }
+                container.appendChild(layer);
+                
+                // Add weight matrix between layers
+                if (i < layerConfigs.length - 1) {
+                    const w = document.createElement('div');
+                    w.className = 'weight-matrix';
+                    w.id = `full-w${i}`; // Add ID for animation targeting
+                    w.textContent = `W${i}`;
+                    container.appendChild(w);
+                }
+            });
+
+            // Defer connection creation to ensure layout is done
+            setTimeout(() => {
+                createConnections();
+                // Give more time for flex layout to settle for links
+                setTimeout(createPipelineLinks, 300);
+            }, 200);
+            
+            // Init Grid
+            const grid = document.getElementById('timelineGrid');
+            if(!grid) return; // Guard
+            grid.innerHTML = '';
+            for(let g=0; g<3; g++) {
+                const row = document.createElement('div');
+                row.className = 'util-row';
+                row.id = `timeline-row-${g}`;
+                // Header
+                const head = document.createElement('div');
+                head.className = 'util-cell';
+                head.style.width = '50px';
+                head.textContent = `GPU ${g}`;
+                head.style.border = 'none';
+                head.style.background = 'transparent';
+                head.style.justifyContent = 'flex-start';
+                row.appendChild(head);
+                
+                grid.appendChild(row);
+            }
+        }
+
+        function createPipelineLinks() {
+            const area = document.getElementById('animationArea');
+            // Remove old links if any
+            document.querySelectorAll('.gpu-link').forEach(l => l.remove());
+            
+            // Find GPU containers
+            const g0 = document.getElementById('gpu0');
+            const g1 = document.getElementById('gpu1');
+            const g2 = document.getElementById('gpu2');
+            
+            if(!g0 || !g1 || !g2) return;
+
+            // Connect Center-Right of G0 to Center-Left of G1
+            connectGpus(g0, g1, 'link-0-1');
+            connectGpus(g1, g2, 'link-1-2');
+        }
+        
+        function connectGpus(gSrc, gDst, id) {
+            const area = document.getElementById('animationArea');
+            const r1 = gSrc.getBoundingClientRect();
+            const r2 = gDst.getBoundingClientRect();
+            const aR = area.getBoundingClientRect();
+            
+            // Center vertical, connect right edge to left edge
+            const y = (r1.top + r1.height/2) - aR.top;
+            const x1 = r1.right - aR.left;
+            const x2 = r2.left - aR.left;
+            
+            const l = document.createElement('div');
+            l.className = 'gpu-link';
+            l.id = id;
+            l.style.top = y + 'px';
+            l.style.left = x1 + 'px';
+            l.style.width = (x2 - x1) + 'px';
+            area.appendChild(l);
+        }
+
+        // --- Animation Logic ---
+        
+        function nextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                executeStep(currentStep);
+            } else {
+                isPlaying = false;
+                if(animationInterval) clearInterval(animationInterval);
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                executeStep(currentStep);
+            }
+        }
+
+        function executeStep(s) {
+            const step = steps[s];
+            
+            let descText = step.desc;
+            
+            // Generate dynamic description if not set
+            if (!descText && s >= 2) {
+                const tasks = schedule[s];
+                if (tasks) {
+                    const actions = tasks.map(t => {
+                        const action = t.t === 'f' ? 'Forward' : 'Backward';
+                        const item = t.t === 'f' ? `MB${t.b}` : `∇MB${t.b}`;
+                        return `GPU${t.g}: ${action} ${item}`;
+                    });
+                    descText = actions.join(' | ');
+                }
+            }
+            
+            document.getElementById('status').textContent = step.name;
+            document.getElementById('stepDescription').textContent = descText || step.name;
+            
+            if(s === 1) {
+                animatePartitioning();
+            } else if (s >= 2) {
+                animatePipelineStep(s);
+            }
+        }
+        
+        function animatePartitioning() {
+            if(isPartitioned) return;
+            isPartitioned = true;
+            
+            const initial = document.getElementById('initialDnnStructure');
+            
+            // Definition of Partitioning
+            const parts = [
+                { gpu: 0, ids: ['layerIn', 'layer0'], w: 'W0', nodes: [4, 5], fullWId: 'full-w0' },
+                { gpu: 1, ids: ['layer0', 'layer1'], w: 'W1', nodes: [5, 5], fullWId: 'full-w1' },
+                { gpu: 2, ids: ['layer1', 'layer2'], w: 'W2', nodes: [5, 4], fullWId: 'full-w2' }
+            ];
+
+            const area = document.getElementById('animationArea');
+            const areaRect = area.getBoundingClientRect();
+
+            // 1. Animate Weights Flying to GPUs
+            parts.forEach((p, idx) => {
+                const fullW = document.getElementById(p.fullWId);
+                const targetGPU = document.getElementById(`gpu${p.gpu}`);
+                
+                if(fullW && targetGPU) {
+                    const wRect = fullW.getBoundingClientRect();
+                    const gRect = targetGPU.getBoundingClientRect();
+                    
+                    const clone = document.createElement('div');
+                    clone.className = 'flying-shard';
+                    clone.textContent = p.w;
+                    clone.style.width = wRect.width + 'px';
+                    clone.style.height = wRect.height + 'px';
+                    clone.style.left = (wRect.left - areaRect.left) + 'px';
+                    clone.style.top = (wRect.top - areaRect.top) + 'px';
+                    
+                    area.appendChild(clone);
+                    
+                    // Trigger Animation
+                    requestAnimationFrame(() => {
+                        // Move to center of GPU container
+                        const targetX = (gRect.left + gRect.width/2 - wRect.width/2) - areaRect.left;
+                        const targetY = (gRect.top + gRect.height/2 - wRect.height/2) - areaRect.top;
+                        
+                        clone.style.left = targetX + 'px';
+                        clone.style.top = targetY + 'px';
+                        clone.style.transform = 'scale(1.2)';
+                    });
+                    
+                    // Remove clone after animation
+                    setTimeout(() => {
+                        clone.remove();
+                        populateGpuStage(p, idx); // Show the GPU content
+                    }, 1500);
+                } else {
+                     // Fallback if elements missing
+                     populateGpuStage(p, idx);
+                }
+            });
+            
+            // Dim full model after weights fly out
+            // setTimeout(() => {
+            //    document.getElementById('initialModel').style.opacity = '0.3';
+            //    document.querySelectorAll('.connection').forEach(c => c.style.opacity = '0.1');
+            // }, 1000);
+        }
+        
+        function populateGpuStage(p, idx) {
+            const stage = document.getElementById(`stage${p.gpu}`);
+            stage.innerHTML = ''; // Clear
+            
+            // Create Input Layer for Stage
+            const inLayer = document.createElement('div');
+            inLayer.className = 'dnn-layer';
+            inLayer.id = `gpu-${p.ids[0]}-${p.gpu}`; // Unique ID
+            for(let n=0; n<p.nodes[0]; n++) {
+                const neuron = document.createElement('div');
+                neuron.className = 'neuron';
+                if(idx === 0 || idx > 0) neuron.classList.add('input-node'); 
+                inLayer.appendChild(neuron);
+            }
+            stage.appendChild(inLayer);
+            
+            // Create Weight Label (instead of block)
+            const w = document.createElement('div');
+            w.className = 'weight-label';
+            w.textContent = p.w;
+            stage.appendChild(w);
+            
+            // Create Output Layer for Stage
+            const outLayer = document.createElement('div');
+            outLayer.className = 'dnn-layer';
+            outLayer.id = `gpu-${p.ids[1]}-${p.gpu}`;
+            for(let n=0; n<p.nodes[1]; n++) {
+                const neuron = document.createElement('div');
+                neuron.className = 'neuron';
+                outLayer.appendChild(neuron);
+            }
+            stage.appendChild(outLayer);
+            
+            // Create internal connections for this GPU
+            setTimeout(() => {
+                createGPUConnectionsForStage(p.gpu);
+            }, 50);
+        }
+        
+        function createGPUConnectionsForStage(gpuIdx) {
+             const stage = document.getElementById(`stage${gpuIdx}`);
+             if(!stage) return;
+             
+             // Clear existing connections in this stage
+             stage.querySelectorAll('.gpu-connection').forEach(c => c.remove());
+
+             const layers = stage.querySelectorAll('.dnn-layer');
+             if(layers.length < 2) return;
+             
+             const srcL = layers[0];
+             const tgtL = layers[1];
+             
+             const neuronsIn = srcL.querySelectorAll('.neuron');
+             const neuronsOut = tgtL.querySelectorAll('.neuron');
+             
+             neuronsIn.forEach((src, i) => {
+                 neuronsOut.forEach((tgt, j) => {
+                     createLine(stage, src, tgt, 'gpu-connection', `conn-s${gpuIdx}-${i}-${j}`);
+                 });
+             });
+        }
+
+        function createGPUConnections() {
+            for(let i=0; i<3; i++) {
+                createGPUConnectionsForStage(i);
+            }
+        }
+        
+        // GPipe Schedule (1F1B or just fill then drain for simple pipe)
+        // Simple Pipeline:
+        // T1: MB0@G0
+        // T2: MB1@G0, MB0@G1
+        // T3: MB2@G0, MB1@G1, MB0@G2
+        // T4: MB3@G0, MB2@G1, MB1@G2
+        // T5:         MB3@G1, MB2@G2  (Bubble G0)
+        // T6:                 MB3@G2  (Bubble G0, G1)
+        // ... Then Backward ...
+        // Let's do a full cycle representation in simplified steps
+        
+        // Data Structure for Schedule
+        // step: [ { gpu: 0, batch: 0, type: 'f'|'b', t_prev: boolean } ]
+        // t_prev: transfer from previous gpu (visual effect)
+        
+        const schedule = {
+            2: [{ g:0, b:0, t:'f' }],
+            3: [{ g:0, b:1, t:'f' }, { g:1, b:0, t:'f', t_prev:true }],
+            4: [{ g:0, b:2, t:'f' }, { g:1, b:1, t:'f', t_prev:true }, { g:2, b:0, t:'f', t_prev:true }],
+            5: [{ g:0, b:3, t:'f' }, { g:1, b:2, t:'f', t_prev:true }, { g:2, b:1, t:'f', t_prev:true }],
+            6: [                     { g:1, b:3, t:'f', t_prev:true }, { g:2, b:2, t:'f', t_prev:true }],
+            7: [                                                       { g:2, b:3, t:'f', t_prev:true }], // All Forward Done
+            
+            // Backward (Assuming gradients return immediately for demo, simplified)
+            // Usually Bwd starts as soon as Fwd done on last stage
+            // Let's interleave properly for GPipe? Or just drain forward then drain backward for clarity?
+            // Steps 8-12: Backward drain
+            8: [{ g:2, b:0, t:'b' }], // Start Bwd on G2
+            9: [{ g:2, b:1, t:'b' }, { g:1, b:0, t:'b', t_prev:true }],
+            10:[{ g:2, b:2, t:'b' }, { g:1, b:1, t:'b', t_prev:true }, { g:0, b:0, t:'b', t_prev:true }],
+            11:[{ g:2, b:3, t:'b' }, { g:1, b:2, t:'b', t_prev:true }, { g:0, b:1, t:'b', t_prev:true }],
+            12:[                     { g:1, b:3, t:'b', t_prev:true }, { g:0, b:2, t:'b', t_prev:true }],
+            13:[                                                       { g:0, b:3, t:'b', t_prev:true }] // Done
+        };
+        // Updated schedule size to match steps array length roughly or extend steps
+        
+        const gpuBatchLabels = { 0: null, 1: null, 2: null }; // Track what's on GPU
+
+        function clearGpuActiveState() {
+             document.querySelectorAll('.neuron').forEach(n => {
+                 n.classList.remove('active', 'gradient', 'lit-hold');
+                 // Keep lit-hold? No, reset for next step usually. 
+                 // But if we want persistence until next step overwrite?
+                 // Let's clear to avoid confusion.
+             });
+             document.querySelectorAll('.gpu-connection').forEach(c => c.classList.remove('active', 'backward'));
+             document.querySelectorAll('.weight-label').forEach(w => w.classList.remove('active'));
+             document.querySelectorAll('.gpu-link').forEach(l => l.classList.remove('active', 'backward'));
+             
+             // Clear activation labels
+             document.querySelectorAll('.activation-label').forEach(l => l.remove());
+        }
+
+        function animatePipelineStep(s) {
+            // Tasks for this time step
+            const tasks = schedule[s];
+            if(!tasks) return;
+
+            // 1. Clear previous highlights
+            clearGpuActiveState();
+            
+            // 2. Handle Transfer Animations (leaving slots)
+            // We do this BEFORE inputs so slots clear out for new arrivals
+            tasks.forEach(t => {
+                if (t.t_prev) {
+                    // Determine source and target
+                    let srcG, tgtG;
+                    if (t.t === 'f') {
+                        srcG = t.g - 1; tgtG = t.g;
+                    } else {
+                        srcG = t.g + 1; tgtG = t.g;
+                    }
+                    animateTransfer(srcG, tgtG, t.b, t.t);
+                }
+            });
+
+            // 3. Handle New Inputs (filling slots)
+            const entryTask = tasks.find(t => t.g === 0 && t.t === 'f');
+            if (entryTask) {
+                animateInputTransfer(entryTask.b);
+            }
+            
+            // Backward Start on G2 (Inject gradient)
+            const bwdStart = tasks.find(t => t.g === 2 && t.t === 'b' && !t.t_prev);
+            if(bwdStart) {
+                 setTimeout(() => {
+                     const slot = document.getElementById('slot2');
+                     if(slot) {
+                         const color = batchColors[bwdStart.b];
+                         slot.textContent = `Grad ${bwdStart.b}`; // Show as Grad
+                         slot.className = 'active-batch-slot filled-grad';
+                         slot.style.borderColor = color;
+                         slot.style.color = color;
+                         slot.style.boxShadow = `0 0 10px ${color}66`;
+                     }
+                 }, 100);
+            }
+            
+            // 4. Process Tasks on GPU (Computation)
+            tasks.forEach(t => {
+                // Update Grid
+                const row = document.getElementById(`timeline-row-${t.g}`);
+                const cell = document.createElement('div');
+                cell.className = `util-cell ${t.t === 'f' ? 'fwd' : 'bwd'}`;
+                cell.textContent = (t.t==='f' ? 'F' : 'B') + t.b;
+                cell.style.color = batchColors[t.b]; // Use batch color text
+                if(t.t==='f') cell.style.borderColor = batchColors[t.b];
+                
+                row.appendChild(cell);
+                
+                // Flash GPU Neurons
+                setTimeout(() => {
+                    flashNeuronsInGpu(t.g, t.t, t.b);
+                }, 500); // Wait for transfer to arrive
+            });
+            
+            // Fill bubble for idle GPUs
+            for(let g=0; g<3; g++) {
+                if(!tasks.find(t => t.g === g)) {
+                    const row = document.getElementById(`timeline-row-${g}`);
+                    const cell = document.createElement('div');
+                    cell.className = 'util-cell bubble';
+                    row.appendChild(cell);
+                }
+            }
+        }
+        
+        function animateInputTransfer(batchId) {
+            // Visual: Move from Left Queue to GPU0 Input Slot
+            const mbEl = document.getElementById(`mb${batchId}`);
+            if(!mbEl) return;
+            
+            const color = batchColors[batchId];
+            
+            // Fade out original in queue
+            mbEl.style.opacity = '0.2';
+            
+            const area = document.getElementById('animationArea');
+            const rect = mbEl.getBoundingClientRect();
+            const areaRect = area.getBoundingClientRect();
+            
+            const clone = document.createElement('div');
+            clone.className = 'flying-batch';
+            clone.textContent = `MB ${batchId}`;
+            clone.style.borderColor = color;
+            clone.style.color = color;
+            clone.style.boxShadow = `0 0 15px ${color}66`;
+            
+            clone.style.left = (rect.left - areaRect.left) + 'px';
+            clone.style.top = (rect.top - areaRect.top) + 'px';
+            clone.style.width = rect.width + 'px';
+            clone.style.height = rect.height + 'px';
+            
+            area.appendChild(clone);
+            
+            // Target: GPU0 Slot
+            const target = document.getElementById('slot0');
+            if(target) {
+                const tRect = target.getBoundingClientRect();
+                requestAnimationFrame(() => {
+                    clone.style.left = (tRect.left - areaRect.left) + 'px';
+                    clone.style.top = (tRect.top - areaRect.top) + 'px';
+                    // Match slot size
+                    clone.style.width = tRect.width + 'px';
+                    clone.style.height = tRect.height + 'px';
+                });
+            }
+            
+            setTimeout(() => {
+                clone.remove();
+                // Fill Slot
+                if(target) {
+                    target.textContent = `MB ${batchId}`;
+                    target.classList.add('filled');
+                    target.classList.remove('filled-grad');
+                    target.style.borderColor = color;
+                    target.style.color = color;
+                    target.style.boxShadow = `0 0 10px ${color}66`;
+                }
+            }, 1000);
+        }
+        
+        function animateTransfer(fromGpu, toGpu, batchIdx, type) {
+            // Visual box moving between slots
+            const srcSlot = document.getElementById(`slot${fromGpu}`);
+            const tgtSlot = document.getElementById(`slot${toGpu}`);
+            const color = batchColors[batchIdx];
+            
+            // Clear source slot immediately as it "leaves"
+            if(srcSlot) {
+                srcSlot.textContent = '';
+                srcSlot.className = 'active-batch-slot';
+                srcSlot.style.borderColor = '';
+                srcSlot.style.color = '';
+                srcSlot.style.boxShadow = '';
+            }
+
+            if(!tgtSlot) return;
+
+            // Start position: fromGpu Slot
+            // Note: if srcSlot was just cleared, we use its position.
+            const r1 = srcSlot ? srcSlot.getBoundingClientRect() : null;
+            const r2 = tgtSlot.getBoundingClientRect();
+            const area = document.getElementById('animationArea').getBoundingClientRect();
+            
+            if(!r1) return; // Should not happen
+
+            // Create flying box representing ACTIVATION moving
+            const clone = document.createElement('div');
+            clone.className = 'flying-batch'; // Reuse flying batch style
+            // Adjust style to match slot look
+            clone.style.background = type === 'f' ? '#111' : '#111';
+            clone.style.borderColor = color;
+            clone.style.color = color;
+            clone.style.boxShadow = `0 0 15px ${color}66`;
+            
+            // Text: "Act X" or "Grad X"
+            const label = type === 'f' ? `Act ${batchIdx}` : `Grad ${batchIdx}`;
+            clone.innerHTML = label;
+            
+            clone.style.width = r1.width + 'px';
+            clone.style.height = r1.height + 'px';
+            clone.style.left = (r1.left - area.left) + 'px';
+            clone.style.top = (r1.top - area.top) + 'px';
+            clone.style.display = 'flex';
+            clone.style.alignItems = 'center';
+            clone.style.justifyContent = 'center';
+            clone.style.fontSize = '14px';
+            clone.style.fontWeight = 'bold';
+            
+            document.getElementById('animationArea').appendChild(clone);
+            
+            // Animate
+            requestAnimationFrame(() => {
+                clone.style.left = (r2.left - area.left) + 'px';
+                clone.style.top = (r2.top - area.top) + 'px';
+            });
+            
+            // Highlight Link
+            const linkId = fromGpu < toGpu ? `link-${fromGpu}-${toGpu}` : `link-${toGpu}-${fromGpu}`;
+            const link = document.getElementById(linkId);
+            if(link) {
+                link.style.setProperty('--h-color', color);
+                link.classList.add(type === 'f' ? 'active' : 'backward');
+            }
+
+            // Remove after done and fill target
+            setTimeout(() => {
+                clone.remove();
+                if(link) link.classList.remove('active', 'backward');
+                
+                // Fill Target Slot
+                tgtSlot.textContent = label;
+                tgtSlot.className = 'active-batch-slot ' + (type === 'f' ? 'filled' : 'filled-grad');
+                tgtSlot.style.borderColor = color;
+                tgtSlot.style.color = color;
+                tgtSlot.style.boxShadow = `0 0 10px ${color}66`;
+            }, 1000);
+        }
+
+        function addActivationLabel(layer, type, batchId, gpuIdx) {
+             const rect = layer.getBoundingClientRect();
+             const areaRect = document.getElementById('animationArea').getBoundingClientRect();
+             
+             const label = document.createElement('div');
+             label.className = 'activation-label';
+             label.textContent = type === 'f' ? `A${batchId}` : `∇${batchId}`;
+             label.style.position = 'absolute';
+             label.style.left = (rect.left - areaRect.left + rect.width/2) + 'px';
+             label.style.top = (rect.top - areaRect.top - 20) + 'px';
+             label.style.transform = 'translateX(-50%)';
+             // Set Color
+             label.style.setProperty('--h-color', batchColors[batchId]);
+             // label.style.color = type === 'f' ? '#00ffff' : '#ff3333'; // Removed old
+             
+             label.style.fontSize = '12px';
+             label.style.fontWeight = 'bold';
+             label.style.zIndex = '20';
+             
+             document.getElementById('animationArea').appendChild(label);
+             gpuBatchLabels[gpuIdx] = batchId;
+        }
+
+        function flashNeuronsInGpu(gpuIdx, type, batchId) {
+            const stage = document.getElementById(`stage${gpuIdx}`);
+            if(!stage) return;
+            
+            // Set highlight color for this batch
+            const color = batchColors[batchId];
+            stage.style.setProperty('--h-color', color);
+            
+            // Identify Input and Output layers
+            let inputId, outputId;
+            if (gpuIdx === 0) { inputId = 'gpu-layerIn-0'; outputId = 'gpu-layer0-0'; }
+            else if (gpuIdx === 1) { inputId = 'gpu-layer0-1'; outputId = 'gpu-layer1-1'; }
+            else { inputId = 'gpu-layer1-2'; outputId = 'gpu-layer2-2'; }
+            
+            const inputLayer = document.getElementById(inputId);
+            const outputLayer = document.getElementById(outputId);
+            
+            const cls = type === 'f' ? 'active' : 'gradient';
+            const connCls = type === 'f' ? 'active' : 'backward';
+            
+            const staggerDelay = 250; // Slower animation
+            let maxDelay = 0;
+
+            if (type === 'f') {
+                // FORWARD: Left -> Right
+                
+                // 1. Input Neurons & Outgoing Connections
+                if (inputLayer) {
+                    const inNeurons = inputLayer.querySelectorAll('.neuron');
+                    inNeurons.forEach((n, i) => {
+                        const delay = i * staggerDelay;
+                        maxDelay = Math.max(maxDelay, delay);
+                        
+                        setTimeout(() => {
+                            // Flash Neuron
+                            n.classList.add(cls);
+                            setTimeout(() => n.classList.remove(cls), 800);
+                            
+                            // Flash Connections originating from this neuron
+                            const conns = stage.querySelectorAll(`[id^="conn-s${gpuIdx}-${i}-"]`);
+                            conns.forEach(c => {
+                                c.classList.add(connCls);
+                                setTimeout(() => c.classList.remove(connCls), 800);
+                            });
+                            
+                        }, delay);
+                    });
+                }
+                
+                // 2. Weight Label (Flash in middle)
+                setTimeout(() => {
+                    const weightLabel = stage.querySelector('.weight-label');
+                    if(weightLabel) {
+                        weightLabel.classList.add('active');
+                        setTimeout(() => weightLabel.classList.remove('active'), 800);
+                    }
+                }, maxDelay / 2 + 300);
+                
+                // 3. Output Neurons (Staggered after inputs finish)
+                const outputStartDelay = maxDelay + 600;
+                
+                if (outputLayer) {
+                    const outNeurons = outputLayer.querySelectorAll('.neuron');
+                    outNeurons.forEach((n, i) => {
+                        setTimeout(() => {
+                            n.classList.add(cls);
+                            n.classList.add('lit-hold');
+                        }, outputStartDelay + (i * staggerDelay));
+                    });
+                    
+                    // Add Label after last output neuron lights up
+                    setTimeout(() => {
+                        addActivationLabel(outputLayer, type, batchId, gpuIdx);
+                    }, outputStartDelay + (outNeurons.length * staggerDelay));
+                }
+            } else {
+                // BACKWARD: Right -> Left
+                
+                // 1. Output Neurons (Right side)
+                if (outputLayer) {
+                    const outNeurons = outputLayer.querySelectorAll('.neuron');
+                    outNeurons.forEach((n, j) => {
+                        const delay = j * staggerDelay;
+                        maxDelay = Math.max(maxDelay, delay);
+                        
+                        setTimeout(() => {
+                            n.classList.add(cls);
+                            setTimeout(() => n.classList.remove(cls), 800);
+                            
+                            // Flash Incoming Connections (reversed flow)
+                            // Connections end at output j: id ends with -j
+                            const conns = stage.querySelectorAll(`.gpu-connection[id$="-${j}"]`);
+                            conns.forEach(c => {
+                                c.classList.add(connCls);
+                                setTimeout(() => c.classList.remove(connCls), 800);
+                            });
+                        }, delay);
+                    });
+                }
+                
+            setTimeout(() => {
+                // 2. Weight Label
+                setTimeout(() => {
+                    const weightLabel = stage.querySelector('.weight-label');
+                    if(weightLabel) {
+                        weightLabel.classList.add('active'); // Use class with variable
+                        // Override specific gradient hardcodes if any
+                        weightLabel.style.borderColor = ''; 
+                        weightLabel.style.color = '';
+                        weightLabel.style.boxShadow = '';
+                        
+                        setTimeout(() => {
+                            weightLabel.classList.remove('active');
+                        }, 800);
+                    }
+                }, maxDelay / 2 + 300);
+                
+                // 3. Input Neurons (Left side) - Hold Lit
+                const inStart = maxDelay + 600;
+                if (inputLayer) {
+                    const inNeurons = inputLayer.querySelectorAll('.neuron');
+                    inNeurons.forEach((n, i) => {
+                        setTimeout(() => {
+                            n.classList.add(cls);
+                            n.classList.add('lit-hold');
+                        }, inStart + (i * staggerDelay));
+                    });
+                    
+                    setTimeout(() => {
+                        addActivationLabel(inputLayer, type, batchId, gpuIdx);
+                    }, inStart + (inNeurons.length * staggerDelay));
+                }
+            }, 0); // Immediate execution of backward logic block wrapper if needed or just run
+            
+            }
+        }
+
+        function resetAnimation() {
+            currentStep = 0;
+            isPlaying = false;
+            if(animationInterval) clearInterval(animationInterval);
+            
+            document.getElementById('status').textContent = 'Ready';
+            document.getElementById('stepDescription').textContent = 'Model loaded and ready for partitioning.';
+            
+            // Reset Visuals
+            document.querySelectorAll('.batch').forEach(b => {
+                b.style.opacity = '';
+                b.style.transform = '';
+            });
+            
+            document.querySelectorAll('.data-batch').forEach(b => b.style.opacity = '1');
+            
+            // Reset Slots
+            document.querySelectorAll('.active-batch-slot').forEach(s => {
+                s.textContent = '';
+                s.className = 'active-batch-slot';
+                s.style.borderColor = '';
+                s.style.color = '';
+                s.style.boxShadow = '';
+            });
+
+            // Reset Model Section
+            const initialModel = document.getElementById('initialModel');
+            initialModel.classList.remove('hidden');
+            initialModel.style.opacity = '1';
+            
+            document.querySelectorAll('.dnn-layer, .weight-column').forEach(el => el.style.opacity = '1');
+            document.querySelectorAll('.connection').forEach(c => c.style.opacity = '0.3'); // Restore connections
+            
+            // Clear GPUs
+            for(let i=0; i<3; i++) {
+                const c = document.getElementById(`stage${i}`);
+                if(c) {
+                    c.innerHTML = '';
+                    c.classList.remove('visible');
+                    c.style.removeProperty('--h-color');
+                }
+            }
+            
+            document.getElementById('timelineGrid').innerHTML = '';
+            init(); // Re-init timeline rows
+            
+            isPartitioned = false;
+            
+            // Reset queue colors
+            for(let b=0; b<4; b++) {
+                const mb = document.getElementById(`mb${b}`);
+                if(mb) mb.style.opacity = '1';
+            }
+            // Restore
+            createConnections();
+            setTimeout(createPipelineLinks, 300);
+        }
+        
+        function playAnimation() {
+            if (isPlaying) return;
+            isPlaying = true;
+            animationInterval = setInterval(() => {
+                if (currentStep < steps.length - 1) {
+                    nextStep();
+                } else {
+                    clearInterval(animationInterval);
+                    isPlaying = false;
+                }
+            }, 3000); // Slow interval
+        }
+
+        // Initialize on Load
+        window.onload = init;
+        window.onresize = () => {
+            createConnections();
+            createPipelineLinks();
+            if(isPartitioned) createGPUConnections();
+        };
+
+    </script>
+</body>
+</html>

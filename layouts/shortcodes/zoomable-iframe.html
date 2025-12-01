@@ -1,0 +1,68 @@
+<div class="zoomable-iframe-container" id="zoom-container-{{ .Get "id" | default (printf "%d" now.UnixNano) }}">
+  <div class="zoom-controls">
+    <button class="zoom-out" title="Zoom Out (-)">−</button>
+    <span class="zoom-level">100%</span>
+    <button class="zoom-in" title="Zoom In (+)">+</button>
+    <button class="zoom-reset" title="Reset Zoom">Reset</button>
+    <span class="zoom-label">Scroll to pan</span>
+  </div>
+  <div class="iframe-wrapper">
+    <iframe 
+      src="{{ .Get "src" }}" 
+      width="{{ .Get "width" | default "100%" }}" 
+      height="{{ .Get "height" | default "600" }}"
+      style="border: none; background: white;"
+      loading="lazy"
+    ></iframe>
+  </div>
+</div>
+
+<script>
+(function() {
+  const container = document.getElementById('zoom-container-{{ .Get "id" | default (printf "%d" now.UnixNano) }}');
+  if (!container) return;
+  
+  const iframe = container.querySelector('iframe');
+  const wrapper = container.querySelector('.iframe-wrapper');
+  const zoomLevelSpan = container.querySelector('.zoom-level');
+  const zoomOutBtn = container.querySelector('.zoom-out');
+  const zoomInBtn = container.querySelector('.zoom-in');
+  const zoomResetBtn = container.querySelector('.zoom-reset');
+  
+  let zoomLevel = 100;
+  const minZoom = 25;
+  const maxZoom = 200;
+  const zoomStep = 25;
+  const baseHeight = {{ .Get "height" | default "600" }};
+  
+  function updateZoom() {
+    const scale = zoomLevel / 100;
+    iframe.style.transform = `scale(${scale})`;
+    iframe.style.width = `${100 / scale}%`;
+    iframe.style.height = `${baseHeight}px`;
+    wrapper.style.height = `${baseHeight * scale}px`;
+    zoomLevelSpan.textContent = `${zoomLevel}%`;
+    
+    zoomOutBtn.style.opacity = zoomLevel <= minZoom ? '0.5' : '1';
+    zoomInBtn.style.opacity = zoomLevel >= maxZoom ? '0.5' : '1';
+  }
+  
+  zoomOutBtn.addEventListener('click', () => {
+    if (zoomLevel > minZoom) { zoomLevel -= zoomStep; updateZoom(); }
+  });
+  
+  zoomInBtn.addEventListener('click', () => {
+    if (zoomLevel < maxZoom) { zoomLevel += zoomStep; updateZoom(); }
+  });
+  
+  zoomResetBtn.addEventListener('click', () => {
+    zoomLevel = 100;
+    updateZoom();
+    wrapper.scrollLeft = 0;
+    wrapper.scrollTop = 0;
+  });
+  
+  updateZoom();
+})();
+</script>
+

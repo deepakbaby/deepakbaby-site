@@ -1,0 +1,406 @@
+---
+title: "Distributed Training in Machine Learning: DDP, Pipeline Parallelism, and FSDP"
+date: 2024-11-30
+draft: false
+tags: ["deep learning", "distributed training", "DDP", "FSDP", "pipeline parallelism", "PyTorch"]
+categories: ["Machine Learning"]
+description: "A comprehensive guide to distributed training techniques in ML - understanding Data Distributed Parallel (DDP), Pipeline Parallelism, and Fully Sharded Data Parallel (FSDP) with their pros and cons."
+---
+
+Modern deep learning models have grown exponentially in size and complexity. GPT-4 has over a trillion parameters, and even "smaller" models like LLaMA-70B require substantial computational resources. Training such models on a single GPU is often impossible—not just because of time constraints, but because the model itself may not fit in the memory of a single device. This is where **distributed training** becomes essential.
+
+## Why Do We Need Distributed Training?
+
+### The Memory Wall Problem
+
+A modern GPU like the NVIDIA A100 has 80GB of memory. Sounds like a lot? Let's do some math:
+
+- A model with 7 billion parameters in FP32 requires: $7B \times 4 \text{ bytes} = 28\text{GB}$
+- But during training, we also need:
+  - Gradients: another 28GB
+  - Optimizer states (Adam has 2 momentum terms): 56GB more
+  - Activations for backpropagation: varies, but often substantial
+
+A 7B parameter model can easily require 150GB+ during training—far exceeding what a single GPU can handle.
+
+### The Time Constraint
+
+Even if a model fits in memory, training on a single GPU can take prohibitively long. Consider:
+
+- Training GPT-3 on a single V100 GPU would take approximately **355 years**
+- With distributed training across thousands of GPUs, this was reduced to **weeks**
+
+### Types of Parallelism
+
+Distributed training employs different parallelism strategies:
+
+| Strategy | What's Parallelized | When to Use |
+|----------|---------------------|-------------|
+| **Data Parallelism** | Training data across replicas | Large datasets, model fits in single GPU |
+| **Model/Tensor Parallelism** | Model layers across devices | Very large layers (e.g., attention in transformers) |
+| **Pipeline Parallelism** | Model stages across devices | Deep models with many sequential layers |
+| **Hybrid (3D Parallelism)** | Combination of above | Extremely large models (100B+ parameters) |
+
+Let's dive deep into three fundamental approaches: **DDP**, **Pipeline Parallelism**, and **FSDP**.
+
+---
+
+## Distributed Data Parallel (DDP)
+
+DDP is the most straightforward and commonly used approach for distributed training. The core idea is simple: replicate the entire model on each GPU, split the data batch across GPUs, and synchronize gradients.
+
+### How DDP Works
+
+<div class="viz-container" data-viz-id="ddp">
+  <iframe src="/visualizations/ddp.html" style="border: none; width: 100%; min-height: 600px;"></iframe>
+</div>
+
+#### The DDP Algorithm
+
+1. **Model Replication**: Each GPU gets a complete copy of the model with identical initial weights
+2. **Data Sharding**: The training batch is split equally among all GPUs
+3. **Forward Pass**: Each GPU processes its data shard independently
+4. **Backward Pass**: Each GPU computes gradients for its local data
+5. **Gradient Synchronization**: All GPUs synchronize their gradients using **AllReduce**
+6. **Weight Update**: Each GPU applies the synchronized gradients to update its local model
+
+The magic happens in the **AllReduce** operation, which efficiently computes the average of gradients across all GPUs and distributes the result back to each GPU.
+
+### AllReduce: The Heart of DDP
+
+AllReduce is a collective communication operation that:
+1. Takes input tensors from all processes
+2. Applies a reduction operation (typically sum or average)
+3. Distributes the result to all processes
+
+Modern implementations use **Ring AllReduce**, which is bandwidth-optimal:
+
+```python
+# Simplified DDP training loop
+for batch in dataloader:
+    optimizer.zero_grad()
+    
+    # Each GPU processes different data
+    outputs = model(batch)
+    loss = criterion(outputs, targets)
+    
+    # Backward pass computes local gradients
+    loss.backward()
+    
+    # DDP automatically synchronizes gradients via AllReduce
+    # This happens in the backward hook!
+    
+    optimizer.step()  # All GPUs apply same averaged gradients
+```
+
+### Pros of DDP
+
+| Advantage | Description |
+|-----------|-------------|
+| ✅ **Simple Implementation** | Minimal code changes required; wrap model in `DistributedDataParallel` |
+| ✅ **Linear Scaling** | Near-linear speedup with more GPUs for communication-bound scenarios |
+| ✅ **No Model Changes** | Works with any model architecture without modifications |
+| ✅ **Fault Tolerance** | Easy to checkpoint and resume training |
+| ✅ **Overlapping Communication** | Gradient sync overlaps with backward computation |
+
+### Cons of DDP
+
+| Disadvantage | Description |
+|--------------|-------------|
+| ❌ **Memory Redundancy** | Full model replicated on each GPU |
+| ❌ **Model Size Limit** | Model must fit entirely in single GPU memory |
+| ❌ **Communication Overhead** | AllReduce scales with model size |
+| ❌ **Synchronization Barrier** | All GPUs must wait for slowest one (stragglers) |
+
+### When to Use DDP
+
+DDP is ideal when:
+- Your model fits comfortably in a single GPU
+- You want simple, robust distributed training
+- You're scaling across multiple machines with fast interconnects
+
+```python
+import torch
+import torch.distributed as dist
+from torch.nn.parallel import DistributedDataParallel as DDP
+
+# Initialize distributed training
+dist.init_process_group("nccl")
+local_rank = int(os.environ["LOCAL_RANK"])
+torch.cuda.set_device(local_rank)
+
+# Wrap model in DDP
+model = YourModel().to(local_rank)
+model = DDP(model, device_ids=[local_rank])
+
+# Training loop proceeds normally!
+```
+
+---
+
+## Pipeline Parallelism
+
+When models are too large to fit on a single GPU, we need to partition them across devices. Pipeline Parallelism splits the model into **stages**, where each stage runs on a different GPU.
+
+### How Pipeline Parallelism Works
+
+<div class="viz-container" data-viz-id="pipeline">
+  <iframe src="/visualizations/pipeline.html" style="border: none; width: 100%; min-height: 600px;"></iframe>
+</div>
+
+#### The Pipeline Concept
+
+Think of it like an assembly line in a factory:
+
+1. **Model Partitioning**: Split model into N sequential stages
+2. **Stage Assignment**: Each GPU handles one or more stages
+3. **Micro-batching**: Split input batch into smaller micro-batches
+4. **Pipeline Execution**: Process micro-batches in a pipelined fashion
+
+#### The Bubble Problem
+
+Naive pipeline parallelism has a significant issue—**pipeline bubbles**:
+
+```
+GPU 0: [F1][F2][F3][F4][  ][  ][  ][  ][B4][B3][B2][B1]
+GPU 1: [  ][F1][F2][F3][F4][  ][  ][B4][B3][B2][B1][  ]
+GPU 2: [  ][  ][F1][F2][F3][F4][B4][B3][B2][B1][  ][  ]
+GPU 3: [  ][  ][  ][F1][F2][F3][F4][B3][B2][B1][  ][  ]
+       [                 TIME →                       ]
+
+F = Forward pass, B = Backward pass, [ ] = Idle (bubble)
+```
+
+The pipeline has "bubbles" where GPUs sit idle, waiting for data from previous stages.
+
+#### Reducing Bubbles with Micro-batching
+
+The key optimization is to use **many micro-batches**:
+
+$$\text{Bubble Fraction} = \frac{p - 1}{m}$$
+
+Where $p$ is the number of pipeline stages and $m$ is the number of micro-batches. With more micro-batches, the bubble overhead becomes negligible.
+
+### Pipeline Schedules
+
+Different scheduling strategies minimize bubbles:
+
+| Schedule | Description | Memory | Bubble Ratio |
+|----------|-------------|--------|--------------|
+| **GPipe** | All forward, then all backward | High (stores activations) | $(p-1)/m$ |
+| **1F1B** | Alternates forward/backward | Lower | $(p-1)/m$ |
+| **Interleaved 1F1B** | Virtual stages | Lowest | $(p-1)/(m \cdot v)$ |
+
+### Pros of Pipeline Parallelism
+
+| Advantage | Description |
+|-----------|-------------|
+| ✅ **Scales Model Size** | Train models larger than single GPU memory |
+| ✅ **Lower Communication** | Only activations transferred between stages |
+| ✅ **Works with Sequential Models** | Natural fit for transformer layers |
+| ✅ **Memory Efficient** | Each GPU only holds subset of model |
+
+### Cons of Pipeline Parallelism
+
+| Disadvantage | Description |
+|--------------|-------------|
+| ❌ **Pipeline Bubbles** | Idle time reduces GPU utilization |
+| ❌ **Complex Implementation** | Requires careful model partitioning |
+| ❌ **Load Balancing** | Stages must have similar compute cost |
+| ❌ **Increased Latency** | Forward pass must traverse all stages |
+| ❌ **Gradient Staleness** | Some schedules have delayed gradient updates |
+
+### When to Use Pipeline Parallelism
+
+Pipeline parallelism shines when:
+- Model doesn't fit on a single GPU but isn't excessively large
+- Model has clear sequential structure (e.g., transformer blocks)
+- You have limited inter-GPU bandwidth
+- Combined with data parallelism for better scaling
+
+```python
+# Example using PyTorch's pipeline parallelism
+from torch.distributed.pipeline.sync import Pipe
+
+# Split model into stages
+stage1 = nn.Sequential(layers[:12]).to('cuda:0')
+stage2 = nn.Sequential(layers[12:]).to('cuda:1')
+
+# Create pipeline
+model = nn.Sequential(stage1, stage2)
+model = Pipe(model, chunks=8)  # 8 micro-batches
+
+# Training
+output = model(input)
+loss = criterion(output, target)
+loss.backward()
+```
+
+---
+
+## Fully Sharded Data Parallel (FSDP)
+
+FSDP represents a paradigm shift in distributed training. Instead of replicating the entire model on each GPU (like DDP), FSDP **shards** the model parameters, gradients, and optimizer states across all GPUs.
+
+### How FSDP Works
+
+<div class="viz-container" data-viz-id="fsdp">
+  <iframe src="/visualizations/fsdp.html" style="border: none; width: 100%; min-height: 600px;"></iframe>
+</div>
+
+#### The FSDP Algorithm
+
+FSDP follows a **gather-compute-scatter** pattern:
+
+1. **Sharding**: Model parameters are partitioned across all GPUs
+2. **AllGather**: Before forward pass, gather full parameters for current layer
+3. **Forward Compute**: Execute layer with full parameters
+4. **Discard**: After forward, discard non-local parameters to save memory
+5. **Repeat** for backward pass: AllGather → Compute gradients → ReduceScatter
+6. **ReduceScatter**: Distribute and reduce gradients back to shards
+
+#### Memory Savings
+
+The memory savings with FSDP are dramatic:
+
+| Component | DDP Memory | FSDP Memory |
+|-----------|-----------|-------------|
+| Parameters | $\Phi$ per GPU | $\Phi / N$ per GPU |
+| Gradients | $\Phi$ per GPU | $\Phi / N$ per GPU |
+| Optimizer States | $2\Phi$ per GPU (Adam) | $2\Phi / N$ per GPU |
+| **Total** | $4\Phi$ | $4\Phi / N$ |
+
+Where $\Phi$ is model size and $N$ is number of GPUs.
+
+For a 7B model on 8 GPUs:
+- **DDP**: 28GB × 4 = 112GB per GPU (doesn't fit on 80GB A100!)
+- **FSDP**: 112GB / 8 = 14GB per GPU ✓
+
+#### Sharding Strategies
+
+FSDP offers flexible sharding strategies:
+
+| Strategy | What's Sharded | Memory | Communication |
+|----------|---------------|--------|---------------|
+| **FULL_SHARD** | Params, Grads, Optimizer | Minimum | Maximum |
+| **SHARD_GRAD_OP** | Grads, Optimizer | Medium | Medium |
+| **NO_SHARD** | Nothing (like DDP) | Maximum | Minimum |
+
+### Pros of FSDP
+
+| Advantage | Description |
+|-----------|-------------|
+| ✅ **Massive Memory Savings** | Linear reduction in memory with GPU count |
+| ✅ **Train Huge Models** | Enable training of models that don't fit on single GPU |
+| ✅ **Flexible Sharding** | Choose tradeoff between memory and communication |
+| ✅ **Native PyTorch** | Well-integrated into PyTorch ecosystem |
+| ✅ **Mixed Precision** | Works seamlessly with AMP/BF16 |
+| ✅ **Activation Checkpointing** | Combines well with gradient checkpointing |
+
+### Cons of FSDP
+
+| Disadvantage | Description |
+|--------------|-------------|
+| ❌ **Communication Overhead** | More collective operations than DDP |
+| ❌ **Complexity** | More configuration options to tune |
+| ❌ **Debugging Difficulty** | Harder to debug distributed sharded state |
+| ❌ **Checkpoint Complexity** | Saving/loading requires special handling |
+| ❌ **Latency** | AllGather adds latency before each layer |
+
+### When to Use FSDP
+
+FSDP is the right choice when:
+- Model doesn't fit on single GPU even with mixed precision
+- You need to train models with billions of parameters
+- You have fast GPU interconnects (NVLink, InfiniBand)
+- Memory is the primary bottleneck
+
+```python
+from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+from torch.distributed.fsdp import ShardingStrategy
+
+# Wrap model with FSDP
+model = FSDP(
+    model,
+    sharding_strategy=ShardingStrategy.FULL_SHARD,
+    mixed_precision=MixedPrecision(
+        param_dtype=torch.bfloat16,
+        reduce_dtype=torch.bfloat16,
+        buffer_dtype=torch.bfloat16,
+    ),
+    device_id=torch.cuda.current_device(),
+)
+
+# Training loop is the same as regular PyTorch!
+for batch in dataloader:
+    loss = model(batch)
+    loss.backward()
+    optimizer.step()
+```
+
+---
+
+## Comparison Summary
+
+| Aspect | DDP | Pipeline Parallel | FSDP |
+|--------|-----|-------------------|------|
+| **Memory per GPU** | Full model | Model / stages | Model / GPUs |
+| **Communication** | AllReduce | Point-to-point | AllGather + ReduceScatter |
+| **Complexity** | Low | Medium | Medium-High |
+| **Model Size Limit** | Single GPU | Total GPU memory | Total GPU memory |
+| **GPU Utilization** | High | Medium (bubbles) | High |
+| **Best For** | Small-Medium models | Sequential models | Large models |
+
+## Choosing the Right Strategy
+
+```
+                          Does model fit on single GPU?
+                                    │
+                    ┌───────────────┴───────────────┐
+                    │ YES                           │ NO
+                    ▼                               ▼
+               Use DDP                    Do you have fast interconnect?
+                                                    │
+                                    ┌───────────────┴───────────────┐
+                                    │ YES                           │ NO
+                                    ▼                               ▼
+                                Use FSDP                   Use Pipeline Parallel
+                                    │                               │
+                                    ▼                               ▼
+                            Combine with                    Consider combining
+                            Pipeline for                    with DDP or FSDP
+                            very large models               
+```
+
+## Practical Recommendations
+
+1. **Start with DDP** if your model fits on a single GPU—it's the simplest and most efficient.
+
+2. **Graduate to FSDP** when memory becomes the bottleneck. Start with `SHARD_GRAD_OP` for less communication overhead.
+
+3. **Add Pipeline Parallelism** for very deep models, especially when combined with FSDP for each pipeline stage.
+
+4. **Use 3D Parallelism** (Data + Pipeline + Tensor) for the largest models (100B+ parameters).
+
+5. **Profile and measure**: Use tools like PyTorch Profiler to identify bottlenecks.
+
+## Conclusion
+
+Distributed training is no longer optional for serious ML work—it's essential. Understanding these three fundamental approaches gives you the tools to train models of any size:
+
+- **DDP** for simplicity and efficiency with smaller models
+- **Pipeline Parallelism** for scaling deep sequential models
+- **FSDP** for massive models that exceed single-GPU memory
+
+The future of ML is distributed, and mastering these techniques will be crucial for anyone working on cutting-edge models.
+
+---
+
+## Further Reading
+
+- [PyTorch DDP Documentation](https://pytorch.org/tutorials/intermediate/ddp_tutorial.html)
+- [PyTorch FSDP Tutorial](https://pytorch.org/tutorials/intermediate/FSDP_tutorial.html)
+- [GPipe Paper](https://arxiv.org/abs/1811.06965)
+- [ZeRO: Memory Optimization Toward Training Trillion Parameter Models](https://arxiv.org/abs/1910.02054)
+- [Megatron-LM: Training Multi-Billion Parameter Language Models](https://arxiv.org/abs/1909.08053)
+
