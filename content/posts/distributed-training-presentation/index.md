@@ -22,7 +22,7 @@ Explore distributed training techniques through this interactive presentation. N
 
 Use the arrow keys (← →) or click the navigation arrows to move between slides. Some slides include animations that you can step through using the animation controls at the bottom.
 
-<div style="margin: 2rem 0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); background: #1a1a1a;">
+<div style="margin: 2rem -2rem; border-radius: 0; overflow: hidden; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); background: #1a1a1a;">
   <iframe 
     src="/presentations/distributed_training_talk/main.html" 
     style="width: 100%; height: 85vh; min-height: 700px; border: none; display: block;"
@@ -30,6 +30,23 @@ Use the arrow keys (← →) or click the navigation arrows to move between slid
     loading="lazy">
   </iframe>
 </div>
+
+<style>
+  /* Make presentation full width on wider screens */
+  @media (min-width: 1200px) {
+    .post-content > div[style*="margin: 2rem -2rem"] {
+      margin-left: -5rem !important;
+      margin-right: -5rem !important;
+    }
+  }
+  
+  @media (min-width: 1400px) {
+    .post-content > div[style*="margin: 2rem -2rem"] {
+      margin-left: -8rem !important;
+      margin-right: -8rem !important;
+    }
+  }
+</style>
 
 {{< alert type="success" >}}
 The visualizations and animations in the "Back to Basics" section of this presentation are from the educational content at [3Blue1Brown](https://www.3blue1brown.com/).

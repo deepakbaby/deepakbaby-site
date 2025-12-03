@@ -1,4 +1,5 @@
-/* Collapsible Sidebars for Blog Posts */
+/* Blog Post Layout Enhancements */
+/* This CSS works WITH the theme's built-in responsive behavior */
 
 /* ============================================
    Zoomable Visualization Container
@@ -80,9 +81,7 @@
   box-sizing: border-box;
   flex: 1;
   min-height: 0;
-  /* Width set dynamically by JS - will allow scrolling when larger than container */
   width: 100%;
-  /* Ensure scrolling works in all directions */
   overflow-x: auto;
   overflow-y: auto;
 }
@@ -96,7 +95,7 @@
   padding: 0;
 }
 
-/* Dark mode support */
+/* Dark mode support for visualizations */
 html[data-theme='dark'] .viz-container,
 html[data-theme='dark'] .zoomable-iframe-container {
   background: #1a1a2e;
@@ -194,243 +193,177 @@ html[data-theme='dark'] .zoom-controls {
   color: #4a90a4;
 }
 
-/* Hide the right TOC section completely */
+/* ============================================
+   Blog Post Layout Adjustments
+   ============================================ */
+
+/* Hide the right TOC section (moved to left sidebar) */
 body.kind-page .wrapper .toc-section {
   display: none !important;
-  width: 0 !important;
-  flex: 0 !important;
-  max-width: 0 !important;
 }
 
-/* Expand content section to take full remaining width */
+/* Let content section expand without the TOC */
 body.kind-page .wrapper .content-section {
-  flex: 1 1 auto !important;
-  max-width: calc(100% - 18%) !important;
-  margin-left: 0 !important;
-  padding-left: 0 !important;
+  flex: 1 1 auto;
+  max-width: calc(100% - 20%);
+  transition: max-width 0.3s ease;
 }
 
-/* Better content width management */
-body.kind-page .wrapper .content-section .content .read-area {
-  max-width: 100% !important;
-  width: 100% !important;
+/* When sidebar is collapsed, content takes more space */
+body.kind-page .wrapper .sidebar-section.collapsed ~ .content-section {
+  max-width: 100%;
 }
 
-body.kind-page .wrapper .content-section .content .page-content {
-  max-width: 900px !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
-}
-
-/* Reduce gap between sidebar and content - match right side */
-body.kind-page .wrapper {
-  gap: 0 !important;
-}
-
-body.kind-page .wrapper .sidebar-section {
-  padding-right: 0 !important;
-  margin-right: 0 !important;
-}
-
-body.kind-page .wrapper .sidebar-section .sidebar-holder {
-  padding-right: 0 !important;
-  margin-right: 0 !important;
-}
-
-body.kind-page .wrapper .content-section .content {
-  padding-left: 0 !important;
-  margin-left: 0 !important;
-}
-
-body.kind-page .wrapper .content-section .read-area {
-  margin-left: 0 !important;
-  padding-left: 0 !important;
-}
-
-/* When sidebar is also collapsed, content takes full width */
-body.kind-page .wrapper .sidebar-section.collapsed ~ .content-section,
-body.kind-page.sidebar-collapsed .wrapper .content-section {
-  max-width: 100% !important;
+/* Center page content with reasonable max-width for readability */
+body.kind-page .page-content {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 2rem;
+  padding-right: 2rem;
 }
 
 /* ============================================
-   Toggle Button Base Styles
+   Collapsible Sidebar
    ============================================ */
+
+/* Sidebar transitions */
+body.kind-page .wrapper .sidebar-section {
+  transition: all 0.3s ease;
+}
+
+/* Collapsed state - smoother without opacity changes */
+body.kind-page .wrapper .sidebar-section.collapsed {
+  flex: 0 0 0;
+  max-width: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Hide sidebar holder content when collapsed to prevent any layout shift */
+body.kind-page .wrapper .sidebar-section.collapsed .sidebar-holder {
+  display: none;
+}
+
+/* Toggle button - Confluence-inspired sleek design */
 .sidebar-toggle {
-  position: fixed !important;
-  z-index: 999999 !important;
-  width: 24px !important;
-  height: 60px !important;
-  border-radius: 0 6px 6px 0 !important;
-  border: none !important;
-  background: rgba(74, 144, 164, 0.9) !important;
-  color: white !important;
-  cursor: pointer !important;
-  display: flex !important;
-  visibility: visible !important;
-  opacity: 0.7 !important;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 48px;
+  border: none;
+  border-radius: 0 4px 4px 0;
+  background: rgba(9, 30, 66, 0.08);
+  color: #172B4D;
+  cursor: pointer;
+  display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px !important;
-  font-weight: bold;
-  transition: all 0.3s ease;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2) !important;
-  left: 0 !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
+  font-size: 12px;
+  font-weight: 400;
+  opacity: 0;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  box-shadow: 0 0 0 1px rgba(9, 30, 66, 0.08);
   padding: 0;
   line-height: 1;
 }
 
+/* Show on hover near left edge */
+body.kind-page:hover .sidebar-toggle,
 .sidebar-toggle:hover {
-  opacity: 1 !important;
-  width: 28px !important;
-  background: rgba(74, 144, 164, 1) !important;
-  box-shadow: 3px 0 12px rgba(0, 0, 0, 0.3) !important;
+  opacity: 1;
 }
 
-/* ============================================
-   Collapsed State Styles
-   ============================================ */
-
-/* Left Sidebar Collapsed */
-body.kind-page .wrapper .sidebar-section.collapsed {
-  flex: 0 0 0 !important;
-  max-width: 0 !important;
-  min-width: 0 !important;
-  width: 0 !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  overflow: hidden !important;
-  visibility: hidden;
-  opacity: 0;
-  pointer-events: none;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.sidebar-toggle:hover {
+  background: rgba(9, 30, 66, 0.13);
+  width: 20px;
+  box-shadow: 0 1px 1px rgba(9, 30, 66, 0.25), 0 0 1px rgba(9, 30, 66, 0.31);
 }
 
-body.kind-page .wrapper .sidebar-section.collapsed .sidebar-holder {
-  width: 0 !important;
-  min-width: 0 !important;
-  padding: 0 !important;
-  overflow: hidden !important;
+.sidebar-toggle:active {
+  background: rgba(9, 30, 66, 0.20);
+  transform: translateY(-50%) scale(0.98);
 }
 
-body.kind-page .wrapper .sidebar-section:not(.collapsed) {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* Styled arrow icon */
+.sidebar-toggle::after {
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  transition: transform 0.2s ease;
 }
 
-/* Left Sidebar Collapsed */
-body.kind-page .wrapper .sidebar-section.collapsed,
-.sidebar-section.collapsed {
-  display: none !important;
+/* Chevron pointing right when sidebar is collapsed */
+body.kind-page .wrapper .sidebar-section.collapsed ~ * .sidebar-toggle::after {
+  border-width: 4px 0 4px 6px;
+  border-color: transparent transparent transparent currentColor;
+  margin-left: 1px;
 }
 
-/* ============================================
-   Content Section Expansion
-   ============================================ */
-
-/* Base content section with transition */
-body.kind-page .wrapper .content-section {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+/* Chevron pointing left when sidebar is visible */
+body.kind-page .wrapper .sidebar-section:not(.collapsed) ~ * .sidebar-toggle::after,
+.sidebar-toggle::after {
+  border-width: 4px 6px 4px 0;
+  border-color: transparent currentColor transparent transparent;
+  margin-right: 1px;
 }
 
-/* When sidebar is collapsed, expand content to full width */
-body.kind-page .wrapper:has(.sidebar-section.collapsed) .content-section {
-  flex: 1 1 100% !important;
-  max-width: 100% !important;
-  padding-left: 3rem !important;
-  padding-right: 3rem !important;
+/* Dark mode support */
+html[data-theme='dark'] .sidebar-toggle {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
-/* Fallback for browsers that don't support :has() */
-body.kind-page.sidebar-collapsed .wrapper .content-section {
-  flex: 1 1 100% !important;
-  max-width: 100% !important;
-  padding-left: 3rem !important;
-  padding-right: 3rem !important;
+html[data-theme='dark'] .sidebar-toggle:hover {
+  background: rgba(255, 255, 255, 0.13);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.25), 0 0 1px rgba(255, 255, 255, 0.31);
 }
 
-/* Old TOC section styles removed - TOC is now in left sidebar */
-
-/* ============================================
-   Arrow Icons for Toggle Buttons
-   ============================================ */
-/* Icons are now set via JavaScript innerHTML */
-
-/* ============================================
-   Responsive Adjustments
-   ============================================ */
-@media (max-width: 1200px) {
-  .sidebar-toggle {
-    width: 28px;
-    height: 28px;
-    font-size: 12px;
-  }
+html[data-theme='dark'] .sidebar-toggle:active {
+  background: rgba(255, 255, 255, 0.20);
 }
 
-@media (max-width: 992px) {
-  /* Hide toggle button on smaller screens where sidebar is already hidden */
+/* Hide toggle on mobile where sidebar is already hidden by theme */
+@media (max-width: 1024px) {
   .sidebar-toggle {
     display: none;
   }
+}
 
-  /* Force sidebar to be hidden on mobile */
-  body.kind-page .wrapper .sidebar-section {
-    display: none !important;
-  }
+/* ============================================
+   Mobile Responsive Adjustments
+   Work WITH the theme's built-in breakpoints
+   ============================================ */
 
-  /* Adjust content section for mobile */
+/* At 1280px (very-large) - adjust content width */
+@media (max-width: 1280px) {
   body.kind-page .wrapper .content-section {
-    flex: 1 1 100% !important;
-    max-width: 100% !important;
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
+    max-width: calc(100% - 20%);
   }
 
-  /* Ensure read-area uses full width on mobile */
-  body.kind-page .wrapper .content-section .content {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-  }
-
-  body.kind-page .wrapper .content-section .read-area {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-  }
-
-  /* Adjust page content padding */
-  body.kind-page .page-content {
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-  }
-
-  /* Override desktop centering on mobile */
-  body.kind-page .wrapper .content-section .content .page-content {
-    max-width: 100% !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-  }
-
-  /* Make sure share buttons and improve page button stack properly */
-  body.kind-page .share-buttons,
-  body.kind-page .btn-improve-page {
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
+  body.kind-page .wrapper .sidebar-section.collapsed ~ .content-section {
+    max-width: 100%;
   }
 }
 
+/* At 768px (medium) - adjust for tablet */
 @media (max-width: 768px) {
-  /* Extra mobile adjustments for smaller screens */
   body.kind-page .wrapper .content-section {
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
+    max-width: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
 
   body.kind-page .page-content {
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
+    max-width: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
 
   /* Make iframe containers mobile-friendly */
@@ -461,71 +394,30 @@ body.kind-page.sidebar-collapsed .wrapper .content-section {
   }
 }
 
-@media (max-width: 576px) {
-  /* Small mobile devices */
-  body.kind-page .wrapper .content-section,
+/* At 640px (small) - mobile phones */
+@media (max-width: 640px) {
+  body.kind-page .wrapper .content-section {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
   body.kind-page .page-content {
-    padding-left: 0.25rem !important;
-    padding-right: 0.25rem !important;
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
   }
 
   /* Stack share buttons */
   body.kind-page .share-buttons .btn {
-    margin: 0.25rem !important;
+    margin: 0.25rem;
+  }
+
+  /* Ensure full width on small screens */
+  body.kind-page .wrapper {
+    flex-direction: column;
+  }
+
+  body.kind-page .wrapper .content-section {
+    max-width: 100%;
+    width: 100%;
   }
 }
-
-/* ============================================
-   Dark Theme Support
-   ============================================ */
-html[data-theme='dark'] .sidebar-toggle {
-  background: var(--bg-primary, #1a1a2e);
-  border-color: var(--accent-color, #4a90a4);
-  color: var(--accent-color, #4a90a4);
-}
-
-html[data-theme='dark'] .sidebar-toggle:hover {
-  background: var(--accent-color, #4a90a4);
-  color: var(--bg-primary, #1a1a2e);
-}
-
-/* ============================================
-   Smooth Transitions for All Elements
-   ============================================ */
-body.kind-page .wrapper {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-body.kind-page .wrapper .content-section {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* ============================================
-   Tooltip Styles
-   ============================================ */
-.sidebar-toggle[title] {
-  position: relative;
-}
-
-.sidebar-toggle::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  padding: 4px 8px;
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  font-size: 11px;
-  border-radius: 4px;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-  left: 100%;
-  margin-left: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.sidebar-toggle:hover::after {
-  opacity: 1;
-}
-
