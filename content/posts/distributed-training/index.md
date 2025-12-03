@@ -54,12 +54,14 @@ DDP is the most straightforward and commonly used approach for distributed train
 ### How DDP Works
 Click the Play button to see a visualization of how DDP works.
 
-<div style="margin: 2rem 0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); background: #1a1a1a;">
+<div style="margin: 0; padding: 0; border-radius: 0; overflow: hidden; background: transparent;">
   <iframe 
     src="/visualizations/ddp.html" 
-    style="width: 100%; height: 700px; border: none; display: block;"
+    style="width: 100%; aspect-ratio: 16 / 9; border: none; display: block; margin: 0; padding: 0; min-height: 0;"
     allowfullscreen
-    loading="lazy">
+    loading="lazy"
+    frameborder="0"
+    scrolling="no">
   </iframe>
 </div>
 
@@ -115,12 +117,14 @@ When models are too large to fit on a single GPU, we need to partition them acro
 ### How Pipeline Parallelism Works
 Click the Play button.
 
-<div style="margin: 2rem 0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); background: #1a1a1a;">
+<div style="margin: 0; padding: 0; border-radius: 0; overflow: hidden; background: transparent;">
   <iframe 
     src="/visualizations/pipeline.html" 
-    style="width: 100%; height: 850px; border: none; display: block;"
+    style="width: 100%; aspect-ratio: 16 / 9; border: none; display: block; margin: 0; padding: 0; min-height: 0;"
     allowfullscreen
-    loading="lazy">
+    loading="lazy"
+    frameborder="0"
+    scrolling="no">
   </iframe>
 </div>
 
@@ -186,12 +190,14 @@ FSDP represents a paradigm shift in distributed training. Instead of replicating
 
 ### How FSDP Works
 
-<div style="margin: 2rem 0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); background: #1a1a1a;">
+<div style="margin: 0; padding: 0; border-radius: 0; overflow: hidden; background: transparent;">
   <iframe 
     src="/visualizations/fsdp.html" 
-    style="width: 100%; height: 700px; border: none; display: block;"
+    style="width: 100%; aspect-ratio: 16 / 9; border: none; display: block; margin: 0; padding: 0; min-height: 0;"
     allowfullscreen
-    loading="lazy">
+    loading="lazy"
+    frameborder="0"
+    scrolling="no">
   </iframe>
 </div>
 

@@ -18,19 +18,18 @@
         }
         body {
             font-family: 'Segoe UI', 'Arial', sans-serif;
-            background: transparent;
+            background: #0a0a0a;
             color: #ffffff;
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            width: 100%;
-            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            overflow: auto;
         }
         h1 {
             text-align: center;
             color: #ffffff;
-            margin: 0 0 10px 0;
-            font-size: 18px;
+            margin: 0 0 1vh 0;
+            font-size: clamp(14px, 2vh, 26px);
             font-weight: 300;
             letter-spacing: 1px;
             text-transform: uppercase;
@@ -39,23 +38,21 @@
         
         /* Layout */
         .container {
+            position: relative;
+            width: 100%;
+            max-width: 100vw;
+            aspect-ratio: 16 / 9;
+            max-height: 100vh;
             background: #141414;
             border-radius: 0;
-            padding: 15px;
-            box-shadow: none;
-            width: 100%;
-            height: 100%;
+            padding: 20px;
             display: flex;
             flex-direction: column;
-            box-sizing: border-box;
+            box-shadow: none;
         }
         
         .info-panel {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #333;
+            display: none;
             flex-shrink: 0;
         }
         
@@ -79,7 +76,6 @@
         #animationArea {
             position: relative;
             width: 100%;
-            aspect-ratio: 16 / 9;
             background: #000000;
             border-radius: 0;
             overflow: hidden;
@@ -87,7 +83,7 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            padding: 2% 3%;
+            padding: 2vh 0.5vw;
             flex: 1;
             min-height: 0;
         }
@@ -174,6 +170,7 @@
             background: transparent;
             padding: 0;
             gap: 0;
+            min-height: 0;
         }
 
         .pipeline-container {
@@ -183,6 +180,7 @@
             flex: 1 1 auto;
             position: relative;
             margin-top: 20px;
+            margin-bottom: 0;
             gap: 25px;
             min-height: 0;
         }
@@ -516,7 +514,7 @@
         /* Grid for Utilization */
         .timeline-container {
             width: 100%;
-            padding: 10px;
+            padding: 6px 10px 4px 10px;
             background: #111;
             border-top: 1px solid #333;
             margin-top: 0;
@@ -549,10 +547,9 @@
         .controls {
             display: flex;
             justify-content: center;
-            gap: 10px;
-            margin-top: 0;
+            gap: 1vw;
+            margin-top: 1vh;
             flex-shrink: 0;
-            padding: 5px 0;
         }
         button {
             padding: 8px 20px;
@@ -585,7 +582,7 @@
             gap: 15px; 
             font-size: 12px; 
             color: #888;
-            margin-top: 10px;
+            margin-top: 5px;
             justify-content: flex-end;
         }
         .legend-item { display: flex; align-items: center; gap: 5px; }
@@ -597,9 +594,9 @@
 
     <div class="container">
         <h1>Pipeline Parallelism (GPipe)</h1>
-        <div class="info-panel">
+        <div class="info-panel" style="display: none;">
             <div>
-                <div class="description" id="stepDescription">Model partitioned across 3 GPUs. Micro-batches flow through stages.</div>
+                <div class="description" id="stepDescription"></div>
             </div>
         </div>
 
@@ -655,7 +652,7 @@
 
                 <!-- Utilization Timeline (Bottom of Right) -->
                 <div class="timeline-container">
-                    <div style="color: #888; font-size: 12px; margin-bottom: 5px;">Device Utilization Timeline</div>
+                    <div style="color: #888; font-size: 12px; margin-bottom: 3px;">Device Utilization Timeline</div>
                     <div class="util-grid" id="timelineGrid">
                         <!-- Rows for GPU 0, 1, 2 -->
                     </div>
