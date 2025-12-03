@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <title>Pipeline Parallelism - Dark Theme</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         html, body {
             margin: 0;
             padding: 0;
@@ -11,51 +17,79 @@
             height: 100%;
         }
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background: #0a0a0a;
-            color: #eee;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            font-family: 'Segoe UI', 'Arial', sans-serif;
+            background: transparent;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
             overflow: hidden;
+            width: 100%;
+            height: 100vh;
         }
-        h1 { margin-bottom: 10px; color: #fff; }
+        h1 {
+            text-align: center;
+            color: #ffffff;
+            margin: 0 0 10px 0;
+            font-size: 18px;
+            font-weight: 300;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
         
         /* Layout */
         .container {
-            position: relative;
-            width: 100%;
-            max-width: 100vw;
-            aspect-ratio: 16 / 9;
-            max-height: 100vh;
             background: #141414;
             border-radius: 0;
-            padding: 20px;
+            padding: 15px;
+            box-shadow: none;
+            width: 100%;
+            height: 100%;
             display: flex;
             flex-direction: column;
-            box-shadow: none;
+            box-sizing: border-box;
         }
         
         .info-panel {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             padding-bottom: 10px;
             border-bottom: 1px solid #333;
+            flex-shrink: 0;
         }
         
-        .status-box { font-size: 18px; font-weight: bold; color: #0f0; }
-        .description { font-size: 14px; color: #aaa; max-width: 800px; }
+        .status-box { 
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 20;
+            background: #000;
+            padding: 6px 12px;
+            border-radius: 15px;
+            border: 1px solid #444;
+            box-shadow: none;
+        }
+        .description { font-size: 14px; color: #aaa; max-width: 800px; font-weight: 400; }
 
         /* Animation Area Main Flex */
         #animationArea {
-            flex: 1;
             position: relative;
-            overflow: visible;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #000000;
+            border-radius: 0;
+            overflow: hidden;
+            border: none;
             display: flex;
-            gap: 30px;
-            padding: 10px;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 2% 3%;
+            flex: 1;
+            min-height: 0;
         }
 
         /* Left: Source Column (Data + Model) */
@@ -77,9 +111,9 @@
         }
 
         .section-title {
-            font-size: 16px;
-            font-weight: bold;
-            color: #ccc;
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffffff;
             text-transform: uppercase;
             letter-spacing: 1px;
             border-bottom: 1px solid #444;
@@ -137,23 +171,26 @@
             position: relative;
             border: none;
             border-radius: 0;
-            background: #000;
-            padding: 20px;
+            background: transparent;
+            padding: 0;
+            gap: 0;
         }
 
         .pipeline-container {
             display: flex;
-            justify-content: space-around;
+            justify-content: center;
             align-items: flex-start;
-            flex: 1;
+            flex: 1 1 auto;
             position: relative;
             margin-top: 20px;
+            gap: 25px;
+            min-height: 0;
         }
 
         /* GPU Boxes */
         .gpu-container {
             position: relative; /* Changed from absolute */
-            width: 260px;
+            width: 220px;
             height: 350px;
             border: 2px solid #444;
             border-radius: 8px;
@@ -167,13 +204,14 @@
         }
         
         .gpu-title {
-            font-weight: bold; 
+            font-weight: 600; 
             margin-bottom: 10px; 
-            color: #ccc;
-            font-size: 14px;
+            color: #ffffff;
+            font-size: 16px;
             background: #333;
             padding: 5px 15px;
-            border-radius: 15px;
+            border-radius: 20px;
+            border: 1px solid #555;
             z-index: 5;
         }
         
@@ -481,7 +519,9 @@
             padding: 10px;
             background: #111;
             border-top: 1px solid #333;
-            margin-top: auto;
+            margin-top: 0;
+            margin-bottom: 0;
+            flex-shrink: 0;
         }
 
         .util-grid {
@@ -507,23 +547,29 @@
         .util-cell.bubble { background: #222; border: 1px dashed #444; }
 
         .controls {
-            margin-top: 20px;
             display: flex;
-            gap: 10px;
             justify-content: center;
+            gap: 10px;
+            margin-top: 0;
+            flex-shrink: 0;
+            padding: 5px 0;
         }
         button {
-            padding: 10px 20px;
-            background: #333;
-            color: #fff;
-            border: 1px solid #555;
-            border-radius: 4px;
+            padding: 8px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid #444;
+            border-radius: 6px;
             cursor: pointer;
-            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: none;
+            background: #222;
+            color: #fff;
         }
-        button:hover { background: #444; transform: translateY(-2px); }
-        .play-btn { background: #006633; border-color: #009944; }
-        .step-btn { background: #004488; border-color: #0066cc; }
+        button:hover {
+            background: #333;
+            border-color: #666;
+        }
         
         .arrow-right {
             position: absolute;
@@ -550,15 +596,15 @@
 <body>
 
     <div class="container">
+        <h1>Pipeline Parallelism (GPipe)</h1>
         <div class="info-panel">
             <div>
-                <h1>Pipeline Parallelism (GPipe)</h1>
                 <div class="description" id="stepDescription">Model partitioned across 3 GPUs. Micro-batches flow through stages.</div>
             </div>
-            <div class="status-box" id="status">Ready</div>
         </div>
 
         <div id="animationArea">
+            <div class="status-box" id="status">Ready</div>
             <!-- Left Column: Data & Model -->
             <div class="source-column">
                 <!-- Training Data -->
