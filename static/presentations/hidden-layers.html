@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hidden Layers - Distributed Training</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: sans-serif;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .content-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 100px;
+            position: relative;
+        }
+
+        .page-title {
+            font-family: sans-serif;
+            font-size: 2.8rem;
+            font-weight: normal;
+            color: #ffffff;
+            margin-bottom: 60px;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.6s ease;
+        }
+
+        .page-title.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .content-area {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        .text-block {
+            font-size: 1.5rem;
+            line-height: 1.8;
+            color: #e0e0e0;
+            opacity: 0;
+            transform: translateX(-30px);
+            transition: all 0.6s ease;
+            padding: 0;
+        }
+
+        .text-block.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .text-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .text-number {
+            font-size: 1.8rem;
+            color: #4a9eff;
+            font-weight: normal;
+            min-width: 60px;
+            text-align: right;
+        }
+
+        .text-content {
+            flex: 1;
+        }
+
+        .formula-block {
+            font-size: 1.5rem;
+            color: #e0e0e0;
+            margin-top: 15px;
+            padding-left: 90px;
+        }
+
+        /* Animation controls - positioned at bottom right, above footer */
+        .animation-controls {
+            position: fixed;
+            bottom: 70px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            background: rgba(45, 45, 45, 0.95);
+            padding: 10px 20px;
+            border-radius: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            z-index: 1003;
+            backdrop-filter: blur(10px);
+        }
+
+        .anim-arrow {
+            background: rgba(60, 60, 60, 0.9);
+            border: 2px solid #555;
+            color: #e0e0e0;
+            font-size: 20px;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .anim-arrow:hover {
+            background: rgba(80, 80, 80, 0.9);
+            border-color: #666;
+            transform: scale(1.1);
+        }
+
+        .anim-arrow:active {
+            transform: scale(0.95);
+        }
+
+        .anim-arrow:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .animation-step-indicator {
+            color: #b0b0b0;
+            font-size: 14px;
+            margin: 0 10px;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .content-container {
+                padding: 40px 30px;
+            }
+
+            .page-title {
+                font-size: 2rem;
+                margin-bottom: 40px;
+            }
+
+            .text-block {
+                font-size: 1.2rem;
+            }
+
+            .text-number {
+                font-size: 1.5rem;
+                min-width: 50px;
+            }
+
+            .formula-block {
+                font-size: 1.2rem;
+                padding-left: 0;
+            }
+
+            .animation-controls {
+                bottom: 70px;
+                right: 15px;
+                padding: 8px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="content-container">
+        <h1 class="page-title" id="title">The "hidden" layers</h1>
+        
+        <div class="content-area">
+            <div class="text-block" id="text-1">
+                <div class="text-item">
+                    <div class="text-number">01</div>
+                    <div class="text-content">
+                        A neural network consists of several hidden layers that capture different patterns in the input data
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-block" id="text-2">
+                <div class="text-item">
+                    <div class="text-number">02</div>
+                    <div class="text-content">
+                        These hidden layers are "trained" or "learned" during the neural network training phase
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-block" id="text-3">
+                <div class="text-item">
+                    <div class="text-number">03</div>
+                    <div class="text-content">
+                        In our example we have
+                        <div class="formula-block">
+                            784×16 + 16 + 16×16 + 16 + 16×10 + 10 = 13002 weights to learn
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Animation controls -->
+        <div class="animation-controls">
+            <button class="anim-arrow" id="prevAnim" onclick="navigateAnimation(-1)">←</button>
+            <div class="animation-step-indicator">
+                <span id="currentStep">1</span> / <span id="totalSteps">4</span>
+            </div>
+            <button class="anim-arrow" id="nextAnim" onclick="navigateAnimation(1)">→</button>
+        </div>
+    </div>
+
+    <script>
+        // Animation state management
+        let currentAnimationStep = 0;
+        const totalAnimationSteps = 4;
+
+        // Animation sequence
+        const animations = [
+            () => {
+                // Step 1: Show title
+                document.getElementById('title').classList.add('visible');
+            },
+            () => {
+                // Step 2: Show first text block
+                document.getElementById('text-1').classList.add('visible');
+            },
+            () => {
+                // Step 3: Show second text block
+                document.getElementById('text-2').classList.add('visible');
+            },
+            () => {
+                // Step 4: Show third text block with formula
+                document.getElementById('text-3').classList.add('visible');
+            }
+        ];
+
+        // Initialize
+        function init() {
+            updateAnimation();
+            updateControls();
+        }
+
+        // Navigate animation (can be called from parent or internally)
+        function navigateAnimation(direction) {
+            const newStep = currentAnimationStep + direction;
+            if (newStep >= 0 && newStep < totalAnimationSteps) {
+                currentAnimationStep = newStep;
+                updateAnimation();
+                updateControls();
+            }
+        }
+
+        // Expose navigateAnimation globally for parent window access
+        window.navigateAnimation = navigateAnimation;
+
+        // Update animation display
+        function updateAnimation() {
+            // Execute all animations up to current step
+            for (let i = 0; i <= currentAnimationStep; i++) {
+                if (animations[i]) {
+                    animations[i]();
+                }
+            }
+
+            // Hide elements beyond current step
+            if (currentAnimationStep < 0) {
+                document.getElementById('title').classList.remove('visible');
+                document.getElementById('text-1').classList.remove('visible');
+                document.getElementById('text-2').classList.remove('visible');
+                document.getElementById('text-3').classList.remove('visible');
+            }
+        }
+
+        // Update control buttons
+        function updateControls() {
+            const prevBtn = document.getElementById('prevAnim');
+            const nextBtn = document.getElementById('nextAnim');
+            const currentStepSpan = document.getElementById('currentStep');
+            const totalStepsSpan = document.getElementById('totalSteps');
+
+            if (prevBtn) prevBtn.disabled = currentAnimationStep === 0;
+            if (nextBtn) nextBtn.disabled = currentAnimationStep === totalAnimationSteps - 1;
+            if (currentStepSpan) currentStepSpan.textContent = currentAnimationStep + 1;
+            if (totalStepsSpan) totalStepsSpan.textContent = totalAnimationSteps;
+
+            // Send animation state to parent window
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'animationState',
+                    currentStep: currentAnimationStep + 1,
+                    totalSteps: totalAnimationSteps,
+                    canGoPrev: currentAnimationStep > 0,
+                    canGoNext: currentAnimationStep < totalAnimationSteps - 1
+                }, '*');
+            }
+        }
+
+        // Expose updateControls globally
+        window.updateControls = updateControls;
+
+        // Prevent page navigation when clicking animation controls
+        document.querySelectorAll('.anim-arrow').forEach(arrow => {
+            arrow.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        });
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
+

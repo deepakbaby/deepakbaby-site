@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conclusion - Distributed Training</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared-styles.css">
+    <style>
+        html, body {
+            height: 100%;
+            width: 100%;
+        }
+
+        .bg-glow {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-glow::before, .bg-glow::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.4;
+            animation: glow-pulse 4s ease-in-out infinite;
+        }
+
+        .bg-glow::before {
+            width: 700px;
+            height: 700px;
+            left: -250px;
+            top: 10%;
+            background: radial-gradient(circle, var(--color-accent-primary) 0%, transparent 70%);
+        }
+
+        .bg-glow::after {
+            width: 500px;
+            height: 500px;
+            right: -150px;
+            bottom: 10%;
+            background: radial-gradient(circle, var(--color-accent-attention) 0%, transparent 70%);
+            animation-delay: 2s;
+        }
+
+        .page-container {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.7s var(--ease-bounce);
+            z-index: var(--z-elevated);
+        }
+
+        .page-container.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Flowchart Wrapper */
+        .flowchart-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 1600px;
+            padding: var(--space-6);
+        }
+
+        .flowchart-title {
+            font-size: var(--font-size-3xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-text-white);
+            text-align: center;
+            margin-bottom: var(--space-3);
+            letter-spacing: -0.02em;
+            text-shadow: var(--glow-primary);
+            opacity: 0;
+            transform: translateY(-40px) scale(0.95);
+            transition: all var(--timing-slower) var(--ease-bounce);
+        }
+
+        .flowchart-title.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .flowchart-subtitle {
+            font-size: var(--font-size-md);
+            color: var(--color-accent-primary);
+            text-align: center;
+            margin-bottom: var(--space-6);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all var(--timing-slower) var(--ease-bounce) 200ms;
+        }
+
+        .flowchart-subtitle.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Flowchart Container with Absolute Positioning */
+        .flowchart-canvas {
+            position: relative;
+            width: 100%;
+            max-width: 1400px;
+            height: 550px;
+            margin: 0 auto;
+        }
+
+        /* SVG for connections */
+        .flowchart-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .flow-line {
+            stroke: var(--color-accent-primary);
+            stroke-width: 3;
+            fill: none;
+            opacity: 0;
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            transition: all 0.8s var(--ease-standard);
+        }
+
+        .flow-line.visible {
+            opacity: 1;
+            stroke-dashoffset: 0;
+        }
+
+        /* Flowchart Nodes */
+        .flowchart-node {
+            position: absolute;
+            z-index: 2;
+            opacity: 0;
+            transform: scale(0.85);
+            transition: all 0.6s var(--ease-bounce);
+        }
+
+        .flowchart-node.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Diamond Decision Shape */
+        .diamond-shape {
+            width: 160px;
+            height: 160px;
+            background: linear-gradient(135deg, rgba(74, 158, 255, 0.12) 0%, var(--color-bg-card) 100%);
+            border: 3px solid var(--color-accent-primary);
+            transform: rotate(45deg);
+            box-shadow: var(--shadow-lg), 0 0 20px rgba(74, 158, 255, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: var(--blur-md);
+        }
+
+        .diamond-shape:hover {
+            box-shadow: var(--shadow-xl), 0 0 30px rgba(74, 158, 255, 0.6);
+        }
+
+        .diamond-text {
+            transform: rotate(-45deg);
+            text-align: center;
+            font-size: 13px;
+            line-height: 1.3;
+            color: var(--color-text-white);
+            font-weight: var(--font-weight-semibold);
+            padding: 0 10px;
+            max-width: 100px;
+        }
+
+        /* Rectangle Process Shape */
+        .rectangle-shape {
+            min-width: 180px;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, rgba(46, 213, 115, 0.1) 0%, var(--color-bg-card) 100%);
+            border: 3px solid var(--color-accent-success);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg), 0 0 20px rgba(46, 213, 115, 0.3);
+            text-align: center;
+            backdrop-filter: var(--blur-md);
+        }
+
+        .rectangle-shape:hover {
+            box-shadow: var(--shadow-xl), 0 0 30px rgba(46, 213, 115, 0.5);
+        }
+
+        .rectangle-shape.fsdp {
+            border-color: var(--color-accent-attention);
+            background: linear-gradient(135deg, rgba(255, 184, 0, 0.1) 0%, var(--color-bg-card) 100%);
+            box-shadow: var(--shadow-lg), 0 0 20px rgba(255, 184, 0, 0.3);
+        }
+
+        .rectangle-shape.fsdp:hover {
+            box-shadow: var(--shadow-xl), 0 0 30px rgba(255, 184, 0, 0.5);
+        }
+
+        .rectangle-shape.pipeline {
+            border-color: var(--color-accent-warning);
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, var(--color-bg-card) 100%);
+            box-shadow: var(--shadow-lg), 0 0 20px rgba(255, 107, 107, 0.3);
+        }
+
+        .rectangle-shape.pipeline:hover {
+            box-shadow: var(--shadow-xl), 0 0 30px rgba(255, 107, 107, 0.5);
+        }
+
+        /* Rounded Rectangle Note Shape */
+        .rounded-rectangle-shape {
+            min-width: 160px;
+            padding: 12px 16px;
+            background: var(--color-bg-card);
+            border: 2px solid rgba(74, 158, 255, 0.4);
+            border-radius: 25px;
+            box-shadow: var(--shadow-md);
+            text-align: center;
+            backdrop-filter: var(--blur-md);
+        }
+
+        .rounded-rectangle-shape.fsdp {
+            border-color: rgba(255, 184, 0, 0.4);
+        }
+
+        .rounded-rectangle-shape.pipeline {
+            border-color: rgba(255, 107, 107, 0.4);
+        }
+
+        .node-label {
+            font-size: 11px;
+            color: var(--color-accent-success);
+            margin-bottom: 4px;
+            font-weight: var(--font-weight-bold);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .rectangle-shape.fsdp .node-label {
+            color: var(--color-accent-attention);
+        }
+
+        .rectangle-shape.pipeline .node-label {
+            color: var(--color-accent-warning);
+        }
+
+        .node-text {
+            font-size: 15px;
+            line-height: 1.4;
+            color: var(--color-text-white);
+            font-weight: var(--font-weight-medium);
+        }
+
+        .rounded-rectangle-shape .node-text {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+        }
+
+        /* Branch Labels */
+        .branch-label {
+            position: absolute;
+            font-size: 12px;
+            font-weight: var(--font-weight-bold);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 4px 12px;
+            border-radius: var(--radius-sm);
+            z-index: 3;
+            opacity: 0;
+            transition: all 0.5s var(--ease-bounce);
+        }
+
+        .branch-label.visible {
+            opacity: 1;
+        }
+
+        .branch-label.yes {
+            color: var(--color-accent-success);
+            background: rgba(46, 213, 115, 0.15);
+            border: 1px solid rgba(46, 213, 115, 0.4);
+            text-shadow: 0 0 8px rgba(46, 213, 115, 0.5);
+        }
+
+        .branch-label.no {
+            color: var(--color-accent-warning);
+            background: rgba(255, 107, 107, 0.15);
+            border: 1px solid rgba(255, 107, 107, 0.4);
+            text-shadow: 0 0 8px rgba(255, 107, 107, 0.5);
+        }
+
+        /* Arrowheads */
+        .arrowhead {
+            fill: var(--color-accent-primary);
+            opacity: 0;
+            transition: opacity 0.6s ease;
+        }
+
+        .arrowhead.visible {
+            opacity: 1;
+        }
+
+        /* Summary Page Styles */
+        .summary-container {
+            max-width: 1600px;
+            width: 100vw;
+            min-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: var(--space-6);
+        }
+
+        .summary-title {
+            font-size: var(--font-size-3xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-text-white);
+            text-align: center;
+            margin-bottom: var(--space-3);
+            letter-spacing: -0.02em;
+            text-shadow: var(--glow-primary);
+            opacity: 0;
+            transform: translateY(-30px);
+            transition: all var(--timing-slower) var(--ease-bounce);
+        }
+
+        .summary-title.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .summary-subtitle {
+            font-size: var(--font-size-md);
+            color: var(--color-accent-primary);
+            text-align: center;
+            margin-bottom: var(--space-7);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all var(--timing-slower) var(--ease-bounce) 200ms;
+        }
+
+        .summary-subtitle.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .techniques-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-9);
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        .technique-card {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all var(--timing-slower) var(--ease-bounce);
+        }
+
+        .technique-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* DDP Styling */
+        .technique-card:nth-child(1) {
+            transition-delay: 0ms;
+        }
+
+        .technique-card:nth-child(1) .technique-name {
+            color: var(--color-accent-success);
+            text-shadow: 0 0 20px rgba(46, 213, 115, 0.8), 0 0 40px rgba(46, 213, 115, 0.4);
+        }
+
+        .technique-card:nth-child(1) .technique-icon {
+            filter: drop-shadow(0 0 12px rgba(46, 213, 115, 0.7));
+        }
+
+        .technique-card:nth-child(1) .technique-key-points li::before {
+            color: var(--color-accent-success);
+        }
+
+        /* Pipeline Styling */
+        .technique-card:nth-child(2) {
+            transition-delay: 100ms;
+        }
+
+        .technique-card:nth-child(2) .technique-name {
+            color: var(--color-accent-warning);
+            text-shadow: 0 0 20px rgba(255, 107, 107, 0.8), 0 0 40px rgba(255, 107, 107, 0.4);
+        }
+
+        .technique-card:nth-child(2) .technique-icon {
+            filter: drop-shadow(0 0 12px rgba(255, 107, 107, 0.7));
+        }
+
+        .technique-card:nth-child(2) .technique-key-points li::before {
+            color: var(--color-accent-warning);
+        }
+
+        /* FSDP Styling */
+        .technique-card:nth-child(3) {
+            transition-delay: 200ms;
+        }
+
+        .technique-card:nth-child(3) .technique-name {
+            color: var(--color-accent-attention);
+            text-shadow: 0 0 20px rgba(255, 184, 0, 0.8), 0 0 40px rgba(255, 184, 0, 0.4);
+        }
+
+        .technique-card:nth-child(3) .technique-icon {
+            filter: drop-shadow(0 0 12px rgba(255, 184, 0, 0.7));
+        }
+
+        .technique-card:nth-child(3) .technique-key-points li::before {
+            color: var(--color-accent-attention);
+        }
+
+        .technique-name {
+            font-size: var(--font-size-2xl);
+            font-weight: var(--font-weight-bold);
+            margin-bottom: var(--space-5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--space-3);
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .technique-icon {
+            font-size: 3.5rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .technique-card:nth-child(1) .technique-icon {
+            animation-delay: 0s;
+        }
+
+        .technique-card:nth-child(2) .technique-icon {
+            animation-delay: 0.5s;
+        }
+
+        .technique-card:nth-child(3) .technique-icon {
+            animation-delay: 1s;
+        }
+
+        .technique-description {
+            font-size: var(--font-size-base);
+            line-height: var(--line-height-relaxed);
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-5);
+            text-align: center;
+        }
+
+        .technique-key-points {
+            list-style: none;
+            padding: 0;
+            border-top: 1px solid rgba(74, 158, 255, 0.2);
+            padding-top: var(--space-4);
+        }
+
+        .technique-key-points li {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-tertiary);
+            padding: var(--space-2) 0 var(--space-2) var(--space-6);
+            position: relative;
+            transition: all var(--timing-fast) var(--ease-standard);
+        }
+
+        .technique-key-points li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            font-weight: var(--font-weight-bold);
+            font-size: var(--font-size-md);
+        }
+
+        .technique-key-points li:hover {
+            color: var(--color-text-secondary);
+            padding-left: calc(var(--space-6) + var(--space-2));
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-8px);
+            }
+        }
+
+        /* Thank You Page Styles */
+        .thank-you-container {
+            max-width: 1000px;
+            width: 100vw;
+            height: 100vh;
+            text-align: center;
+            margin: 0 auto;
+            padding-top: var(--space-8);
+            position: relative;
+            z-index: 2;
+            overflow: visible;
+        }
+
+        .thank-you-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .thank-you-title {
+            font-size: var(--font-size-4xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-text-white);
+            margin-bottom: var(--space-5);
+            letter-spacing: -0.02em;
+            text-shadow: var(--glow-primary-lg);
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 1s var(--ease-bounce);
+        }
+
+        .thank-you-title.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .thank-you-subtitle {
+            font-size: var(--font-size-xl);
+            color: var(--color-accent-primary);
+            margin-bottom: var(--space-6);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 1s var(--ease-bounce) 300ms;
+        }
+
+        .thank-you-subtitle.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .thank-you-graphics {
+            margin-top: var(--space-7);
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 1s var(--ease-bounce) 600ms;
+        }
+
+        .thank-you-graphics.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .graphics-main {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: var(--space-9);
+            margin-bottom: var(--space-7);
+        }
+
+        .graphic-item-large {
+            font-size: 6rem;
+            color: var(--color-accent-primary);
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 30px rgba(74, 158, 255, 0.8));
+        }
+
+        .graphic-item-large:nth-child(2) {
+            animation-delay: 0.5s;
+            color: var(--color-accent-success);
+            filter: drop-shadow(0 0 30px rgba(46, 213, 115, 0.8));
+        }
+
+        .graphic-item-large:nth-child(3) {
+            animation-delay: 1s;
+            color: var(--color-accent-attention);
+            filter: drop-shadow(0 0 30px rgba(255, 184, 0, 0.8));
+        }
+
+        /* Word Cloud Animation */
+        .word-cloud-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: visible;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .magic-box {
+            position: absolute;
+            top: 80px;
+            right: 80px;
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, rgba(74, 158, 255, 0.2) 0%, rgba(46, 213, 115, 0.2) 100%);
+            border: 3px solid var(--color-accent-primary);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 0 30px rgba(74, 158, 255, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            animation: boxPulse 2s ease-in-out infinite;
+            z-index: 10;
+        }
+
+        @keyframes boxPulse {
+            0%, 100% {
+                box-shadow: 0 0 30px rgba(74, 158, 255, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 50px rgba(74, 158, 255, 0.8);
+            }
+        }
+
+        .keyword {
+            position: absolute;
+            font-weight: var(--font-weight-bold);
+            opacity: 0;
+            white-space: nowrap;
+            top: 140px;
+            right: 140px;
+            transform: scale(0);
+        }
+
+        .thank-you-graphics.visible .keyword {
+            animation: popOut 10s ease-out infinite;
+        }
+
+        @keyframes popOut {
+            0% {
+                opacity: 0;
+                transform: translate(0, 0) scale(0) rotate(0deg);
+            }
+            8% {
+                opacity: 1;
+                transform: translate(var(--end-x, 0px) * 0.15, var(--end-y, 0px) * 0.15) scale(1) rotate(var(--end-rotation, 0deg) * 0.15);
+            }
+            30% {
+                opacity: 1;
+                transform: translate(var(--end-x, 0px) * 0.4, var(--end-y, 0px) * 0.4) scale(1.1) rotate(var(--end-rotation, 0deg) * 0.4);
+            }
+            70% {
+                opacity: 1;
+                transform: translate(var(--end-x, 0px) * 0.8, var(--end-y, 0px) * 0.8) scale(1) rotate(var(--end-rotation, 0deg) * 0.8);
+            }
+            90% {
+                opacity: 0.4;
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--end-x, 0px), var(--end-y, 0px)) scale(0.5) rotate(var(--end-rotation, 0deg));
+            }
+        }
+
+        /* Individual keyword styling - flying in different directions from top right */
+        #keyword1 {
+            font-size: 2.5rem;
+            color: var(--color-accent-primary);
+            text-shadow: 0 0 20px rgba(74, 158, 255, 0.8);
+            animation-delay: 0s;
+            --end-x: -1200px;
+            --end-y: 600px;
+            --end-rotation: 25deg;
+        }
+
+        #keyword2 {
+            font-size: 2.2rem;
+            color: var(--color-accent-success);
+            text-shadow: 0 0 20px rgba(46, 213, 115, 0.8);
+            animation-delay: 0.8s;
+            --end-x: -800px;
+            --end-y: 800px;
+            --end-rotation: 45deg;
+        }
+
+        #keyword3 {
+            font-size: 2rem;
+            color: var(--color-accent-attention);
+            text-shadow: 0 0 20px rgba(255, 184, 0, 0.8);
+            animation-delay: 1.6s;
+            --end-x: -600px;
+            --end-y: 700px;
+            --end-rotation: 50deg;
+        }
+
+        #keyword4 {
+            font-size: 1.6rem;
+            color: var(--color-accent-warning);
+            text-shadow: 0 0 20px rgba(255, 107, 107, 0.8);
+            animation-delay: 2.4s;
+            --end-x: -1400px;
+            --end-y: -200px;
+            --end-rotation: -8deg;
+        }
+
+        #keyword5 {
+            font-size: 1.8rem;
+            color: var(--color-accent-primary);
+            text-shadow: 0 0 20px rgba(74, 158, 255, 0.8);
+            animation-delay: 3.2s;
+            --end-x: -1000px;
+            --end-y: -500px;
+            --end-rotation: -25deg;
+        }
+
+        #keyword6 {
+            font-size: 1.6rem;
+            color: var(--color-accent-success);
+            text-shadow: 0 0 20px rgba(46, 213, 115, 0.8);
+            animation-delay: 4s;
+            --end-x: -1600px;
+            --end-y: 400px;
+            --end-rotation: 15deg;
+        }
+
+        #keyword7 {
+            font-size: 1.5rem;
+            color: var(--color-accent-attention);
+            text-shadow: 0 0 20px rgba(255, 184, 0, 0.8);
+            animation-delay: 4.8s;
+            --end-x: -400px;
+            --end-y: 900px;
+            --end-rotation: 65deg;
+        }
+
+        #keyword8 {
+            font-size: 1.5rem;
+            color: var(--color-accent-warning);
+            text-shadow: 0 0 20px rgba(255, 107, 107, 0.8);
+            animation-delay: 5.6s;
+            --end-x: -1500px;
+            --end-y: -400px;
+            --end-rotation: -15deg;
+        }
+
+        #keyword9 {
+            font-size: 1.3rem;
+            color: var(--color-accent-primary);
+            text-shadow: 0 0 20px rgba(74, 158, 255, 0.8);
+            animation-delay: 6.4s;
+            --end-x: 0px;
+            --end-y: 1000px;
+            --end-rotation: 90deg;
+        }
+
+        #keyword10 {
+            font-size: 1.2rem;
+            color: var(--color-accent-success);
+            text-shadow: 0 0 20px rgba(46, 213, 115, 0.8);
+            animation-delay: 7.2s;
+            --end-x: -1100px;
+            --end-y: -600px;
+            --end-rotation: -28deg;
+        }
+
+        #keyword11 {
+            font-size: 1.4rem;
+            color: var(--color-accent-attention);
+            text-shadow: 0 0 20px rgba(255, 184, 0, 0.8);
+            animation-delay: 8s;
+            --end-x: -700px;
+            --end-y: 500px;
+            --end-rotation: 35deg;
+        }
+
+        #keyword12 {
+            font-size: 1.3rem;
+            color: var(--color-accent-warning);
+            text-shadow: 0 0 20px rgba(255, 107, 107, 0.8);
+            animation-delay: 8.8s;
+            --end-x: -1300px;
+            --end-y: -300px;
+            --end-rotation: -12deg;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .flowchart-canvas {
+                transform: scale(0.85);
+            }
+            .techniques-grid {
+                gap: var(--space-6);
+            }
+            .technique-icon {
+                font-size: 3.5rem;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .flowchart-canvas {
+                transform: scale(0.7);
+            }
+            .techniques-grid {
+                grid-template-columns: 1fr;
+                max-width: 500px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .flowchart-canvas {
+                transform: scale(0.55);
+            }
+            .flowchart-title {
+                font-size: var(--font-size-2xl);
+            }
+            .summary-title {
+                font-size: var(--font-size-3xl);
+            }
+            .technique-name {
+                font-size: var(--font-size-xl);
+            }
+            .technique-icon {
+                font-size: 3rem;
+            }
+            .thank-you-title {
+                font-size: var(--font-size-3xl);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-glow"></div>
+
+    <!-- Page 1: Decision Flowchart -->
+    <div class="page-container active" id="page1">
+        <div class="flowchart-wrapper">
+            <h1 class="flowchart-title" id="flowchartTitle">Choosing the Right Strategy</h1>
+            <p class="flowchart-subtitle" id="flowchartSubtitle">Decision flowchart for distributed training</p>
+
+            <div class="flowchart-canvas">
+                <!-- SVG for Connections -->
+                <svg class="flowchart-svg" id="flowchartSvg">
+                    <defs>
+                        <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                            <polygon points="0 0, 10 3, 0 6" class="arrowhead" id="arrow1Head"/>
+                        </marker>
+                        <marker id="arrowhead2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                            <polygon points="0 0, 10 3, 0 6" class="arrowhead" id="arrow2Head"/>
+                        </marker>
+                        <marker id="arrowhead3" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                            <polygon points="0 0, 10 3, 0 6" class="arrowhead" id="arrow3Head"/>
+                        </marker>
+                        <marker id="arrowhead4" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                            <polygon points="0 0, 10 3, 0 6" class="arrowhead" id="arrow4Head"/>
+                        </marker>
+                        <marker id="arrowhead5" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                            <polygon points="0 0, 10 3, 0 6" class="arrowhead" id="arrow5Head"/>
+                        </marker>
+                        <marker id="arrowhead6" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                            <polygon points="0 0, 10 3, 0 6" class="arrowhead" id="arrow6Head"/>
+                        </marker>
+                    </defs>
+
+                    <!-- Decision 1 to YES (DDP) -->
+                    <path class="flow-line" id="line1" d="M 240 200 L 280 200 L 280 80 L 350 80" marker-end="url(#arrowhead)"/>
+
+                    <!-- Decision 1 to NO (Decision 2) -->
+                    <path class="flow-line" id="line2" d="M 240 200 L 280 200 L 280 300 L 330 300" marker-end="url(#arrowhead2)"/>
+
+                    <!-- Decision 2 to YES (FSDP) -->
+                    <path class="flow-line" id="line3" d="M 490 300 L 530 300 L 530 220 L 590 220" marker-end="url(#arrowhead3)"/>
+
+                    <!-- Decision 2 to NO (Pipeline) -->
+                    <path class="flow-line" id="line4" d="M 490 300 L 530 300 L 530 400 L 590 400" marker-end="url(#arrowhead4)"/>
+
+                    <!-- FSDP to Note -->
+                    <path class="flow-line" id="line5" d="M 770 220 L 900 220" marker-end="url(#arrowhead5)"/>
+
+                    <!-- Pipeline to Note -->
+                    <path class="flow-line" id="line6" d="M 770 400 L 900 400" marker-end="url(#arrowhead6)"/>
+                </svg>
+
+                <!-- Decision 1: Does model fit on single GPU? -->
+                <div class="flowchart-node" id="decision1" style="left: 80px; top: 120px;">
+                    <div class="diamond-shape">
+                        <div class="diamond-text">Does model fit on single GPU?</div>
+                    </div>
+                </div>
+
+                <!-- YES Branch to Decision 1 -->
+                <div class="branch-label yes" id="yesLabel1" style="left: 290px; top: 55px;">YES</div>
+
+                <!-- NO Branch to Decision 1 -->
+                <div class="branch-label no" id="noLabel1" style="left: 290px; top: 275px;">NO</div>
+
+                <!-- DDP Solution -->
+                <div class="flowchart-node" id="ddpBox" style="left: 350px; top: 50px;">
+                    <div class="rectangle-shape">
+                        <div class="node-label">Solution</div>
+                        <div class="node-text">Use DDP</div>
+                    </div>
+                </div>
+
+                <!-- Decision 2: Fast interconnect? -->
+                <div class="flowchart-node" id="decision2" style="left: 330px; top: 220px;">
+                    <div class="diamond-shape">
+                        <div class="diamond-text">Fast interconnect?</div>
+                    </div>
+                </div>
+
+                <!-- YES Branch to Decision 2 -->
+                <div class="branch-label yes" id="yesLabel2" style="left: 540px; top: 195px;">YES</div>
+
+                <!-- NO Branch to Decision 2 -->
+                <div class="branch-label no" id="noLabel2" style="left: 540px; top: 375px;">NO</div>
+
+                <!-- FSDP Solution -->
+                <div class="flowchart-node" id="fsdpBox" style="left: 590px; top: 190px;">
+                    <div class="rectangle-shape fsdp">
+                        <div class="node-label">Solution</div>
+                        <div class="node-text">Use FSDP</div>
+                    </div>
+                </div>
+
+                <!-- Pipeline Solution -->
+                <div class="flowchart-node" id="pipelineBox" style="left: 590px; top: 370px;">
+                    <div class="rectangle-shape pipeline">
+                        <div class="node-label">Solution</div>
+                        <div class="node-text">Pipeline Parallelism</div>
+                    </div>
+                </div>
+
+                <!-- FSDP Note -->
+                <div class="flowchart-node" id="fsdpNote" style="left: 900px; top: 195px;">
+                    <div class="rounded-rectangle-shape fsdp">
+                        <div class="node-text">Combine with Pipeline for very large models</div>
+                    </div>
+                </div>
+
+                <!-- Pipeline Note -->
+                <div class="flowchart-node" id="pipelineNote" style="left: 900px; top: 375px;">
+                    <div class="rounded-rectangle-shape pipeline">
+                        <div class="node-text">Consider combining with DDP or FSDP</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 2: Summary -->
+    <div class="page-container" id="page2">
+        <div class="summary-container">
+            <h1 class="summary-title" id="summaryTitle">Key Takeaways</h1>
+            <p class="summary-subtitle" id="summarySubtitle">Three approaches to scale your training</p>
+
+            <div class="techniques-grid">
+                <article class="technique-card" id="ddpSummary">
+                    <div class="technique-name">
+                        <span class="technique-icon">🔄</span>
+                        <span>DDP</span>
+                    </div>
+                    <div class="technique-description">
+                        Replicates the model across GPUs, each processing different data batches.
+                    </div>
+                    <ul class="technique-key-points">
+                        <li>Same model on all GPUs</li>
+                        <li>Different data batches</li>
+                        <li>Gradient synchronization</li>
+                        <li>Linear speedup</li>
+                    </ul>
+                </article>
+
+                <article class="technique-card" id="pipelineSummary">
+                    <div class="technique-name">
+                        <span class="technique-icon">🔀</span>
+                        <span>Pipeline Parallelism</span>
+                    </div>
+                    <div class="technique-description">
+                        Splits model layers across GPUs in a pipeline, with data flowing sequentially through stages.
+                    </div>
+                    <ul class="technique-key-points">
+                        <li>Layer partitioning</li>
+                        <li>Sequential data flow</li>
+                        <li>Micro-batches</li>
+                        <li>Handles large models</li>
+                    </ul>
+                </article>
+
+                <article class="technique-card" id="fsdpSummary">
+                    <div class="technique-name">
+                        <span class="technique-icon">⚡</span>
+                        <span>FSDP</span>
+                    </div>
+                    <div class="technique-description">
+                        Shards parameters across GPUs and dynamically gathers them when needed.
+                    </div>
+                    <ul class="technique-key-points">
+                        <li>Parameter sharding</li>
+                        <li>Dynamic gathering</li>
+                        <li>Memory efficient</li>
+                        <li>Scales to huge models</li>
+                    </ul>
+                </article>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 3: Thank You -->
+    <div class="page-container" id="page3">
+        <div class="thank-you-container">
+            <h1 class="thank-you-title" id="thankYouTitle">Thank You!</h1>
+            <p class="thank-you-subtitle" id="thankYouSubtitle">Questions & Discussion</p>
+
+            <div class="thank-you-graphics" id="thankYouGraphics">
+                <div class="graphics-main">
+                    <div class="graphic-item-large">🚀</div>
+                    <div class="graphic-item-large">🧠</div>
+                    <div class="graphic-item-large">🎯</div>
+                </div>
+
+                <!-- Word Cloud Animation -->
+                <div class="word-cloud-container" id="wordCloudContainer">
+                    <div class="magic-box" id="magicBox">⚡</div>
+                    <div class="keyword" id="keyword1">DDP</div>
+                    <div class="keyword" id="keyword2">FSDP</div>
+                    <div class="keyword" id="keyword3">Pipeline</div>
+                    <div class="keyword" id="keyword4">Neural Networks</div>
+                    <div class="keyword" id="keyword5">GPUs</div>
+                    <div class="keyword" id="keyword6">Memory</div>
+                    <div class="keyword" id="keyword7">Gradients</div>
+                    <div class="keyword" id="keyword8">Sharding</div>
+                    <div class="keyword" id="keyword9">Synchronization</div>
+                    <div class="keyword" id="keyword10">Backpropagation</div>
+                    <div class="keyword" id="keyword11">Distributed</div>
+                    <div class="keyword" id="keyword12">Parallel</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../animation-utils.js"></script>
+
+    <script>
+        const page1Steps = [
+            { elements: ['flowchartTitle'] },
+            { elements: ['flowchartSubtitle'] },
+            { elements: ['decision1'] },
+            { elements: ['line1', 'line2', 'arrow1Head', 'arrow2Head'] },
+            { elements: ['yesLabel1', 'noLabel1'] },
+            { elements: ['ddpBox', 'decision2'] },
+            { elements: ['line3', 'line4', 'arrow3Head', 'arrow4Head'] },
+            { elements: ['yesLabel2', 'noLabel2'] },
+            { elements: ['fsdpBox', 'pipelineBox'] },
+            { elements: ['line5', 'line6', 'arrow5Head', 'arrow6Head'] },
+            { elements: ['fsdpNote', 'pipelineNote'] }
+        ];
+
+        const page2Steps = [
+            { elements: ['summaryTitle'] },
+            { elements: ['summarySubtitle'] },
+            { elements: ['ddpSummary'] },
+            { elements: ['pipelineSummary'] },
+            { elements: ['fsdpSummary'] }
+        ];
+
+        const page3Steps = [
+            { elements: ['thankYouTitle'] },
+            { elements: ['thankYouSubtitle'] },
+            { elements: ['thankYouGraphics'] }
+        ];
+
+        const allSteps = [
+            ...page1Steps.map(s => ({ page: 0, ...s })),
+            ...page2Steps.map(s => ({ page: 1, ...s })),
+            ...page3Steps.map(s => ({ page: 2, ...s }))
+        ];
+
+        const controller = new AnimationController(allSteps.length);
+        window.animationController = controller;
+
+        function showPage(pageIndex) {
+            document.querySelectorAll('.page-container').forEach((page, idx) => {
+                page.classList.toggle('active', idx === pageIndex);
+            });
+        }
+
+        function updateDisplay() {
+            const currentStep = controller.getCurrentStep();
+            const currentStepData = allSteps[currentStep];
+
+            if (!currentStepData) return;
+
+            const targetPage = currentStepData.page;
+            showPage(targetPage);
+
+            document.querySelectorAll('[id]').forEach(el => {
+                if (el.id && !el.id.includes('Anim') && el.id !== 'currentStep' && el.id !== 'totalSteps' && el.id !== 'flowchartSvg') {
+                    el.classList.remove('visible');
+                }
+            });
+
+            for (let i = 0; i <= currentStep && i < allSteps.length; i++) {
+                const step = allSteps[i];
+                if (step.page === targetPage) {
+                    step.elements.forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) {
+                            el.classList.add('visible');
+                        }
+                    });
+                }
+            }
+
+            window.currentAnimationStep = currentStep;
+            window.totalAnimationSteps = allSteps.length;
+        }
+
+        controller.on('onStepChange', (step) => {
+            updateDisplay();
+        });
+
+        window.addEventListener('load', () => {
+            updateDisplay();
+        });
+
+    </script>
+</body>
+</html>

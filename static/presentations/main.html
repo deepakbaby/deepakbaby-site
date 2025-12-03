@@ -1,0 +1,1705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distributed Training - Presentation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="shared-styles.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family-primary);
+            background: var(--color-bg-primary);
+            background-image: radial-gradient(circle at 20% 50%, rgba(74, 158, 255, 0.06) 0%, transparent 50%),
+                            radial-gradient(circle at 80% 80%, rgba(74, 158, 255, 0.04) 0%, transparent 50%);
+            color: var(--color-text-secondary);
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .presentation-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Hero Bar - Page Navigation */
+        .hero-bar {
+            background: rgba(26, 26, 26, 0.95);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--color-border);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            z-index: var(--z-fixed);
+            backdrop-filter: var(--blur-md);
+        }
+
+        .hero-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .current-section {
+            color: var(--color-text-primary);
+            font-size: 16px;
+            font-weight: var(--font-weight-semibold);
+            min-width: 200px;
+            letter-spacing: -0.01em;
+        }
+
+        .current-section.hidden {
+            opacity: 0;
+        }
+
+        /* Section Navigation Links */
+        .section-nav {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            flex: 1;
+            justify-content: center;
+            margin: 0 40px;
+        }
+
+        .section-nav::-webkit-scrollbar {
+            display: none;
+        }
+
+        .section-nav-link {
+            color: rgba(232, 232, 232, 0.6);
+            font-size: 14px;
+            font-weight: var(--font-weight-medium);
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all var(--timing-normal) var(--ease-standard);
+            white-space: nowrap;
+            position: relative;
+            letter-spacing: -0.01em;
+        }
+
+        .section-nav-link:hover {
+            color: var(--color-text-secondary);
+            background: rgba(74, 158, 255, 0.1);
+        }
+
+        .section-nav-link.active {
+            color: var(--color-accent-primary);
+            background: rgba(74, 158, 255, 0.15);
+            font-weight: var(--font-weight-semibold);
+        }
+
+        .section-nav-link.active::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 8px;
+            padding: 2px;
+            background: linear-gradient(135deg, rgba(74, 158, 255, 0.8), rgba(74, 158, 255, 0.4));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            opacity: 0;
+            animation: glow-pulse 2s ease-in-out infinite;
+        }
+
+        .section-nav-link.active::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 6px;
+            background: rgba(74, 158, 255, 0.2);
+            box-shadow: 0 0 20px rgba(74, 158, 255, 0.5),
+                        0 0 40px rgba(74, 158, 255, 0.3),
+                        inset 0 0 20px rgba(74, 158, 255, 0.1);
+            animation: glow-pulse 2s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% {
+                opacity: 0.6;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.02);
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .section-nav {
+                gap: 6px;
+                margin: 0 20px;
+            }
+
+            .section-nav-link {
+                font-size: 13px;
+                padding: 6px 12px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .section-nav {
+                display: none;
+            }
+        }
+
+        /* Side Navigation Arrows */
+        .side-nav-arrow {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(26, 26, 26, 0.95);
+            backdrop-filter: blur(12px);
+            border: 2px solid rgba(74, 158, 255, 0.2);
+            color: #e8e8e8;
+            font-size: 28px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+            z-index: 1001;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .side-nav-arrow.left {
+            left: 30px;
+        }
+
+        .side-nav-arrow.right {
+            right: 30px;
+        }
+
+        .side-nav-arrow:hover:not(:disabled) {
+            background: rgba(74, 158, 255, 0.15);
+            border-color: #4a9eff;
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 8px 32px rgba(74, 158, 255, 0.5);
+        }
+
+        .side-nav-arrow:active {
+            transform: translateY(-50%) scale(0.9);
+        }
+
+        .side-nav-arrow:disabled {
+            opacity: 0.2;
+            cursor: not-allowed;
+            transform: translateY(-50%);
+            border-color: rgba(74, 158, 255, 0.1);
+        }
+
+        .side-nav-arrow:not(:disabled):hover {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 6px 30px rgba(74, 158, 255, 0.4);
+            }
+            50% {
+                box-shadow: 0 8px 40px rgba(74, 158, 255, 0.6);
+            }
+        }
+
+        @keyframes fade-in-slide {
+            from {
+                opacity: 0;
+                transform: translateY(-50%) translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(-50%) translateX(0);
+            }
+        }
+
+        .side-nav-arrow.left {
+            animation: fade-in-slide 0.6s ease-out;
+        }
+
+        .side-nav-arrow.right {
+            animation: fade-in-slide 0.6s ease-out 0.2s both;
+        }
+
+        /* Responsive design for side arrows */
+        @media (max-width: 768px) {
+            .side-nav-arrow {
+                width: 50px;
+                height: 50px;
+                font-size: 24px;
+            }
+
+            .side-nav-arrow.left {
+                left: 15px;
+            }
+
+            .side-nav-arrow.right {
+                right: 15px;
+            }
+        }
+
+        /* Hero Bar Navigation (keep for page indicators) */
+        .nav-arrow {
+            background: #3d3d3d;
+            border: 2px solid #555;
+            color: #e0e0e0;
+            font-size: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .nav-arrow:hover {
+            background: #4d4d4d;
+            border-color: #666;
+            transform: scale(1.1);
+        }
+
+        .nav-arrow:active {
+            transform: scale(0.95);
+        }
+
+        .nav-arrow:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .page-indicators {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .page-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+        }
+
+        .page-dot.active {
+            background: #4a9eff;
+            transform: scale(1.4);
+            box-shadow: 0 0 12px rgba(74, 158, 255, 0.6);
+            border-color: rgba(74, 158, 255, 0.3);
+        }
+
+        .page-dot:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.35);
+            transform: scale(1.2);
+            border-color: rgba(74, 158, 255, 0.2);
+        }
+
+        .page-info {
+            color: var(--color-text-tertiary);
+            font-size: 14px;
+            margin: 0 20px;
+        }
+
+        /* Page Content Area */
+        .page-content {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: transparent;
+            padding-bottom: 60px;
+        }
+
+        /* Section Transition Slide */
+        .section-transition {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #0f0f0f;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 600ms cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .section-transition.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .section-transition-title {
+            font-family: var(--font-family-primary);
+            font-size: var(--font-size-4xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-text-white);
+            text-align: center;
+            letter-spacing: -0.02em;
+            line-height: var(--line-height-tight);
+            max-width: 900px;
+            padding: 0 48px;
+            text-shadow: var(--glow-primary);
+            animation: sectionTitleFadeIn var(--timing-slower) var(--ease-bounce) forwards;
+        }
+
+        .section-transition-subtitle {
+            font-family: var(--font-family-primary);
+            font-size: var(--font-size-md);
+            font-weight: var(--font-weight-medium);
+            color: var(--color-accent-primary);
+            margin-top: var(--space-6);
+            opacity: 0;
+            animation: sectionSubtitleFadeIn var(--timing-slower) var(--ease-bounce) 300ms forwards;
+        }
+
+        @keyframes sectionTitleFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-32px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes sectionSubtitleFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .section-transition-title {
+                font-size: 2.8rem;
+            }
+
+            .section-transition-subtitle {
+                font-size: 1.2rem;
+            }
+        }
+
+        .page-frame {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+
+        .page-frame.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .page-frame iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: transparent;
+        }
+
+        /* Animated Background Glow (similar to conclusion.html) */
+        .bg-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-glow::before,
+        .bg-glow::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.4;
+            animation: glow-pulse-bg 4s ease-in-out infinite;
+        }
+
+        .bg-glow::before {
+            width: 700px;
+            height: 700px;
+            left: -250px;
+            top: 10%;
+            background: radial-gradient(circle, var(--color-accent-primary) 0%, transparent 70%);
+        }
+
+        .bg-glow::after {
+            width: 500px;
+            height: 500px;
+            right: -150px;
+            bottom: 10%;
+            background: radial-gradient(circle, var(--color-accent-attention) 0%, transparent 70%);
+            animation-delay: 2s;
+        }
+
+        @keyframes glow-pulse-bg {
+            0%, 100% {
+                opacity: 0.3;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(1.1);
+            }
+        }
+
+        /* Shooting Stars Container */
+        .shooting-stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .shooting-star {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(74, 158, 255, 1),
+                        0 0 16px rgba(74, 158, 255, 0.8),
+                        0 0 24px rgba(74, 158, 255, 0.6);
+            opacity: 0;
+        }
+
+        .shooting-star::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 150px;
+            height: 2px;
+            background: linear-gradient(90deg, 
+                rgba(74, 158, 255, 1) 0%, 
+                rgba(74, 158, 255, 0.6) 30%,
+                rgba(74, 158, 255, 0.3) 60%,
+                transparent 100%);
+            transform: translateY(-50%) rotate(var(--angle, 0rad));
+            transform-origin: left center;
+        }
+
+        @keyframes shoot {
+            0% {
+                opacity: 0;
+                transform: translate(0, 0) scale(0);
+            }
+            10% {
+                opacity: 1;
+                transform: translate(0, 0) scale(1);
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--end-x), var(--end-y)) scale(0);
+            }
+        }
+
+        /* Footer - Transparent to show controls above */
+        .presentation-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(26, 26, 26, 0.95);
+            border-top: 1px solid var(--color-border);
+            padding: 14px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: calc(var(--z-fixed) + 1);
+            backdrop-filter: var(--blur-md);
+            box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .footer-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .footer-title {
+            font-family: var(--font-family-primary);
+            font-size: 1.1rem;
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text-primary);
+            letter-spacing: -0.01em;
+        }
+
+        .footer-presenter {
+            font-family: var(--font-family-primary);
+            font-size: 0.95rem;
+            font-weight: var(--font-weight-medium);
+            color: var(--color-text-tertiary);
+        }
+
+        .footer-nav {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .footer-nav-arrow {
+            background: rgba(60, 60, 60, 0.9);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            color: #e8e8e8;
+            font-size: 18px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+        }
+
+        .footer-nav-arrow:hover:not(:disabled) {
+            background: rgba(74, 158, 255, 0.15);
+            border-color: #4a9eff;
+            transform: scale(1.1);
+            box-shadow: 0 0 16px rgba(74, 158, 255, 0.4);
+        }
+
+        .footer-nav-arrow:active {
+            transform: scale(0.95);
+        }
+
+        .footer-nav-arrow:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Animation controls in footer */
+        .footer-anim-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-right: 20px;
+            padding-right: 20px;
+            border-right: 1px solid #555;
+        }
+
+        .footer-anim-arrow {
+            background: rgba(60, 60, 60, 0.9);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            color: #e8e8e8;
+            font-size: 16px;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+        }
+
+        .footer-anim-arrow:hover:not(:disabled) {
+            background: rgba(74, 158, 255, 0.15);
+            border-color: #4a9eff;
+            transform: scale(1.1);
+            box-shadow: 0 0 16px rgba(74, 158, 255, 0.4);
+        }
+
+        .footer-anim-arrow:active {
+            transform: scale(0.95);
+        }
+
+        .footer-anim-arrow:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .footer-anim-indicator {
+            color: var(--color-text-tertiary);
+            font-size: 12px;
+            margin: 0 5px;
+            min-width: 60px;
+            text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Animated Background Glow -->
+    <div class="bg-glow">
+        <div class="bg-glow-inner"></div>
+    </div>
+    
+    <!-- Shooting Stars -->
+    <div class="shooting-stars" id="shootingStars"></div>
+    
+    <div class="presentation-container">
+        <!-- Hero Bar with Navigation -->
+        <div class="hero-bar">
+            <div class="hero-bar-left">
+                <div class="current-section hidden" id="currentSection"></div>
+            </div>
+
+            <!-- Section Navigation Links -->
+            <nav class="section-nav" id="sectionNav">
+                <!-- Populated by JavaScript -->
+            </nav>
+
+            <div class="page-info">
+                <span id="currentPageNum">1</span> / <span id="totalPages">1</span>
+            </div>
+        </div>
+
+        <!-- Side Navigation Arrows -->
+        <button class="side-nav-arrow left" id="prevPage" onclick="navigatePage(-1)">&lt;</button>
+        <button class="side-nav-arrow right" id="nextPage" onclick="navigatePage(1)">&gt;</button>
+
+        <!-- Page Content Area -->
+        <div class="page-content" id="pageContent"></div>
+
+        <!-- Footer -->
+        <div class="presentation-footer">
+            <div class="footer-left">
+                <div class="footer-title">Distributed Training</div>
+                <div class="footer-presenter">Deepak Baby</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <!-- Page indicators (dots) -->
+                <div class="page-indicators" id="pageIndicators"></div>
+
+                <!-- Animation controls (shown/hidden based on current page) -->
+                <div class="footer-anim-controls" id="footerAnimControls" style="display: none;">
+                    <!-- Debug: This div should be populated by JavaScript -->
+                </div>
+
+                <!-- Page navigation -->
+                <div class="footer-nav">
+                    <button class="footer-nav-arrow" id="footerPrevPage" onclick="navigatePage(-1)">&lt;&lt;</button>
+                    <button class="footer-nav-arrow" id="footerNextPage" onclick="navigatePage(1)">&gt;&gt;</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sections structure - group pages by section
+        const sections = [
+            {
+                title: "Back to Basics",
+                pages: [
+                    'sections/01-back-to-basics/neural-network-basics.html',
+                    'sections/01-back-to-basics/back-to-basics.html',
+                    'sections/01-back-to-basics/hidden-layers.html',
+                    'sections/01-back-to-basics/backpropagation.html',
+                    'sections/01-back-to-basics/summary.html'
+                ]
+            },
+            {
+                title: "Why do we need distributed training",
+                pages: [
+                    'sections/02-why-distributed-training/memory-consumption.html'
+                ]
+            },
+            {
+                title: "DDP",
+                pages: [
+                    'sections/03-ddp/ddp-intro.html',
+                    'sections/03-ddp/ddp.html',
+                    'sections/03-ddp/ddp-pros-cons.html'
+                ]
+            },
+            {
+                title: "Pipeline Parallelism",
+                pages: [
+                    'sections/04-pipeline-parallelism/pipeline-intro.html',
+                    'sections/04-pipeline-parallelism/pipeline.html',
+                    'sections/04-pipeline-parallelism/pipeline-pros-cons.html'
+                ]
+            },
+            {
+                title: "FSDP",
+                pages: [
+                    'sections/05-fsdp/fsdp-intro.html',
+                    'sections/05-fsdp/fsdp-professional.html',
+                    'sections/05-fsdp/fsdp-pros-cons.html'
+                ]
+            },
+            {
+                title: "Conclusion",
+                pages: [
+                    'sections/06-conclusion/conclusion.html'
+                ]
+            }
+        ];
+
+        // Build flat pages array from sections (includes title, contents, and all section pages)
+        let pages = [];
+        let pageToSectionMap = {}; // Maps page index to section info for navigation
+        let sectionStartIndices = {}; // Maps section title to first page index
+
+        function buildPagesArray() {
+            pages = ['title.html', null]; // null will be replaced with inline contents page
+            pageToSectionMap = { 0: null, 1: null }; // Title and contents pages have no section
+            
+            sections.forEach((section, sectionIndex) => {
+                // Track if this section has any pages
+                const firstPageIndex = pages.length;
+                
+                section.pages.forEach(pageFile => {
+                    pages.push(pageFile);
+                    pageToSectionMap[pages.length - 1] = {
+                        sectionIndex: sectionIndex,
+                        sectionTitle: section.title
+                    };
+                });
+                
+                // Store the first page index for this section (if it has pages)
+                if (section.pages.length > 0) {
+                    sectionStartIndices[section.title] = firstPageIndex;
+                }
+            });
+        }
+
+        buildPagesArray();
+
+        // Generate contents page HTML
+        function generateContentsPageHTML() {
+            const contentsItems = sections.map((section, index) => {
+                const sectionIndex = sectionStartIndices[section.title] || -1;
+                const hasPages = section.pages.length > 0;
+                const clickHandler = hasPages && sectionIndex > 0
+                    ? `onclick="window.parent.goToPage(${sectionIndex})" style="cursor: pointer;"`
+                    : '';
+
+                return `
+                    <li class="contents-item" ${clickHandler}>
+                        ${section.title}
+                    </li>
+                `;
+            }).join('');
+
+            return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contents - Distributed Training</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --font-family-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --color-bg-primary: #0f0f0f;
+            --color-text-secondary: #e8e8e8;
+            --color-text-white: #ffffff;
+            --color-text-primary: #f0f0f0;
+            --color-accent-primary: #4a9eff;
+            --color-accent-attention: #ffb800;
+            --color-border: rgba(74, 158, 255, 0.2);
+            --font-size-3xl: 3.5rem;
+            --font-size-2xl: 3rem;
+            --font-size-lg: 1.8rem;
+            --font-size-base: 1.125rem;
+            --font-weight-normal: 400;
+            --font-weight-medium: 500;
+            --font-weight-bold: 700;
+            --space-7: 48px;
+            --space-6: 32px;
+            --space-5: 24px;
+            --space-4: 16px;
+            --space-2: 8px;
+            --timing-normal: 300ms;
+            --timing-slower: 800ms;
+            --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+            --ease-bounce: cubic-bezier(0.16, 1, 0.3, 1);
+            --glow-primary: 0 0 20px rgba(74, 158, 255, 0.4);
+            --z-elevated: 10;
+        }
+    </style>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+        }
+
+        body {
+            font-family: var(--font-family-primary);
+            background: transparent;
+            color: var(--color-text-secondary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bg-glow {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-glow::before, .bg-glow::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.4;
+            animation: glow-pulse 4s ease-in-out infinite;
+        }
+
+        .bg-glow::before {
+            width: 700px;
+            height: 700px;
+            left: -250px;
+            top: 10%;
+            background: radial-gradient(circle, var(--color-accent-primary) 0%, transparent 70%);
+        }
+
+        .bg-glow::after {
+            width: 500px;
+            height: 500px;
+            right: -150px;
+            bottom: 10%;
+            background: radial-gradient(circle, var(--color-accent-attention) 0%, transparent 70%);
+            animation-delay: 2s;
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% {
+                opacity: 0.3;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(1.1);
+            }
+        }
+
+        .contents-container {
+            max-width: 900px;
+            width: 90%;
+            padding: var(--space-7);
+            animation: fadeInUp var(--timing-slower) var(--ease-bounce);
+            position: relative;
+            z-index: var(--z-elevated);
+        }
+
+        .contents-title {
+            font-family: var(--font-family-primary);
+            font-size: var(--font-size-3xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-text-white);
+            margin-bottom: var(--space-7);
+            text-align: center;
+            letter-spacing: -0.02em;
+            text-shadow: var(--glow-primary);
+        }
+
+        .contents-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .contents-item {
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-normal);
+            color: var(--color-text-secondary);
+            padding: var(--space-5) 0;
+            padding-left: var(--space-7);
+            border-bottom: 1px solid var(--color-border);
+            position: relative;
+            transition: all var(--timing-normal) var(--ease-standard);
+            cursor: default;
+        }
+
+        .contents-item[onclick] {
+            cursor: pointer;
+        }
+
+        .contents-item:last-child {
+            border-bottom: none;
+        }
+
+        .contents-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 12px;
+            background: var(--color-accent-primary);
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity var(--timing-normal) var(--ease-standard);
+            box-shadow: var(--glow-primary);
+        }
+
+        .contents-item:hover {
+            color: var(--color-text-white);
+            padding-left: calc(var(--space-7) + var(--space-2));
+        }
+
+        .contents-item:hover::before {
+            opacity: 1;
+        }
+
+        .contents-item[onclick]:hover {
+            color: var(--color-accent-primary);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .contents-title {
+                font-size: var(--font-size-2xl);
+            }
+
+            .contents-item {
+                font-size: var(--font-size-base);
+                padding: var(--space-4) 0;
+                padding-left: var(--space-6);
+            }
+
+            .contents-item:hover {
+                padding-left: calc(var(--space-6) + var(--space-2));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-glow"></div>
+    <div class="contents-container">
+        <h1 class="contents-title">Contents</h1>
+        <ul class="contents-list">
+            ${contentsItems}
+        </ul>
+    </div>
+</body>
+</html>
+            `;
+        }
+
+        let currentPageIndex = 0;
+
+        // Initialize presentation
+        function initPresentation() {
+            const pageContent = document.getElementById('pageContent');
+            const pageIndicators = document.getElementById('pageIndicators');
+            const totalPages = document.getElementById('totalPages');
+            const sectionNav = document.getElementById('sectionNav');
+
+            totalPages.textContent = pages.length;
+
+            // Populate section navigation links
+            sections.forEach((section, index) => {
+                if (section.pages.length > 0 && sectionStartIndices[section.title] !== undefined) {
+                    const link = document.createElement('a');
+                    link.className = 'section-nav-link';
+                    link.textContent = section.title;
+                    link.onclick = (e) => {
+                        e.preventDefault();
+                        goToPage(sectionStartIndices[section.title]);
+                    };
+                    sectionNav.appendChild(link);
+                }
+            });
+
+            // Create page frames
+            pages.forEach((page, index) => {
+                const frame = document.createElement('div');
+                frame.className = 'page-frame';
+                frame.id = `page-${index}`;
+                
+                const iframe = document.createElement('iframe');
+                
+                // Handle inline contents page (when page is null)
+                if (page === null) {
+                    iframe.srcdoc = generateContentsPageHTML();
+                } else {
+                    iframe.src = page;
+                }
+                
+                iframe.onload = function() {
+                    // Ensure iframe content is styled correctly
+                    try {
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        iframeDoc.body.style.backgroundColor = '#1a1a1a';
+                        iframeDoc.body.style.color = '#e0e0e0';
+                    } catch (e) {
+                        // Cross-origin restrictions may prevent this
+                    }
+                    
+                    // Render animation controls after iframe loads
+                    if (index === currentPageIndex) {
+                        setTimeout(() => {
+                            renderAnimationControls();
+                        }, 300);
+                    }
+                };
+                
+                frame.appendChild(iframe);
+                pageContent.appendChild(frame);
+
+                // Create page indicator dot
+                const dot = document.createElement('div');
+                dot.className = 'page-dot';
+                if (index === 0) dot.classList.add('active');
+                dot.onclick = () => goToPage(index);
+                pageIndicators.appendChild(dot);
+            });
+
+            // Show first page (skip transition on init)
+            showPage(0, true);
+
+            // Keyboard navigation
+            document.addEventListener('keydown', handleKeyboard);
+            
+            // Initial render of animation controls
+            setTimeout(() => {
+                renderAnimationControls();
+            }, 500);
+        }
+
+        // Get section name for a given page index
+        function getSectionNameForPage(index) {
+            // Title page and contents page have no section
+            if (index === 0 || index === 1) {
+                return null;
+            }
+            
+            // Check if this page belongs to a section
+            const sectionInfo = pageToSectionMap[index];
+            if (sectionInfo && sectionInfo.sectionTitle) {
+                return sectionInfo.sectionTitle;
+            }
+            
+            return null;
+        }
+
+        // Check if we're entering a new section
+        function isNewSection(fromIndex, toIndex) {
+            if (toIndex < 2) return false; // Title and contents pages
+
+            const fromSection = pageToSectionMap[fromIndex];
+            const toSection = pageToSectionMap[toIndex];
+
+            // Check if we're moving to a different section and it's the first page of that section
+            if (fromSection && toSection &&
+                fromSection.sectionIndex !== toSection.sectionIndex) {
+
+                // Check if toIndex is the first page of the section
+                const section = sections[toSection.sectionIndex];
+                if (section && section.pages.length > 0) {
+                    const firstPageIndex = sectionStartIndices[section.title];
+                    return toIndex === firstPageIndex;
+                }
+            }
+            return false;
+        }
+
+        // Show section transition
+        function showSectionTransition(sectionTitle, callback) {
+            const pageContent = document.getElementById('pageContent');
+
+            // Create transition element
+            const transition = document.createElement('div');
+            transition.className = 'section-transition active';
+            transition.innerHTML = `
+                <div class="section-transition-title">${sectionTitle}</div>
+                <div class="section-transition-subtitle">Section ${sections.findIndex(s => s.title === sectionTitle) + 1}</div>
+            `;
+
+            pageContent.appendChild(transition);
+
+            // Auto-dismiss after 2 seconds
+            setTimeout(() => {
+                transition.classList.remove('active');
+                setTimeout(() => {
+                    transition.remove();
+                    if (callback) callback();
+                }, 600); // Wait for fade out
+            }, 2000);
+        }
+
+        // Show specific page
+        function showPage(index, skipTransition = false) {
+            if (index < 0 || index >= pages.length) return;
+
+            // Check if we need to show section transition
+            if (!skipTransition && isNewSection(currentPageIndex, index)) {
+                const toSection = pageToSectionMap[index];
+                if (toSection) {
+                    // Hide all pages immediately before showing transition
+                    document.querySelectorAll('.page-frame').forEach((frame, i) => {
+                        frame.classList.remove('active');
+                    });
+
+                    showSectionTransition(toSection.sectionTitle, () => {
+                        // Actually show the page after transition
+                        showPageInternal(index);
+                    });
+                    return;
+                }
+            }
+
+            showPageInternal(index);
+        }
+
+        // Internal function to actually show the page
+        function showPageInternal(index) {
+            // Hide all pages
+            document.querySelectorAll('.page-frame').forEach((frame, i) => {
+                frame.classList.remove('active');
+            });
+
+            // Show selected page
+            const selectedFrame = document.getElementById(`page-${index}`);
+            if (selectedFrame) {
+                selectedFrame.classList.add('active');
+            }
+
+            // Update indicators
+            document.querySelectorAll('.page-dot').forEach((dot, i) => {
+                dot.classList.toggle('active', i === index);
+            });
+
+            // Update page info
+            document.getElementById('currentPageNum').textContent = index + 1;
+
+            // Update section name
+            const sectionName = getSectionNameForPage(index);
+            const sectionDisplay = document.getElementById('currentSection');
+            if (sectionDisplay) {
+                if (sectionName) {
+                    sectionDisplay.textContent = sectionName;
+                    sectionDisplay.classList.remove('hidden');
+                } else {
+                    sectionDisplay.textContent = '';
+                    sectionDisplay.classList.add('hidden');
+                }
+            }
+
+            // Update section navigation links active state
+            const sectionNavLinks = document.querySelectorAll('.section-nav-link');
+            const currentSectionName = getSectionNameForPage(index);
+            
+            sectionNavLinks.forEach(link => {
+                link.classList.remove('active');
+                const linkSectionTitle = link.textContent;
+                
+                // Highlight if this link's section matches the current page's section
+                if (currentSectionName && linkSectionTitle === currentSectionName) {
+                    link.classList.add('active');
+                }
+            });
+
+            // Update navigation buttons (side arrows and footer arrows)
+            const prevBtn = document.getElementById('prevPage');
+            const nextBtn = document.getElementById('nextPage');
+            const footerPrevBtn = document.getElementById('footerPrevPage');
+            const footerNextBtn = document.getElementById('footerNextPage');
+            
+            if (prevBtn) prevBtn.disabled = index === 0;
+            if (nextBtn) nextBtn.disabled = index === pages.length - 1;
+            if (footerPrevBtn) footerPrevBtn.disabled = index === 0;
+            if (footerNextBtn) footerNextBtn.disabled = index === pages.length - 1;
+
+            currentPageIndex = index;
+
+            // Render animation controls from iframe (with multiple retries)
+            // Wait for iframe to load completely
+            const selectedIframe = selectedFrame ? selectedFrame.querySelector('iframe') : null;
+            if (selectedIframe) {
+                const tryRender = () => {
+                    renderAnimationControls();
+                };
+                
+                // Try immediately
+                setTimeout(tryRender, 100);
+                
+                // Try again after iframe loads (if not already loaded)
+                if (selectedIframe.contentDocument && selectedIframe.contentDocument.readyState === 'complete') {
+                    setTimeout(tryRender, 500);
+                } else {
+                    selectedIframe.addEventListener('load', () => {
+                        setTimeout(tryRender, 500);
+                    });
+                }
+                
+                // Additional retries for slow-loading pages
+                let retries = 0;
+                const maxRetries = 8;
+                const retryInterval = setInterval(() => {
+                    retries++;
+                    renderAnimationControls();
+                    if (retries >= maxRetries) {
+                        clearInterval(retryInterval);
+                    }
+                }, 300);
+            } else {
+                // No iframe yet, hide controls
+                document.getElementById('footerAnimControls').style.display = 'none';
+            }
+        }
+
+        // Show footer controls with default values (when state can't be read yet)
+        function showFooterControlsWithDefaults(footerAnimControls, currentStep = 1, totalSteps = 1) {
+            footerAnimControls.innerHTML = '';
+            footerAnimControls.style.display = 'flex';
+            
+            // Create footer version of prev button
+            const footerPrevBtn = document.createElement('button');
+            footerPrevBtn.className = 'footer-anim-arrow';
+            footerPrevBtn.id = 'footerPrevAnim';
+            footerPrevBtn.textContent = '←';
+            footerPrevBtn.disabled = currentStep <= 1;
+            footerPrevBtn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                navigateAnimationInPage(-1);
+            };
+            footerAnimControls.appendChild(footerPrevBtn);
+            
+            // Create footer version of step indicator
+            const footerIndicator = document.createElement('div');
+            footerIndicator.className = 'footer-anim-indicator';
+            footerIndicator.innerHTML = `<span id="footerAnimStep">${currentStep}</span> / <span id="footerAnimTotal">${totalSteps}</span>`;
+            footerAnimControls.appendChild(footerIndicator);
+            
+            // Create footer version of next button
+            const footerNextBtn = document.createElement('button');
+            footerNextBtn.className = 'footer-anim-arrow';
+            footerNextBtn.id = 'footerNextAnim';
+            footerNextBtn.textContent = '→';
+            footerNextBtn.disabled = currentStep >= totalSteps;
+            footerNextBtn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                navigateAnimationInPage(1);
+            };
+            footerAnimControls.appendChild(footerNextBtn);
+        }
+
+        // Extract and render animation controls from active iframe
+        function renderAnimationControls() {
+            const activeFrame = document.querySelector('.page-frame.active iframe');
+            const footerAnimControls = document.getElementById('footerAnimControls');
+
+            if (!footerAnimControls) return;
+
+            // Clear existing controls
+            footerAnimControls.innerHTML = '';
+
+            if (!activeFrame || !activeFrame.contentWindow) {
+                footerAnimControls.style.display = 'none';
+                return;
+            }
+            
+            try {
+                const iframeWindow = activeFrame.contentWindow;
+                if (!iframeWindow) {
+                    footerAnimControls.style.display = 'none';
+                    return;
+                }
+                
+                let iframeDoc = null;
+                try {
+                    iframeDoc = activeFrame.contentDocument || iframeWindow.document;
+                } catch (e) {
+                    // Cross-origin or not accessible
+                }
+                
+                if (!iframeDoc || !iframeDoc.body) {
+                    // Iframe not ready yet, but we can still check for functions
+                    // Check if navigateAnimation function exists even without full DOM access
+                    if (iframeWindow && typeof iframeWindow.navigateAnimation === 'function') {
+                        // We have animations! Show controls with defaults
+                        showFooterControlsWithDefaults(footerAnimControls);
+                    }
+                    return;
+                }
+                
+                // Check multiple ways if this page has animations
+                let hasAnimations = false;
+                let currentStep = 1;
+                let totalSteps = 1;
+                let canGoPrev = false;
+                let canGoNext = false;
+                
+                // Method 1: Check for animation-controls element 
+                // querySelector should work even if display:none (it's still in DOM)
+                let iframeControls = null;
+                try {
+                    iframeControls = iframeDoc.querySelector('.animation-controls');
+                } catch (e) {
+                    // Can't query, continue to other methods
+                }
+                
+                // Method 2: Check for navigateAnimation function (most reliable)
+                const hasNavigateFunction = iframeWindow && typeof iframeWindow.navigateAnimation === 'function';
+                
+                // If we have either controls element or the function, we have animations
+                if (iframeControls || hasNavigateFunction) {
+                    hasAnimations = true;
+                    
+                    if (iframeControls) {
+                        // Extract buttons and indicator (even if hidden)
+                        const prevBtn = iframeDoc.getElementById('prevAnim');
+                        const nextBtn = iframeDoc.getElementById('nextAnim');
+                        const stepSpan = iframeDoc.getElementById('currentStep');
+                        const totalSpan = iframeDoc.getElementById('totalSteps');
+                        
+                        // Try to read from DOM elements
+                        if (stepSpan && totalSpan) {
+                            const stepText = stepSpan.textContent || stepSpan.innerText || '1';
+                            const totalText = totalSpan.textContent || totalSpan.innerText || '1';
+                            currentStep = parseInt(stepText) || 1;
+                            totalSteps = parseInt(totalText) || 1;
+                        }
+                        
+                        // Try to read disabled states
+                        if (prevBtn) canGoPrev = !prevBtn.disabled;
+                        if (nextBtn) canGoNext = !nextBtn.disabled;
+                    }
+                    
+                    // Try to access animation state variables directly from iframe scope
+                    if (hasNavigateFunction) {
+                        try {
+                            // Access variables if they're in global scope (they should be)
+                            if (typeof iframeWindow.currentAnimationStep !== 'undefined') {
+                                currentStep = (iframeWindow.currentAnimationStep || 0) + 1;
+                            }
+                            if (typeof iframeWindow.totalAnimationSteps !== 'undefined') {
+                                totalSteps = iframeWindow.totalAnimationSteps || 1;
+                            }
+                        } catch (e) {
+                            // Can't access variables directly, keep DOM values if available
+                        }
+                    }
+                    
+                    // Calculate navigation states based on current step
+                    if (currentStep <= 1) {
+                        canGoPrev = false;
+                    } else {
+                        canGoPrev = true;
+                    }
+                    
+                    if (currentStep >= totalSteps) {
+                        canGoNext = false;
+                    } else {
+                        canGoNext = true;
+                    }
+                }
+                
+                // If we detected animations but don't have step info yet, request it via postMessage
+                if (hasAnimations && (currentStep === 1 && totalSteps === 1)) {
+                    // Request animation state from iframe
+                    if (iframeWindow) {
+                        iframeWindow.postMessage({ type: 'requestAnimationState' }, '*');
+                        // Also try to call updateControls if available
+                        if (iframeWindow.updateControls && typeof iframeWindow.updateControls === 'function') {
+                            try {
+                                iframeWindow.updateControls();
+                            } catch (e) {
+                                // Ignore
+                            }
+                        }
+                    }
+                }
+                
+                if (hasAnimations) {
+                    // Show footer controls with current state
+                    showFooterControlsWithDefaults(footerAnimControls, currentStep, totalSteps);
+                    
+                    // Update button states based on canGoPrev/canGoNext if available
+                    const prevBtn = document.getElementById('footerPrevAnim');
+                    const nextBtn = document.getElementById('footerNextAnim');
+                    if (prevBtn && !canGoPrev && currentStep > 1) {
+                        // Allow prev if we're not on first step
+                        prevBtn.disabled = false;
+                    }
+                    if (nextBtn && !canGoNext && currentStep < totalSteps) {
+                        // Allow next if we're not on last step
+                        nextBtn.disabled = false;
+                    }
+                } else {
+                    // No animation controls in this page
+                    footerAnimControls.style.display = 'none';
+                }
+            } catch (e) {
+                // Cross-origin or other error - hide controls
+                footerAnimControls.style.display = 'none';
+                console.log('Error accessing iframe:', e);
+            }
+        }
+
+        // Navigate animation within current page (called from footer)
+        function navigateAnimationInPage(direction) {
+            const activeFrame = document.querySelector('.page-frame.active iframe');
+            if (!activeFrame) return;
+            
+            try {
+                const iframeWindow = activeFrame.contentWindow;
+                const iframeDoc = activeFrame.contentDocument || (iframeWindow ? iframeWindow.document : null);
+                
+                // Try direct function call first (most reliable)
+                if (iframeWindow && typeof iframeWindow.navigateAnimation === 'function') {
+                    iframeWindow.navigateAnimation(direction);
+                    // Update controls after animation
+                    setTimeout(renderAnimationControls, 200);
+                    return;
+                }
+                
+                // Try accessing via contentDocument defaultView
+                if (iframeDoc && iframeDoc.defaultView && typeof iframeDoc.defaultView.navigateAnimation === 'function') {
+                    iframeDoc.defaultView.navigateAnimation(direction);
+                    setTimeout(renderAnimationControls, 200);
+                    return;
+                }
+                
+                // Fallback to postMessage
+                if (iframeWindow) {
+                    iframeWindow.postMessage({ 
+                        type: 'navigateAnimation', 
+                        direction: direction 
+                    }, '*');
+                    setTimeout(renderAnimationControls, 200);
+                }
+            } catch (e) {
+                console.log('Cannot communicate with iframe:', e);
+            }
+        }
+
+        // Listen for messages from iframes to update controls
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'animationState') {
+                // Update footer controls when iframe sends state update
+                const footerAnimControls = document.getElementById('footerAnimControls');
+                if (footerAnimControls) {
+                    // Update the step indicator immediately if we have the data
+                    const stepSpan = document.getElementById('footerAnimStep');
+                    const totalSpan = document.getElementById('footerAnimTotal');
+                    const prevBtn = document.getElementById('footerPrevAnim');
+                    const nextBtn = document.getElementById('footerNextAnim');
+                    
+                    if (stepSpan && event.data.currentStep) {
+                        stepSpan.textContent = event.data.currentStep;
+                    }
+                    if (totalSpan && event.data.totalSteps) {
+                        totalSpan.textContent = event.data.totalSteps;
+                    }
+                    if (prevBtn !== null && event.data.hasOwnProperty('canGoPrev')) {
+                        prevBtn.disabled = !event.data.canGoPrev;
+                    }
+                    if (nextBtn !== null && event.data.hasOwnProperty('canGoNext')) {
+                        nextBtn.disabled = !event.data.canGoNext;
+                    }
+                }
+                // Also do a full re-render to be safe
+                setTimeout(renderAnimationControls, 100);
+            }
+        });
+        
+        // Periodically update animation controls (fallback)
+        setInterval(() => {
+            const activeFrame = document.querySelector('.page-frame.active iframe');
+            if (activeFrame) {
+                try {
+                    const iframeDoc = activeFrame.contentDocument || activeFrame.contentWindow.document;
+                    if (iframeDoc && iframeDoc.body) {
+                        renderAnimationControls();
+                    }
+                } catch (e) {
+                    // Silently fail
+                }
+            }
+        }, 2000);
+
+        // Navigate to page
+        function navigatePage(direction) {
+            const newIndex = currentPageIndex + direction;
+            if (newIndex >= 0 && newIndex < pages.length) {
+                showPage(newIndex);
+            }
+        }
+
+        // Go to specific page
+        function goToPage(index) {
+            showPage(index);
+        }
+
+        // Handle keyboard navigation
+        function handleKeyboard(event) {
+            // Check if we're in an input field
+            if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+                return;
+            }
+
+            switch(event.key) {
+                case 'ArrowLeft':
+                    event.preventDefault();
+                    navigatePage(-1);
+                    break;
+                case 'ArrowRight':
+                    event.preventDefault();
+                    navigatePage(1);
+                    break;
+            }
+        }
+
+        // Shooting Stars Animation
+        function createShootingStar() {
+            const container = document.getElementById('shootingStars');
+            if (!container) return;
+
+            const star = document.createElement('div');
+            star.className = 'shooting-star';
+
+            // Random starting position (from top or left edge)
+            const startFromTop = Math.random() > 0.5;
+            let startX, startY, endX, endY, angle;
+
+            if (startFromTop) {
+                // Start from top, shoot diagonally down
+                startX = Math.random() * window.innerWidth;
+                startY = -10;
+                angle = (Math.random() * 60 + 15) * (Math.PI / 180); // 15-75 degrees
+                const distance = Math.random() * 800 + 600; // 600-1400px
+                endX = startX + Math.cos(angle) * distance;
+                endY = startY + Math.sin(angle) * distance;
+            } else {
+                // Start from left, shoot diagonally right
+                startX = -10;
+                startY = Math.random() * window.innerHeight;
+                angle = (Math.random() * 60 - 30) * (Math.PI / 180); // -30 to 30 degrees
+                const distance = Math.random() * 1000 + 800; // 800-1800px
+                endX = startX + Math.cos(angle) * distance;
+                endY = startY + Math.sin(angle) * distance;
+            }
+
+            // Set rotation for the trail
+            star.style.setProperty('--angle', angle + 'rad');
+
+            // Set position
+            star.style.left = startX + 'px';
+            star.style.top = startY + 'px';
+            star.style.setProperty('--end-x', (endX - startX) + 'px');
+            star.style.setProperty('--end-y', (endY - startY) + 'px');
+
+            // Random duration (0.8s to 2s)
+            const duration = Math.random() * 1.2 + 0.8;
+            star.style.animation = `shoot ${duration}s linear forwards`;
+
+            // Add to container
+            container.appendChild(star);
+
+            // Remove after animation
+            setTimeout(() => {
+                if (star.parentNode) {
+                    star.parentNode.removeChild(star);
+                }
+            }, duration * 1000);
+        }
+
+        // Continuously create shooting stars
+        function startShootingStars() {
+            // Create first star immediately
+            createShootingStar();
+
+            // Then create stars at random intervals
+            function scheduleNextStar() {
+                const delay = Math.random() * 2000 + 1000; // 1-3 seconds
+                setTimeout(() => {
+                    createShootingStar();
+                    scheduleNextStar();
+                }, delay);
+            }
+
+            scheduleNextStar();
+        }
+
+        // Initialize when page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            initPresentation();
+            startShootingStars();
+        });
+    </script>
+</body>
+</html>
+

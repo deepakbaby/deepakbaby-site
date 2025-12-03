@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pipeline Parallelism Pros and Cons - Distributed Training</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #0f0f0f;
+            background-image: radial-gradient(circle at 20% 50%, rgba(74, 158, 255, 0.06) 0%, transparent 50%),
+                            radial-gradient(circle at 80% 80%, rgba(74, 158, 255, 0.04) 0%, transparent 50%);
+            color: #e8e8e8;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .content-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 100px;
+            position: relative;
+            max-width: 1600px;
+        }
+
+        .page-title {
+            font-size: 3rem;
+            font-weight: 600;
+            color: #f0f0f0;
+            margin-bottom: 60px;
+            text-align: center;
+            letter-spacing: -0.02em;
+            text-shadow: 0 0 20px rgba(74, 158, 255, 0.3);
+            opacity: 0;
+            transform: translateY(-30px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .page-title.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .content-area {
+            width: 100%;
+            display: flex;
+            gap: 60px;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        .pros-section, .cons-section {
+            flex: 1;
+            max-width: 600px;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid;
+        }
+
+        .pros-section .section-title {
+            color: #2ed573;
+            border-color: rgba(46, 213, 115, 0.3);
+        }
+
+        .cons-section .section-title {
+            color: #ff6b6b;
+            border-color: rgba(255, 107, 107, 0.3);
+        }
+
+        .pros-list, .cons-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .pro-item, .con-item {
+            background: rgba(45, 45, 45, 0.6);
+            border: 2px solid;
+            border-radius: 12px;
+            padding: 25px 30px;
+            backdrop-filter: blur(8px);
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .pro-item {
+            border-color: rgba(46, 213, 115, 0.3);
+        }
+
+        .pro-item:hover {
+            border-color: rgba(46, 213, 115, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(46, 213, 115, 0.2);
+        }
+
+        .con-item {
+            border-color: rgba(255, 107, 107, 0.3);
+        }
+
+        .con-item:hover {
+            border-color: rgba(255, 107, 107, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(255, 107, 107, 0.2);
+        }
+
+        .pro-item.visible, .con-item.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .item-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .pro-item .item-title {
+            color: #2ed573;
+        }
+
+        .con-item .item-title {
+            color: #ff6b6b;
+        }
+
+        .item-description {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #e8e8e8;
+        }
+
+        /* Animation controls - hidden but present for parent detection */
+        .animation-controls {
+            position: fixed;
+            bottom: 70px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            background: rgba(45, 45, 45, 0.95);
+            padding: 10px 20px;
+            border-radius: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            z-index: 1003;
+            backdrop-filter: blur(10px);
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .anim-arrow {
+            background: rgba(60, 60, 60, 0.9);
+            border: 2px solid #555;
+            color: #e0e0e0;
+            font-size: 20px;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .anim-arrow:hover:not(:disabled) {
+            background: rgba(74, 158, 255, 0.2);
+            border-color: #4a9eff;
+            transform: scale(1.1);
+        }
+
+        .anim-arrow:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .animation-step-indicator {
+            color: #b0b0b0;
+            font-size: 14px;
+            margin: 0 10px;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        @media (max-width: 1024px) {
+            .content-area {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .pros-section, .cons-section {
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 2.2rem;
+            }
+
+            .section-title {
+                font-size: 1.6rem;
+            }
+
+            .item-title {
+                font-size: 1.1rem;
+            }
+
+            .item-description {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="content-container">
+        <h1 class="page-title" id="pageTitle">Pipeline Parallelism: Pros and Cons</h1>
+        
+        <div class="content-area">
+            <div class="pros-section">
+                <h2 class="section-title">Advantages</h2>
+                <div class="pros-list">
+                    <div class="pro-item" id="pro1">
+                        <div class="item-title">Handles Large Models</div>
+                        <div class="item-description">Enables training models that exceed single GPU memory by distributing layers across multiple GPUs.</div>
+                    </div>
+                    <div class="pro-item" id="pro2">
+                        <div class="item-title">Memory Efficiency</div>
+                        <div class="item-description">Each GPU only stores the layers assigned to it, significantly reducing per-GPU memory requirements.</div>
+                    </div>
+                    <div class="pro-item" id="pro3">
+                        <div class="item-title">Scales Model Size</div>
+                        <div class="item-description">Model size can scale almost linearly with the number of GPUs in the pipeline.</div>
+                    </div>
+                    <div class="pro-item" id="pro4">
+                        <div class="item-title">Good for Long Networks</div>
+                        <div class="item-description">Particularly effective for deep networks with many sequential layers.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cons-section">
+                <h2 class="section-title">Limitations</h2>
+                <div class="cons-list">
+                    <div class="con-item" id="con1">
+                        <div class="item-title">Pipeline Bubbles</div>
+                        <div class="item-description">GPUs may experience idle time during pipeline warm-up and cool-down phases, reducing efficiency.</div>
+                    </div>
+                    <div class="con-item" id="con2">
+                        <div class="item-title">Communication Overhead</div>
+                        <div class="item-description">Requires frequent communication between adjacent GPUs to pass activations and gradients.</div>
+                    </div>
+                    <div class="con-item" id="con3">
+                        <div class="item-title">Complex Scheduling</div>
+                        <div class="item-description">Managing micro-batches and pipeline stages adds complexity compared to data parallelism.</div>
+                    </div>
+                    <div class="con-item" id="con4">
+                        <div class="item-title">Load Balancing</div>
+                        <div class="item-description">Uneven partitioning can create bottlenecks if some stages take longer than others.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Animation controls for parent frame -->
+    <div class="animation-controls">
+        <button class="anim-arrow" id="prevAnim" onclick="navigateAnimation(-1)">←</button>
+        <div class="animation-step-indicator">
+            <span id="currentStep">1</span> / <span id="totalSteps">9</span>
+        </div>
+        <button class="anim-arrow" id="nextAnim" onclick="navigateAnimation(1)">→</button>
+    </div>
+
+    <script>
+        let currentStep = 0;
+        const totalSteps = 9; // Title, then 4 pros, then 4 cons
+
+        // Make navigateAnimation available to parent
+        window.navigateAnimation = function(direction) {
+            const oldStep = currentStep;
+            if (direction > 0 && currentStep < totalSteps - 1) {
+                currentStep++;
+            } else if (direction < 0 && currentStep > 0) {
+                currentStep--;
+            }
+            // Only update if step actually changed
+            if (oldStep !== currentStep) {
+                updateDisplay();
+            }
+        };
+
+        function updateDisplay() {
+            // Step 0: Show title
+            if (currentStep >= 0) {
+                document.getElementById('pageTitle').classList.add('visible');
+            } else {
+                document.getElementById('pageTitle').classList.remove('visible');
+            }
+
+            // Step 1: Show first advantage (pro1)
+            if (currentStep >= 1) {
+                document.getElementById('pro1').classList.add('visible');
+            } else {
+                document.getElementById('pro1').classList.remove('visible');
+            }
+
+            // Step 2: Show second advantage (pro2)
+            if (currentStep >= 2) {
+                document.getElementById('pro2').classList.add('visible');
+            } else {
+                document.getElementById('pro2').classList.remove('visible');
+            }
+
+            // Step 3: Show third advantage (pro3)
+            if (currentStep >= 3) {
+                document.getElementById('pro3').classList.add('visible');
+            } else {
+                document.getElementById('pro3').classList.remove('visible');
+            }
+
+            // Step 4: Show fourth advantage (pro4)
+            if (currentStep >= 4) {
+                document.getElementById('pro4').classList.add('visible');
+            } else {
+                document.getElementById('pro4').classList.remove('visible');
+            }
+
+            // Step 5: Show first disadvantage (con1)
+            if (currentStep >= 5) {
+                document.getElementById('con1').classList.add('visible');
+            } else {
+                document.getElementById('con1').classList.remove('visible');
+            }
+
+            // Step 6: Show second disadvantage (con2)
+            if (currentStep >= 6) {
+                document.getElementById('con2').classList.add('visible');
+            } else {
+                document.getElementById('con2').classList.remove('visible');
+            }
+
+            // Step 7: Show third disadvantage (con3)
+            if (currentStep >= 7) {
+                document.getElementById('con3').classList.add('visible');
+            } else {
+                document.getElementById('con3').classList.remove('visible');
+            }
+
+            // Step 8: Show fourth disadvantage (con4)
+            if (currentStep >= 8) {
+                document.getElementById('con4').classList.add('visible');
+            } else {
+                document.getElementById('con4').classList.remove('visible');
+            }
+
+            // Update controls
+            document.getElementById('currentStep').textContent = currentStep + 1;
+            document.getElementById('totalSteps').textContent = totalSteps;
+            document.getElementById('prevAnim').disabled = currentStep === 0;
+            document.getElementById('nextAnim').disabled = currentStep >= totalSteps - 1;
+            
+            // Update exposed state to parent (must be updated here, not just at init)
+            window.currentAnimationStep = currentStep;
+            window.totalAnimationSteps = totalSteps;
+        }
+
+        // Expose state to parent (initial values)
+        window.currentAnimationStep = currentStep;
+        window.totalAnimationSteps = totalSteps;
+
+        // Initialize
+        window.addEventListener('load', () => {
+            updateDisplay();
+        });
+
+        // Listen for messages from parent
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'requestAnimationState') {
+                window.parent.postMessage({
+                    type: 'animationState',
+                    currentStep: currentStep + 1,
+                    totalSteps: totalSteps,
+                    canGoPrev: currentStep > 0,
+                    canGoNext: currentStep < totalSteps - 1
+                }, '*');
+            }
+        });
+    </script>
+</body>
+</html>
+

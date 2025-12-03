@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Network Training Basics - Distributed Training</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: sans-serif;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .content-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 50px 100px;
+            position: relative;
+        }
+
+        .page-title {
+            font-family: sans-serif;
+            font-size: 2.8rem;
+            font-weight: normal;
+            color: #ffffff;
+            margin-bottom: 60px;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.6s ease;
+        }
+
+        .page-title.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .content-area {
+            width: 100%;
+            max-width: 1400px;
+            display: flex;
+            gap: 80px;
+            align-items: center;
+        }
+
+        .text-content {
+            flex: 1;
+            min-height: 400px;
+        }
+
+        .text-block {
+            font-size: 1.5rem;
+            line-height: 1.6;
+            color: #e0e0e0;
+            margin-bottom: 35px;
+            opacity: 0;
+            transform: translateX(-30px);
+            transition: all 0.6s ease;
+            padding: 0;
+        }
+
+        .text-block.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .graphics-area {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            min-height: 400px;
+        }
+
+        .brain-visual {
+            width: 100%;
+            max-width: 500px;
+            height: 400px;
+            position: relative;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.8s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .brain-visual.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .brain-svg {
+            width: 100%;
+            height: 100%;
+            max-width: 400px;
+            max-height: 400px;
+        }
+
+        .brain-path {
+            fill: none;
+            stroke: #4a9eff;
+            stroke-width: 3;
+            opacity: 0.6;
+        }
+
+        .brain-glow {
+            filter: drop-shadow(0 0 15px rgba(74, 158, 255, 0.5));
+        }
+
+        .thought-bubble {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(74, 158, 255, 0.2);
+            border: 2px solid rgba(74, 158, 255, 0.5);
+            opacity: 0;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .thought-bubble.visible {
+            opacity: 1;
+        }
+
+        .thought-bubble:nth-child(1) {
+            top: 10%;
+            right: 15%;
+            animation-delay: 0s;
+        }
+
+        .thought-bubble:nth-child(2) {
+            top: 30%;
+            right: 5%;
+            animation-delay: 0.5s;
+            width: 60px;
+            height: 60px;
+        }
+
+        .thought-bubble:nth-child(3) {
+            bottom: 20%;
+            right: 10%;
+            animation-delay: 1s;
+            width: 70px;
+            height: 70px;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) scale(1);
+            }
+            50% {
+                transform: translateY(-15px) scale(1.05);
+            }
+        }
+
+
+        .connection {
+            position: absolute;
+            background: linear-gradient(to right, rgba(74, 158, 255, 0.3), rgba(74, 158, 255, 0.1));
+            height: 2px;
+            transform-origin: left center;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .connection.visible {
+            opacity: 1;
+        }
+
+        /* MNIST Visual */
+        .mnist-visual {
+            width: 100%;
+            max-width: 400px;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.8s ease;
+        }
+
+        .mnist-visual.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .mnist-digit {
+            aspect-ratio: 1;
+            background: rgba(74, 158, 255, 0.08);
+            border: 1px solid rgba(74, 158, 255, 0.25);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            color: #b0b0b0;
+            font-weight: normal;
+            transition: all 0.3s ease;
+        }
+
+        .mnist-digit:hover {
+            background: rgba(74, 158, 255, 0.15);
+            border-color: #4a9eff;
+            color: #e0e0e0;
+        }
+
+        /* Training Data Image */
+        .training-data-visual {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.8s ease;
+            display: none;
+            z-index: 100;
+            background: rgba(26, 26, 26, 0.95);
+        }
+
+        .training-data-visual.visible {
+            opacity: 1;
+            transform: scale(1);
+            display: flex;
+        }
+
+        .training-data-visual img {
+            max-width: 90%;
+            max-height: 90%;
+            width: auto;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Animation controls - visually hidden but structurally present for parent to detect */
+        .animation-controls {
+            position: fixed;
+            bottom: 70px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            background: rgba(45, 45, 45, 0.95);
+            padding: 10px 20px;
+            border-radius: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            z-index: 1003;
+            backdrop-filter: blur(10px);
+            /* Hide from view but keep in DOM for parent detection */
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .anim-arrow {
+            background: rgba(60, 60, 60, 0.9);
+            border: 2px solid #555;
+            color: #e0e0e0;
+            font-size: 20px;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .anim-arrow:hover {
+            background: rgba(80, 80, 80, 0.9);
+            border-color: #666;
+            transform: scale(1.1);
+        }
+
+        .anim-arrow:active {
+            transform: scale(0.95);
+        }
+
+        .anim-arrow:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .animation-step-indicator {
+            color: #b0b0b0;
+            font-size: 14px;
+            margin: 0 10px;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        /* Responsive design */
+        @media (max-width: 1024px) {
+            .content-area {
+                flex-direction: column;
+                gap: 40px;
+            }
+
+            .graphics-area {
+                min-height: 300px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .content-container {
+                padding: 40px 30px;
+            }
+
+            .page-title {
+                font-size: 2rem;
+                margin-bottom: 30px;
+            }
+
+            .text-block {
+                font-size: 1.2rem;
+            }
+
+            .content-area {
+                gap: 30px;
+            }
+
+            .animation-controls {
+                bottom: 70px;
+                right: 15px;
+                padding: 8px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="content-container">
+        <h1 class="page-title" id="title">Neural Network Training Basics</h1>
+        
+        <div class="content-area">
+            <div class="text-content">
+                <div class="text-block" id="text-1">
+                    Understanding neural network training fundamentals is essential before exploring distributed strategies.
+                </div>
+                <div class="text-block" id="text-2">
+                    We'll use MNIST: recognizing handwritten digits from 0 to 9.
+                </div>
+                <div class="text-block" id="text-3">
+                    These basics provide the foundation for understanding distributed training approaches.
+                </div>
+            </div>
+
+            <div class="graphics-area">
+                <!-- Brain Visualization -->
+                <div class="brain-visual" id="brain-visual">
+                    <svg class="brain-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Brain outline -->
+                        <path class="brain-path brain-glow" d="M 100 30 Q 60 40 50 70 Q 40 100 50 130 Q 60 160 100 170 Q 140 160 150 130 Q 160 100 150 70 Q 140 40 100 30 Z" 
+                              fill="rgba(74, 158, 255, 0.15)" 
+                              stroke="#4a9eff" 
+                              stroke-width="2"/>
+                        <!-- Brain folds -->
+                        <path class="brain-path" d="M 70 60 Q 80 70 70 80 Q 60 90 70 100" 
+                              fill="none" 
+                              stroke="#4a9eff" 
+                              stroke-width="1.5" 
+                              opacity="0.4"/>
+                        <path class="brain-path" d="M 130 60 Q 120 70 130 80 Q 140 90 130 100" 
+                              fill="none" 
+                              stroke="#4a9eff" 
+                              stroke-width="1.5" 
+                              opacity="0.4"/>
+                        <path class="brain-path" d="M 85 110 Q 95 120 85 130 Q 75 140 85 150" 
+                              fill="none" 
+                              stroke="#4a9eff" 
+                              stroke-width="1.5" 
+                              opacity="0.4"/>
+                        <path class="brain-path" d="M 115 110 Q 105 120 115 130 Q 125 140 115 150" 
+                              fill="none" 
+                              stroke="#4a9eff" 
+                              stroke-width="1.5" 
+                              opacity="0.4"/>
+                        <!-- Central connection -->
+                        <path class="brain-path" d="M 100 50 L 100 150" 
+                              fill="none" 
+                              stroke="#4a9eff" 
+                              stroke-width="1" 
+                              opacity="0.3"/>
+                    </svg>
+                    <!-- Thought bubbles -->
+                    <div class="thought-bubble"></div>
+                    <div class="thought-bubble"></div>
+                    <div class="thought-bubble"></div>
+                </div>
+
+                <!-- MNIST Digits Visualization -->
+                <div class="mnist-visual" id="mnist-visual" style="display: none;">
+                    <div class="mnist-digit">0</div>
+                    <div class="mnist-digit">1</div>
+                    <div class="mnist-digit">2</div>
+                    <div class="mnist-digit">3</div>
+                    <div class="mnist-digit">4</div>
+                    <div class="mnist-digit">5</div>
+                    <div class="mnist-digit">6</div>
+                    <div class="mnist-digit">7</div>
+                    <div class="mnist-digit">8</div>
+                    <div class="mnist-digit">9</div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Training Data Image Overlay -->
+        <div class="training-data-visual" id="training-data-visual">
+            <img src="images/training-data.png" alt="Training Data">
+        </div>
+
+        <!-- Animation controls -->
+        <div class="animation-controls">
+            <button class="anim-arrow" id="prevAnim" onclick="navigateAnimation(-1)">←</button>
+            <div class="animation-step-indicator">
+                <span id="currentStep">1</span> / <span id="totalSteps">6</span>
+            </div>
+            <button class="anim-arrow" id="nextAnim" onclick="navigateAnimation(1)">→</button>
+        </div>
+    </div>
+
+    <script>
+        // Animation state management
+        let currentAnimationStep = 0;
+        const totalAnimationSteps = 6;
+
+        // Animation sequence
+        const animations = [
+            () => {
+                // Step 1: Show title
+                document.getElementById('title').classList.add('visible');
+            },
+            () => {
+                // Step 2: Show first text block and brain visual
+                document.getElementById('text-1').classList.add('visible');
+                document.getElementById('brain-visual').classList.add('visible');
+                document.querySelectorAll('.thought-bubble').forEach((bubble, index) => {
+                    setTimeout(() => bubble.classList.add('visible'), index * 200);
+                });
+            },
+            () => {
+                // Step 3: Show second text block
+                document.getElementById('text-2').classList.add('visible');
+            },
+            () => {
+                // Step 4: Show MNIST digits
+                document.getElementById('mnist-visual').style.display = 'grid';
+                setTimeout(() => {
+                    document.getElementById('mnist-visual').classList.add('visible');
+                }, 50);
+            },
+            () => {
+                // Step 5: Show third text block
+                document.getElementById('text-3').classList.add('visible');
+            },
+            () => {
+                // Step 6: Hide all text and graphics, show training data image overlay
+                document.getElementById('title').classList.remove('visible');
+                document.getElementById('text-1').classList.remove('visible');
+                document.getElementById('text-2').classList.remove('visible');
+                document.getElementById('text-3').classList.remove('visible');
+                document.getElementById('brain-visual').classList.remove('visible');
+                document.querySelectorAll('.thought-bubble').forEach(bubble => {
+                    bubble.classList.remove('visible');
+                });
+                document.getElementById('mnist-visual').classList.remove('visible');
+                document.getElementById('mnist-visual').style.display = 'none';
+                
+                // Show training data image overlay
+                document.getElementById('training-data-visual').style.display = 'flex';
+                setTimeout(() => {
+                    document.getElementById('training-data-visual').classList.add('visible');
+                }, 50);
+            }
+        ];
+
+        // Initialize
+        function init() {
+            updateAnimation();
+            updateControls();
+        }
+
+        // Navigate animation (can be called from parent or internally)
+        function navigateAnimation(direction) {
+            const newStep = currentAnimationStep + direction;
+            if (newStep >= 0 && newStep < totalAnimationSteps) {
+                currentAnimationStep = newStep;
+                updateAnimation();
+                updateControls();
+            }
+        }
+
+        // Expose navigateAnimation globally for parent window access
+        window.navigateAnimation = navigateAnimation;
+
+        // Update animation display
+        function updateAnimation() {
+            // If we're on step 6, only show the training data image
+            if (currentAnimationStep === 5) {
+                // Hide all previous elements
+                document.getElementById('title').classList.remove('visible');
+                document.getElementById('text-1').classList.remove('visible');
+                document.getElementById('text-2').classList.remove('visible');
+                document.getElementById('text-3').classList.remove('visible');
+                document.getElementById('brain-visual').classList.remove('visible');
+                document.querySelectorAll('.thought-bubble').forEach(bubble => {
+                    bubble.classList.remove('visible');
+                });
+                document.getElementById('mnist-visual').classList.remove('visible');
+                document.getElementById('mnist-visual').style.display = 'none';
+                
+                // Show training data image
+                document.getElementById('training-data-visual').style.display = 'flex';
+                setTimeout(() => {
+                    document.getElementById('training-data-visual').classList.add('visible');
+                }, 50);
+                return;
+            }
+            
+            // Hide training data image if not on step 6
+            document.getElementById('training-data-visual').classList.remove('visible');
+            document.getElementById('training-data-visual').style.display = 'none';
+            
+            // Execute all animations up to current step
+            for (let i = 0; i <= currentAnimationStep; i++) {
+                if (animations[i]) {
+                    animations[i]();
+                }
+            }
+
+            // Hide elements beyond current step
+            if (currentAnimationStep < 0) {
+                document.getElementById('title').classList.remove('visible');
+                document.getElementById('text-1').classList.remove('visible');
+                document.getElementById('text-2').classList.remove('visible');
+                document.getElementById('text-3').classList.remove('visible');
+                document.getElementById('brain-visual').classList.remove('visible');
+                document.querySelectorAll('.thought-bubble').forEach(bubble => {
+                    bubble.classList.remove('visible');
+                });
+                document.getElementById('mnist-visual').classList.remove('visible');
+                document.getElementById('mnist-visual').style.display = 'none';
+                document.getElementById('training-data-visual').classList.remove('visible');
+                document.getElementById('training-data-visual').style.display = 'none';
+            }
+        }
+
+        // Update control buttons
+        function updateControls() {
+            const prevBtn = document.getElementById('prevAnim');
+            const nextBtn = document.getElementById('nextAnim');
+            const currentStepSpan = document.getElementById('currentStep');
+            const totalStepsSpan = document.getElementById('totalSteps');
+
+            if (prevBtn) prevBtn.disabled = currentAnimationStep === 0;
+            if (nextBtn) nextBtn.disabled = currentAnimationStep === totalAnimationSteps - 1;
+            if (currentStepSpan) currentStepSpan.textContent = currentAnimationStep + 1;
+            if (totalStepsSpan) totalStepsSpan.textContent = totalAnimationSteps;
+
+            // Send animation state to parent window
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'animationState',
+                    currentStep: currentAnimationStep + 1,
+                    totalSteps: totalAnimationSteps,
+                    canGoPrev: currentAnimationStep > 0,
+                    canGoNext: currentAnimationStep < totalAnimationSteps - 1
+                }, '*');
+            }
+        }
+
+        // Expose updateControls globally
+        window.updateControls = updateControls;
+
+        // Prevent page navigation when clicking animation controls
+        document.querySelectorAll('.anim-arrow').forEach(arrow => {
+            arrow.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        });
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
+
