@@ -54,8 +54,13 @@ DDP is the most straightforward and commonly used approach for distributed train
 ### How DDP Works
 Click the Play button to see a visualization of how DDP works.
 
-<div class="viz-container" data-viz-id="ddp">
-  <iframe src="/visualizations/ddp.html" style="border: none; width: 100%; min-height: 600px;"></iframe>
+<div style="margin: 2rem 0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); background: #1a1a1a;">
+  <iframe 
+    src="/visualizations/ddp.html" 
+    style="width: 100%; height: 700px; border: none; display: block;"
+    allowfullscreen
+    loading="lazy">
+  </iframe>
 </div>
 
 1. **Model Replication**: Each GPU gets a complete copy of the model with identical initial weights
@@ -110,8 +115,13 @@ When models are too large to fit on a single GPU, we need to partition them acro
 ### How Pipeline Parallelism Works
 Click the Play button.
 
-<div class="viz-container" data-viz-id="pipeline">
-  <iframe src="/visualizations/pipeline.html" style="border: none; width: 100%; min-height: 600px;"></iframe>
+<div style="margin: 2rem 0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); background: #1a1a1a;">
+  <iframe 
+    src="/visualizations/pipeline.html" 
+    style="width: 100%; height: 850px; border: none; display: block;"
+    allowfullscreen
+    loading="lazy">
+  </iframe>
 </div>
 
 1. **Model Partitioning**: Split model into N sequential stages
@@ -176,8 +186,13 @@ FSDP represents a paradigm shift in distributed training. Instead of replicating
 
 ### How FSDP Works
 
-<div class="viz-container" data-viz-id="fsdp">
-  <iframe src="/visualizations/fsdp.html" style="border: none; width: 100%; min-height: 600px;"></iframe>
+<div style="margin: 2rem 0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); background: #1a1a1a;">
+  <iframe 
+    src="/visualizations/fsdp.html" 
+    style="width: 100%; height: 700px; border: none; display: block;"
+    allowfullscreen
+    loading="lazy">
+  </iframe>
 </div>
 
 FSDP follows a **gather-compute-scatter** pattern:
@@ -268,25 +283,6 @@ graph LR;
     C --> |NO| F[Use Pipeline Parallel]
 {{< /mermaid >}}
 
-
-```
-                          Does model fit on single GPU?
-                                    │
-                    ┌───────────────┴───────────────┐
-                    │ YES                           │ NO
-                    ▼                               ▼
-               Use DDP                    Do you have fast interconnect?
-                                                    │
-                                    ┌───────────────┴───────────────┐
-                                    │ YES                           │ NO
-                                    ▼                               ▼
-                                Use FSDP                   Use Pipeline Parallel
-                                    │                               │
-                                    ▼                               ▼
-                            Combine with                    Consider combining
-                            Pipeline for                    with DDP or FSDP
-                            very large models               
-```
 
 ## Practical Recommendations
 
