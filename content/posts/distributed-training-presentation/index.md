@@ -1,5 +1,5 @@
 ---
-title: "Distributed Training Slides"
+title: "Slides: Distributed Training for ML"
 date: 2025-12-03
 draft: false
 hero: presentation-hero.png
@@ -18,7 +18,7 @@ Explore distributed training techniques through this interactive presentation. N
 - **Pipeline Parallelism**: Splitting models across devices
 - **FSDP (Fully Sharded Data Parallel)**: Advanced sharding techniques
 
-## Interactive Presentation
+## Slides
 
 Use the arrow keys (← →) or click the navigation arrows to move between slides. Some slides include animations that you can step through using the animation controls at the bottom.
 
@@ -49,7 +49,7 @@ Use the arrow keys (← →) or click the navigation arrows to move between slid
 </style>
 
 {{< alert type="success" >}}
-The visualizations and animations in the "Back to Basics" section of this presentation are from the educational content at [3Blue1Brown](https://www.3blue1brown.com/).
+The visualizations and images on MNIST examples in the "Back to Basics" section are from the educational content at [3Blue1Brown](https://www.3blue1brown.com/).
 {{< /alert >}}
 
 ---
