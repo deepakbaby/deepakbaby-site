@@ -54,14 +54,147 @@ DDP is the most straightforward and commonly used approach for distributed train
 ### How DDP Works
 Click the Play button to see a visualization of how DDP works.
 
-<div style="margin: 0; padding: 0; border-radius: 0; overflow: hidden; background: transparent;">
+<style>
+.embedded-html-wrapper {
+  position: relative;
+  margin: 2rem 0;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.05), rgba(10, 10, 10, 0.85));
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45);
+}
+
+.embedded-html-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.75rem 0.9rem;
+  background: rgba(4, 4, 4, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+}
+
+.embedded-html-toolbar-label {
+  margin-right: auto;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #a7a7a7;
+}
+
+.embedded-html-toolbar-button {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 0.35rem 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  line-height: 1;
+  position: relative;
+  backdrop-filter: blur(6px);
+}
+
+.embedded-html-toolbar-button:hover {
+  background: rgba(255, 255, 255, 0.16);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+}
+
+.embedded-html-toolbar-button:active {
+  transform: translateY(0);
+}
+
+.embedded-html-toolbar-button svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.embedded-html-toolbar-button[data-active="true"] {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.embedded-html-wrapper iframe {
+  width: 100%;
+  border: none;
+  display: block;
+  aspect-ratio: 16 / 9;
+  min-height: 400px;
+  background: #000;
+}
+
+@media (max-width: 768px) {
+  .embedded-html-toolbar {
+    flex-wrap: wrap;
+    gap: 0.65rem;
+  }
+
+  .embedded-html-toolbar-label {
+    width: 100%;
+    margin: 0;
+    text-align: center;
+  }
+}
+</style>
+
+<div class="embedded-html-wrapper" data-src="/visualizations/ddp.html">
+  <div class="embedded-html-toolbar">
+    <span class="embedded-html-toolbar-label">DDP visualization</span>
+    <button
+      type="button"
+      class="embedded-html-toolbar-button"
+      data-action="open-new-tab"
+      aria-label="Open the DDP visualization in a new tab">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M14 3h7v7h-2V6.414l-9.293 9.293-1.414-1.414L17.586 5H14V3zM5 5h5v2H6v11h11v-4h2v5H5V5z" />
+      </svg>
+      <span class="sr-only">Open DDP visualization in new tab</span>
+    </button>
+    <button
+      type="button"
+      class="embedded-html-toolbar-button"
+      data-action="fullscreen"
+      data-label-base="Enter fullscreen view for the DDP visualization"
+      data-label-active="Exit fullscreen view for the DDP visualization"
+      aria-label="Enter fullscreen view for the DDP visualization">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 4h6v2H6v4H4V4zm10 0h6v6h-2V6h-4V4zm6 10v6h-6v-2h4v-4h2zm-10 6H4v-6h2v4h4v2z" />
+      </svg>
+      <span class="sr-only">Toggle fullscreen for DDP visualization</span>
+    </button>
+  </div>
   <iframe 
     src="/visualizations/ddp.html" 
-    style="width: 100%; aspect-ratio: 16 / 9; border: none; display: block; margin: 0; padding: 0; min-height: 0;"
-    allowfullscreen
     loading="lazy"
+    allowfullscreen
     frameborder="0"
-    scrolling="no">
+    scrolling="no"
+    title="Distributed Data Parallel visualization">
   </iframe>
 </div>
 
@@ -117,14 +250,39 @@ When models are too large to fit on a single GPU, we need to partition them acro
 ### How Pipeline Parallelism Works
 Click the Play button.
 
-<div style="margin: 0; padding: 0; border-radius: 0; overflow: hidden; background: transparent;">
+<div class="embedded-html-wrapper" data-src="/visualizations/pipeline.html">
+  <div class="embedded-html-toolbar">
+    <span class="embedded-html-toolbar-label">Pipeline parallelism</span>
+    <button
+      type="button"
+      class="embedded-html-toolbar-button"
+      data-action="open-new-tab"
+      aria-label="Open the pipeline parallelism visualization in a new tab">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M14 3h7v7h-2V6.414l-9.293 9.293-1.414-1.414L17.586 5H14V3zM5 5h5v2H6v11h11v-4h2v5H5V5z" />
+      </svg>
+      <span class="sr-only">Open pipeline parallelism visualization in new tab</span>
+    </button>
+    <button
+      type="button"
+      class="embedded-html-toolbar-button"
+      data-action="fullscreen"
+      data-label-base="Enter fullscreen view for the pipeline parallelism visualization"
+      data-label-active="Exit fullscreen view for the pipeline parallelism visualization"
+      aria-label="Enter fullscreen view for the pipeline parallelism visualization">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 4h6v2H6v4H4V4zm10 0h6v6h-2V6h-4V4zm6 10v6h-6v-2h4v-4h2zm-10 6H4v-6h2v4h4v2z" />
+      </svg>
+      <span class="sr-only">Toggle fullscreen for pipeline parallelism visualization</span>
+    </button>
+  </div>
   <iframe 
-    src="/visualizations/pipeline.html" 
-    style="width: 100%; aspect-ratio: 16 / 9; border: none; display: block; margin: 0; padding: 0; min-height: 0;"
-    allowfullscreen
+    src="/visualizations/pipeline.html"
     loading="lazy"
+    allowfullscreen
     frameborder="0"
-    scrolling="no">
+    scrolling="no"
+    title="Pipeline parallelism visualization">
   </iframe>
 </div>
 
@@ -190,14 +348,39 @@ FSDP represents a paradigm shift in distributed training. Instead of replicating
 
 ### How FSDP Works
 
-<div style="margin: 0; padding: 0; border-radius: 0; overflow: hidden; background: transparent;">
+<div class="embedded-html-wrapper" data-src="/visualizations/fsdp.html">
+  <div class="embedded-html-toolbar">
+    <span class="embedded-html-toolbar-label">FSDP visualization</span>
+    <button
+      type="button"
+      class="embedded-html-toolbar-button"
+      data-action="open-new-tab"
+      aria-label="Open the FSDP visualization in a new tab">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M14 3h7v7h-2V6.414l-9.293 9.293-1.414-1.414L17.586 5H14V3zM5 5h5v2H6v11h11v-4h2v5H5V5z" />
+      </svg>
+      <span class="sr-only">Open FSDP visualization in new tab</span>
+    </button>
+    <button
+      type="button"
+      class="embedded-html-toolbar-button"
+      data-action="fullscreen"
+      data-label-base="Enter fullscreen view for the FSDP visualization"
+      data-label-active="Exit fullscreen view for the FSDP visualization"
+      aria-label="Enter fullscreen view for the FSDP visualization">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 4h6v2H6v4H4V4zm10 0h6v6h-2V6h-4V4zm6 10v6h-6v-2h4v-4h2zm-10 6H4v-6h2v4h4v2z" />
+      </svg>
+      <span class="sr-only">Toggle fullscreen for FSDP visualization</span>
+    </button>
+  </div>
   <iframe 
-    src="/visualizations/fsdp.html" 
-    style="width: 100%; aspect-ratio: 16 / 9; border: none; display: block; margin: 0; padding: 0; min-height: 0;"
-    allowfullscreen
+    src="/visualizations/fsdp.html"
     loading="lazy"
+    allowfullscreen
     frameborder="0"
-    scrolling="no">
+    scrolling="no"
+    title="Fully Sharded Data Parallel visualization">
   </iframe>
 </div>
 
@@ -319,4 +502,80 @@ Distributed training is essential for working with state-of-the-art neural netwo
 - [GPipe Paper](https://arxiv.org/abs/1811.06965)
 - [ZeRO: Memory Optimization Toward Training Trillion Parameter Models](https://arxiv.org/abs/1910.02054)
 - [Megatron-LM: Training Multi-Billion Parameter Language Models](https://arxiv.org/abs/1909.08053)
+
+<script>
+(function() {
+  function runInit() {
+    const fullscreenButtons = document.querySelectorAll('.embedded-html-wrapper [data-action="fullscreen"]');
+    const newTabButtons = document.querySelectorAll('.embedded-html-wrapper [data-action="open-new-tab"]');
+    if (!fullscreenButtons.length && !newTabButtons.length) return;
+
+    function getFullscreenElement() {
+      return document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement || null;
+    }
+
+    function requestFullscreen(element) {
+      if (!element) return Promise.resolve();
+      if (element.requestFullscreen) return element.requestFullscreen();
+      if (element.webkitRequestFullscreen) return element.webkitRequestFullscreen();
+      if (element.msRequestFullscreen) return element.msRequestFullscreen();
+      return Promise.resolve();
+    }
+
+    function exitFullscreen() {
+      if (document.exitFullscreen) return document.exitFullscreen();
+      if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
+      if (document.msExitFullscreen) return document.msExitFullscreen();
+      return Promise.resolve();
+    }
+
+    function updateFullscreenUI() {
+      const active = getFullscreenElement();
+      fullscreenButtons.forEach(button => {
+        const wrapper = button.closest('.embedded-html-wrapper');
+        const isActive = wrapper && active === wrapper;
+        const baseLabel = button.dataset.labelBase || button.getAttribute('aria-label') || 'Toggle fullscreen';
+        const activeLabel = button.dataset.labelActive;
+        button.dataset.active = isActive ? 'true' : 'false';
+        button.setAttribute('aria-label', isActive && activeLabel ? activeLabel : baseLabel);
+      });
+    }
+
+    fullscreenButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const wrapper = button.closest('.embedded-html-wrapper');
+        if (!wrapper) return;
+        const active = getFullscreenElement();
+        if (active && active !== wrapper) {
+          exitFullscreen().finally(() => requestFullscreen(wrapper));
+        } else if (active === wrapper) {
+          exitFullscreen();
+        } else {
+          requestFullscreen(wrapper);
+        }
+      });
+    });
+
+    newTabButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const wrapper = button.closest('.embedded-html-wrapper');
+        const url = wrapper?.dataset.src;
+        if (!url) return;
+        window.open(url, '_blank', 'noopener');
+      });
+    });
+
+    document.addEventListener('fullscreenchange', updateFullscreenUI);
+    document.addEventListener('webkitfullscreenchange', updateFullscreenUI);
+    document.addEventListener('msfullscreenchange', updateFullscreenUI);
+    updateFullscreenUI();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', runInit);
+  } else {
+    runInit();
+  }
+})();
+</script>
 
