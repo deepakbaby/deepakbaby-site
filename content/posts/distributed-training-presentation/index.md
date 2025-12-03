@@ -10,8 +10,6 @@ description: "An interactive presentation exploring distributed training techniq
 
 Explore distributed training techniques through this interactive presentation. Navigate through the slides using arrow keys or the navigation controls.
 
-> **Note**: The visualizations and animations in the "Back to Basics" section of this presentation are inspired by and adapted from the excellent educational content at [3Blue1Brown](https://www.3blue1brown.com/). Grant Sanderson's work on making math and neural networks accessible through beautiful animations has been invaluable to the community.
-
 ## Topics Covered
 
 - **Back to Basics**: Understanding neural network fundamentals
@@ -32,6 +30,10 @@ Use the arrow keys (← →) or click the navigation arrows to move between slid
     loading="lazy">
   </iframe>
 </div>
+
+{{< alert type="success" >}}
+The visualizations and animations in the "Back to Basics" section of this presentation are from the educational content at [3Blue1Brown](https://www.3blue1brown.com/).
+{{< /alert >}}
 
 ---
 

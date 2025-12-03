@@ -210,6 +210,18 @@ body.kind-page .wrapper .content-section {
   padding-left: 0 !important;
 }
 
+/* Better content width management */
+body.kind-page .wrapper .content-section .content .read-area {
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+body.kind-page .wrapper .content-section .content .page-content {
+  max-width: 900px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
 /* Reduce gap between sidebar and content - match right side */
 body.kind-page .wrapper {
   gap: 0 !important;
@@ -360,6 +372,106 @@ body.kind-page.sidebar-collapsed .wrapper .content-section {
   /* Hide toggle button on smaller screens where sidebar is already hidden */
   .sidebar-toggle {
     display: none;
+  }
+
+  /* Force sidebar to be hidden on mobile */
+  body.kind-page .wrapper .sidebar-section {
+    display: none !important;
+  }
+
+  /* Adjust content section for mobile */
+  body.kind-page .wrapper .content-section {
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  /* Ensure read-area uses full width on mobile */
+  body.kind-page .wrapper .content-section .content {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  body.kind-page .wrapper .content-section .read-area {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* Adjust page content padding */
+  body.kind-page .page-content {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  /* Override desktop centering on mobile */
+  body.kind-page .wrapper .content-section .content .page-content {
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  /* Make sure share buttons and improve page button stack properly */
+  body.kind-page .share-buttons,
+  body.kind-page .btn-improve-page {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Extra mobile adjustments for smaller screens */
+  body.kind-page .wrapper .content-section {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+
+  body.kind-page .page-content {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+
+  /* Make iframe containers mobile-friendly */
+  .iframe-wrapper {
+    max-height: 60vh !important;
+  }
+
+  .zoom-controls {
+    padding: 6px 8px !important;
+    gap: 4px !important;
+  }
+
+  .zoom-controls button {
+    min-width: 30px !important;
+    height: 28px !important;
+    font-size: 14px !important;
+    padding: 0 6px !important;
+  }
+
+  .zoom-controls .zoom-level {
+    min-width: 45px !important;
+    font-size: 12px !important;
+    padding: 4px 6px !important;
+  }
+
+  .zoom-controls .zoom-label {
+    display: none !important;
+  }
+}
+
+@media (max-width: 576px) {
+  /* Small mobile devices */
+  body.kind-page .wrapper .content-section,
+  body.kind-page .page-content {
+    padding-left: 0.25rem !important;
+    padding-right: 0.25rem !important;
+  }
+
+  /* Stack share buttons */
+  body.kind-page .share-buttons .btn {
+    margin: 0.25rem !important;
   }
 }
 
