@@ -157,11 +157,12 @@ params:
 
     # Enable Analytics
     analytics:
-      enabled: false
+      enabled: true
       services:
         # Google Analytics
         google:
           id: G-H4LBG7NDFZ
+          respectDoNotTrack: true
         # # CounterDev
         # counterDev:
         #   id: <your counterdev id>
