@@ -161,7 +161,7 @@ params:
       services:
         # Google Analytics
         google:
-          id: G-H4LBG7NDFZ
+          id: G-7EXC1G2E4F
           respectDoNotTrack: true
         # # CounterDev
         # counterDev:
