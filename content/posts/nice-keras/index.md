@@ -2,7 +2,7 @@
 title: "NICE- Non-linear Independent Components Estimation: Insights and Implementation in Keras"
 date: 2019-12-03T12:55:51+01:00
 draft: false
-tags: []
+tags: ["deep learning", "keras", "generative models", "flow-based models", "nice", "normalizing flows"]
 categories: []
 ---
 

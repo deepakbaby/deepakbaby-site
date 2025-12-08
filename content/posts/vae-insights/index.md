@@ -12,10 +12,10 @@ This post is a summary of some of the main hurdles I encountered in implementing
 The Goal of VAE is to train a generative model $\mathbb{P}(\mathbf{X}, z)$ to maximize the marginal likelihood $\mathbb{\mathbf{X}}$ of the dataset. The cost function used in training a VAE is comprised of a reconstruction loss and a KL loss as given below.
 
 $$\begin{equation}
-\mathcal{L} = -\mathbb{E}\left\[ \log\mathbb{P}(\mathbf{X} \vert z)  \right\] + D\left(~\mathbb{Q}(z \vert \mathbf{X})~ \Vert~ \mathbb{P}(z)   ~\right)
+\mathcal{L} = -\mathbb{E}\left[ \log\mathbb{P}(\mathbf{X} \vert z)  \right] + D\left( \mathbb{Q}(z \vert \mathbf{X}) \mathrel{\Vert} \mathbb{P}(z) \right)
 \end{equation}$$
 
-The main implementation issue in this case is that the two losses are kind of opposing each other. The problem of mode collapse is that the second loss term $D\left(~\mathbb{Q}(z \vert \mathbf{X})~ \Vert~ \mathbb{P}(z)   ~\right)$ reduces to $0$. i.e., the approximate posterior $\mathbb{Q}(z \vert \mathbf{X})$ becomes equal to the prior $\mathbb{P}(z)$. Thus the latent variable do not carry any information about the input $\mathbf{X}$.
+The main implementation issue in this case is that the two losses are kind of opposing each other. The problem of mode collapse is that the second loss term $D\left( \mathbb{Q}(z \vert \mathbf{X}) \mathrel{\Vert} \mathbb{P}(z) \right)$ reduces to $0$. i.e., the approximate posterior $\mathbb{Q}(z \vert \mathbf{X})$ becomes equal to the prior $\mathbb{P}(z)$. Thus the latent variable do not carry any information about the input $\mathbf{X}$.
 
 In addition, there is always a mismatch between the dimensions of the data and the latent space. If our data is $N$ dimensional and the latent space has a dimension of $D$, the first cost term involves summation over $N$ values and the KL loss is a summation over $D$ values. This scaling difference introduces additional weightage on one loss term over the other and it converges faster than the other.
 
