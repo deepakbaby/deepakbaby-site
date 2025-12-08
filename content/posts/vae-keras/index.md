@@ -40,29 +40,30 @@ Again, we do not know the best set of characteristics $\mathbb{P}(z \vert \mathb
 Further, a parametric inference model $\mathbb{Q}(z \vert \mathbf{X})$ that maps the data to the underlying latent space and the difference between $\mathbb{P}(z \vert \mathbf{X})$  and $\mathbb{Q}(z \vert \mathbf{X})$ is quantified using [Kullback-Leibler divergence](https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence) between them.
 
 $$\begin{align}
-D_{KL} \left(~ \mathbb{Q}(z \vert \mathbf{X})~ \Vert~ \mathbb{P}(z \vert \mathbf{X})~ \right) &= \sum  \mathbb{Q}(z \vert \mathbf{X}) \log \dfrac{ \mathbb{Q}(z \vert \mathbf{X})}{ \mathbb{P}(z \vert \mathbf{X})} \\\\\\
-&=\mathbb{E}\left\[ \log \dfrac{ \mathbb{Q}(z \vert \mathbf{X})}{ \mathbb{P}(z \vert \mathbf{X})}  \right\] \\\\\\
-&= \mathbb{E}\left\[ \log\mathbb{Q}(z \vert \mathbf{X}) - \log \mathbb{P}(z \vert \mathbf{X})  \right\]
+D_{KL} \left(~ \mathbb{Q}(z \vert \mathbf{X})~ \Vert~ \mathbb{P}(z \vert \mathbf{X})~ \right) &= \sum  \mathbb{Q}(z \vert \mathbf{X}) \log \dfrac{ \mathbb{Q}(z \vert \mathbf{X})}{ \mathbb{P}(z \vert \mathbf{X})} \\\\
+&=\mathbb{E}\left[ \log \dfrac{ \mathbb{Q}(z \vert \mathbf{X})}{ \mathbb{P}(z \vert \mathbf{X})}  \right] \\\\
+&= \mathbb{E}\left[ \log\mathbb{Q}(z \vert \mathbf{X}) - \log \mathbb{P}(z \vert \mathbf{X})  \right]
 \end{align}$$
 
 where, $\mathbb{E}$ is the expectation with respect to $\mathbb{Q}(z \vert \mathbf{X})$. Using $\mathbb{P}(z \vert \mathbf{X}) = \dfrac{\mathbb{P}(\mathbf{X} \vert z) \mathbb{P}(z)}{\mathbb{P}(\mathbf{X})}$ we can rewrite the above expression as:
 
 $$\begin{align}
-D_{KL} \left(~ \mathbb{Q}(z \vert \mathbf{X})~ \Vert~ \mathbb{P}(z \vert \mathbf{X})~ \right) &= \mathbb{E}\left\[ \log\mathbb{Q}(z \vert \mathbf{X}) - \log \dfrac{\mathbb{P}(\mathbf{X} \vert z) \mathbb{P}(z)}{\mathbb{P}(\mathbf{X})}  \right\] \\\\\\
-&= \mathbb{E}\left\[ \log\mathbb{Q}(z \vert \mathbf{X}) - \log\mathbb{P}(\mathbf{X} \vert z) - \log \mathbb{P}(z) + \log \mathbb{P}(\mathbf{X}) \right\]
+D_{KL} \left(~ \mathbb{Q}(z \vert \mathbf{X})~ \Vert~ \mathbb{P}(z \vert \mathbf{X})~ \right) &= \mathbb{E}\left[ \log\mathbb{Q}(z \vert \mathbf{X}) - \log \dfrac{\mathbb{P}(\mathbf{X} \vert z) \mathbb{P}(z)}{\mathbb{P}(\mathbf{X})}  \right] \\\\
+&= \mathbb{E}\left[ \log\mathbb{Q}(z \vert \mathbf{X}) - \log\mathbb{P}(\mathbf{X} \vert z) - \log \mathbb{P}(z) + \log \mathbb{P}(\mathbf{X}) \right]
 \end{align}$$
 
 Notice that $\mathbb{P}(\mathbf{X})$ does not depend on $z$ and hence it can be taken outside the expectation operation over $z$. We will denote $D_{KL}$ as $D$.
+
 $$\begin{align}
-D \left(~ \mathbb{Q}(z \vert \mathbf{X})~ \Vert~ \mathbb{P}(z \vert \mathbf{X})~ \right) &=  \mathbb{E}\left\[ \log\mathbb{Q}(z \vert \mathbf{X}) - \log\mathbb{P}(\mathbf{X} \vert z) - \log \mathbb{P}(z) \right\] + \log \mathbb{P}(\mathbf{X}) \\\\\\
-\implies ~~ \log \mathbb{P}(\mathbf{X}) - D \left(~ \mathbb{Q}(z \vert \mathbf{X})~ \Vert~ \mathbb{P}(z \vert \mathbf{X})~ \right) &= \mathbb{E}\left\[ \log\mathbb{P}(\mathbf{X} \vert z)  \right\] - \mathbb{E}\left\[ \log\mathbb{Q}(z \vert \mathbf{X}) - \mathbb{P}(z)  \right\] \\\\\\
-&= \mathbb{E}\left\[ \log\mathbb{P}(\mathbf{X} \vert z)  \right\] - D\left(~\mathbb{Q}(z \vert \mathbf{X})~ \Vert~ \mathbb{P}(z)   ~\right)
+D \left(~ \mathbb{Q}(z \vert \mathbf{X})~ \Vert~ \mathbb{P}(z \vert \mathbf{X})~ \right) &=  \mathbb{E}\left[ \log\mathbb{Q}(z \vert \mathbf{X}) - \log\mathbb{P}(\mathbf{X} \vert z) - \log \mathbb{P}(z) \right] + \log \mathbb{P}(\mathbf{X}) \\\\
+\implies ~~ \log \mathbb{P}(\mathbf{X}) - D \left(~ \mathbb{Q}(z \vert \mathbf{X})~ \Vert~ \mathbb{P}(z \vert \mathbf{X})~ \right) &= \mathbb{E}\left[ \log\mathbb{P}(\mathbf{X} \vert z)  \right] - \mathbb{E}\left[ \log\mathbb{Q}(z \vert \mathbf{X}) - \mathbb{P}(z)  \right] \\\\
+&= \mathbb{E}\left[ \log\mathbb{P}(\mathbf{X} \vert z)  \right] - D\left(~\mathbb{Q}(z \vert \mathbf{X})~ \Vert~ \mathbb{P}(z)   ~\right)
 \end{align}$$
 
 The right-hand side of the above equation is the objective function used by VAEs. What it says is that, we are trying to model our data which is described by $\log \mathbb{P}(\mathbf{X})$ with some error $D \left(~ \mathbb{Q}(z \vert \mathbf{X})~ \Vert~ \mathbb{P}(z \vert \mathbf{X})~ \right)$. Since $D_{KL}$ is always positive, we can write the above equation as:
 
 $$\begin{equation}
-\log \mathbb{P}(\mathbf{X}) \geq \mathbb{E}\left\[ \log\mathbb{P}(\mathbf{X} \vert z)  \right\] - D\left(~\mathbb{Q}(z \vert \mathbf{X})~ \Vert~ \mathbb{P}(z)   ~\right)
+\log \mathbb{P}(\mathbf{X}) \geq \mathbb{E}\left[ \log\mathbb{P}(\mathbf{X} \vert z)  \right] - D\left(~\mathbb{Q}(z \vert \mathbf{X})~ \Vert~ \mathbb{P}(z)   ~\right)
 \end{equation}$$
 
 Thus, the right-hand side (RHS) of the above inequality is the lower bound for $\log \mathbb{P}(\mathbf{X})$ which we are trying to maximize. This is known as the evidence lower bound (ELBO). Maximizing the RHS is also the same as minimizing its negative. The negative of the RHS is therefore used as a cost function to be minimized while training VAEs.
@@ -71,7 +72,7 @@ At this point, what we have is:
 
 1. $\mathbb{P}(\mathbf{X} \vert z)$: Generating data from the given latent variable (the **decoder**)    
 1. $\mathbb{Q}(z \vert \mathbf{X})$: Infering the latent code given the data (the **encoder**)      
-1. $D\left(~\mathbb{Q}(z \vert \mathbf{X})~ \Vert~ \mathbb{P}(z)   ~\right)$: Making sure that the encoded representation resembles a simpler, tractable distribuation (e.g., Gaussian).
+1. $D\left(\mathbb{Q}(z \vert \mathbf{X}) \Vert \mathbb{P}(z)  \right)$: Making sure that the encoded representation resembles a simpler, tractable distribuation (e.g., Gaussian).
 
 Thus a VAE first encodes the data into some latent space (mapping $x$ to $z$) and then generates (decodes: mapping $z$ to $x$) data based on samples from that latent space, and hence called variational autoencoder.
 
@@ -87,20 +88,20 @@ The mappings $\mathbb{P}(\mathbf{X} \vert z)$ and $\mathbb{Q}(z \vert \mathbf{X}
 As detailed before, the first term of the cost function is the reconstruction loss. We can use any popular loss, say mean-squared error, for this purpose. Computing the KL divergence cost term requires assuming $\mathbb{Q}(z \vert \mathbf{X})$ to be also Gaussian with parameters $\mu (\mathbf{X})$ and $\Sigma (\mathbf{X})$. This assumption enables us to compute the KL divergence between $\mathbb{Q}(z \vert \mathbf{X}) = \mathcal{N}(\mu (\mathbf{X}), \Sigma (\mathbf{X}))$ and $\mathbb{P}(z) = \mathcal{N}(0,1)$ in closed form as:
 
 $$\begin{align}
-D\left\[ \mathcal{N}(\mu (\mathbf{X}), \Sigma (\mathbf{X}))~\Vert ~ \mathcal{N}(0,1) \right\] = \dfrac{1}{2} \left\[ tr\left( \Sigma (\mathbf{X}) \right) + \mu (\mathbf{X})^{T} \mu (\mathbf{X}) - k - \log det\left( \Sigma (\mathbf{X}) \right)   \right\]
+D\left[ \mathcal{N}(\mu (\mathbf{X}), \Sigma (\mathbf{X}))~\Vert ~ \mathcal{N}(0,1) \right] = \dfrac{1}{2} \left[ tr\left( \Sigma (\mathbf{X}) \right) + \mu (\mathbf{X})^{T} \mu (\mathbf{X}) - k - \log det\left( \Sigma (\mathbf{X}) \right)   \right]
 \end{align}$$
 where, $tr$ and $det$ are the trace and determinant of the covariance matrix $\Sigma (\mathbf{X})$ and $k$ is the dimension of the Gaussian distribution. For details on the calculation of the above divergence, refer to this [page](https://stats.stackexchange.com/questions/7440/kl-divergence-between-two-univariate-gaussians). We also assume that the covariance matrix is diagonal, we can compute the determinant by simpy multiplying its diagonal elements. In addition, we can also implement $\Sigma (\mathbf{X})$ as a vector since it is a diagonal matrix.
 
 $$\begin{align}
-D\left\[ \mathcal{N}(\mu (\mathbf{X}), \Sigma (\mathbf{X}))~\Vert ~ \mathcal{N}(0,1) \right\] &= \dfrac{1}{2} \left\[ \sum \Sigma (\mathbf{X}) + \sum \mu^{2} (\mathbf{X}) - \sum 1 - \log \prod \Sigma (\mathbf{X})   \right\] \\\\\\
-&= \dfrac{1}{2} \left\[ \sum \Sigma (\mathbf{X}) + \sum \mu^{2} (\mathbf{X}) - \sum 1 - \sum \log \Sigma (\mathbf{X})   \right\] \\\\\\
-&=  \dfrac{1}{2} \sum \left\[ \Sigma (\mathbf{X}) + \mu^{2} (\mathbf{X}) -  1 - \log \Sigma (\mathbf{X})   \right\]
+D\left[ \mathcal{N}(\mu (\mathbf{X}), \Sigma (\mathbf{X}))~\Vert ~ \mathcal{N}(0,1) \right] &= \dfrac{1}{2} \left[ \sum \Sigma (\mathbf{X}) + \sum \mu^{2} (\mathbf{X}) - \sum 1 - \log \prod \Sigma (\mathbf{X})   \right] \\\\\\
+&= \dfrac{1}{2} \left[ \sum \Sigma (\mathbf{X}) + \sum \mu^{2} (\mathbf{X}) - \sum 1 - \sum \log \Sigma (\mathbf{X})   \right] \\\\\\
+&=  \dfrac{1}{2} \sum \left[ \Sigma (\mathbf{X}) + \mu^{2} (\mathbf{X}) -  1 - \log \Sigma (\mathbf{X})   \right]
 \end{align}$$
 
 In addition, typically we model the logarithm of $\Sigma (\mathbf{X})$ for numerical stability. Thus the final loss term becomes:
 
 $$\begin{equation}
-D\left\[ \mathcal{N}(\mu (\mathbf{X}), \Sigma (\mathbf{X}))~\Vert ~ \mathcal{N}(0,1) \right\] = \dfrac{1}{2} \sum \left\[ \exp(\Sigma (\mathbf{X})) + \mu^{2} (\mathbf{X}) -  1 - \Sigma (\mathbf{X})   \right\]
+D\left[ \mathcal{N}(\mu (\mathbf{X}), \Sigma (\mathbf{X}))~\Vert ~ \mathcal{N}(0,1) \right] = \dfrac{1}{2} \sum \left[ \exp(\Sigma (\mathbf{X})) + \mu^{2} (\mathbf{X}) -  1 - \Sigma (\mathbf{X})   \right]
 \end{equation}$$ 
 
 ## Keras implementation
