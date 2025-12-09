@@ -5,10 +5,7 @@
     <div class="section-container">
         <!-- Section Header -->
         <div class="section-header reveal-up">
-            <span class="section-label">Academic Background</span>
-            <h2 class="section-title">
-                <span class="gradient-text-purple">Education</span>
-            </h2>
+            <h2 class="section-label">Academic Background</h2>
         </div>
 
         <!-- Education Grid -->
@@ -74,9 +71,10 @@
 <style>
     /* Education Section Styles */
     .education-section {
-        background: linear-gradient(180deg, #0a0a0b 0%, #0f0f12 100%);
+        background: var(--bg-secondary);
         padding: 6rem 0;
         position: relative;
+        font-family: 'Inter', -apple-system, sans-serif;
     }
 
     .section-container {
@@ -92,22 +90,21 @@
 
     .section-label {
         display: inline-block;
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: #a78bfa;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        margin-bottom: 0.5rem;
+        font-size: clamp(1.5rem, 4vw, 2.5rem);
+        font-weight: 400;
+        color: #3b82f6;
+        letter-spacing: 0.02em;
+        margin-bottom: 0;
     }
 
     .section-title {
-        font-size: clamp(2rem, 5vw, 3.5rem);
-        font-weight: 800;
-        color: #fff;
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-weight: 500;
+        color: var(--text-primary, #fff);
     }
 
     .gradient-text-purple {
-        background: linear-gradient(135deg, #a78bfa 0%, #ec4899 100%);
+        background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -177,7 +174,7 @@
     .institution-logo-wrapper {
         width: 72px;
         height: 72px;
-        background: rgba(255, 255, 255, 0.08);
+        background: #fff;
         border-radius: 16px;
         display: flex;
         align-items: center;
@@ -185,6 +182,7 @@
         padding: 12px;
         margin-bottom: 1.5rem;
         transition: transform 0.3s;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
     .education-card:hover .institution-logo-wrapper {

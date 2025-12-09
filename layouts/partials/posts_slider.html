@@ -6,10 +6,7 @@
         <!-- Section Header -->
         <div class="posts-header reveal-up">
             <div class="header-text">
-                <span class="section-label">From the Blog</span>
-                <h2 class="section-title">
-                    Latest <span class="gradient-text-green">Thoughts</span>
-                </h2>
+                <h2 class="section-label">From the Blog</h2>
             </div>
             <a href="/posts" class="view-all-link">
                 View All
@@ -83,9 +80,10 @@
 <style>
     /* Posts Section Styles */
     .posts-section {
-        background: #0a0a0b;
+        background: var(--bg-primary);
         padding: 6rem 0;
         overflow: hidden;
+        font-family: 'Inter', -apple-system, sans-serif;
     }
 
     .section-container {
@@ -110,12 +108,11 @@
 
     .section-label {
         display: inline-block;
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: #34d399;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        margin-bottom: 0.5rem;
+        font-size: clamp(1.5rem, 4vw, 2.5rem);
+        font-weight: 400;
+        color: #3b82f6;
+        letter-spacing: 0.02em;
+        margin-bottom: 0;
     }
 
     .section-title {

@@ -9,7 +9,7 @@
             <!-- Brand -->
             <div class="footer-brand">
                 <span class="brand-name">{{ site.Title }}</span>
-                <p class="brand-tagline">Building intelligent systems for tomorrow</p>
+                <p class="brand-tagline">{{ $about.designation }} at {{ $about.company.name }}</p>
             </div>
 
             <!-- Social Links -->
@@ -69,9 +69,9 @@
         height: 2px;
         background: linear-gradient(90deg,
                 transparent 0%,
-                #8b5cf6 25%,
-                #3b82f6 50%,
-                #8b5cf6 75%,
+                #3b82f6 25%,
+                #1d4ed8 50%,
+                #3b82f6 75%,
                 transparent 100%);
         filter: blur(1px);
     }
