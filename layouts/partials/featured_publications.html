@@ -1,0 +1,282 @@
+{{/* Featured Publications Section */}}
+{{ $pubData := site.Data.en.sections.highlightedPublications }}
+{{ if not $pubData }}
+{{ $pubData = site.Data.en.sections.publications }}
+{{ end }}
+
+<section id="publications" class="featured-pubs-section">
+    <div class="pubs-container">
+        <div class="pubs-header reveal-up">
+            <h2 class="unified-section-title">Featured Publications</h2>
+            <a href="/publications/" class="view-all-link">
+                View All
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+            </a>
+        </div>
+
+        <div class="pubs-grid">
+            {{ range first 3 $pubData.publications }}
+            <article class="pub-card reveal-up">
+                <div class="pub-venue">
+                    <span class="venue-name">{{ .publishedIn.name }}</span>
+                    <span class="venue-date">{{ .publishedIn.date }}</span>
+                </div>
+                <h3 class="pub-title">{{ .title }}</h3>
+                <p class="pub-authors">
+                    {{ range $i, $author := .authors }}{{ if $i }}, {{ end }}{{ $author.name }}{{ end }}
+                </p>
+                {{ if .paper.summary }}
+                <p class="pub-summary">{{ .paper.summary | truncate 180 }}</p>
+                {{ end }}
+                <div class="pub-links">
+                    {{ if .paper.url }}
+                    <a href="{{ .paper.url }}" target="_blank" rel="noopener" class="pub-link">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                        </svg>
+                        Read Paper
+                    </a>
+                    {{ end }}
+                </div>
+            </article>
+            {{ end }}
+        </div>
+
+    </div>
+</section>
+
+<style>
+    .featured-pubs-section {
+        padding: 5rem 2rem;
+        background: var(--bg-primary, #0a0a0b);
+        font-family: 'Inter', -apple-system, sans-serif;
+    }
+
+    .pubs-container {
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    .pubs-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2.5rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .unified-section-title {
+        font-size: 1.5rem;
+        font-weight: 500;
+        color: var(--text-primary, #fff);
+        letter-spacing: -0.02em;
+        margin: 0;
+    }
+
+    .view-all-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-secondary, #9ca3af);
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+
+    .view-all-link:hover {
+        color: #3b82f6;
+    }
+
+    .pubs-grid {
+        display: grid;
+        gap: 1.5rem;
+    }
+
+    .pub-card {
+        background: var(--bg-card, rgba(255, 255, 255, 0.03));
+        border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+        border-radius: 16px;
+        padding: 1.75rem;
+        transition: all 0.3s ease;
+    }
+
+    .pub-card:hover {
+        border-color: var(--card-hover-border, rgba(59, 130, 246, 0.3));
+        box-shadow: 0 10px 40px var(--card-hover-shadow, rgba(59, 130, 246, 0.1));
+        transform: translateY(-4px);
+    }
+
+    .pub-venue {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .venue-name {
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: #3b82f6;
+        background: rgba(59, 130, 246, 0.1);
+        padding: 0.25rem 0.75rem;
+        border-radius: 100px;
+    }
+
+    .venue-date {
+        font-size: 0.8rem;
+        color: var(--text-muted, #6b7280);
+    }
+
+    .pub-title {
+        font-size: 1.125rem;
+        font-weight: 500;
+        color: var(--text-primary, #fff);
+        margin-bottom: 0.5rem;
+        line-height: 1.4;
+    }
+
+    .pub-authors {
+        font-size: 0.875rem;
+        color: var(--text-secondary, #9ca3af);
+        margin-bottom: 0.75rem;
+    }
+
+    .pub-summary {
+        font-size: 0.875rem;
+        color: var(--text-muted, #6b7280);
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+
+    .pub-links {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .pub-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        color: var(--text-secondary, #9ca3af);
+        text-decoration: none !important;
+        transition: color 0.2s;
+    }
+
+    .pub-link:hover {
+        color: #3b82f6;
+        text-decoration: none !important;
+    }
+
+    .pubs-footer {
+        text-align: center;
+        margin-top: 2.5rem;
+    }
+
+    .view-all-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1rem;
+        font-weight: 500;
+        color: #3b82f6;
+        text-decoration: none !important;
+        padding: 0.75rem 1.5rem;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 100px;
+        transition: all 0.3s ease;
+    }
+
+    .view-all-link:hover {
+        background: rgba(59, 130, 246, 0.1);
+        border-color: #3b82f6;
+        transform: translateX(4px);
+        text-decoration: none !important;
+    }
+
+    /* Light theme overrides */
+    [data-theme="light"] .featured-pubs-section {
+        background: #ffffff;
+    }
+
+    [data-theme="light"] .unified-section-title {
+        color: #1e293b;
+    }
+
+    [data-theme="light"] .view-all-link {
+        color: #64748b;
+    }
+
+    [data-theme="light"] .view-all-link:hover {
+        color: #3b82f6;
+    }
+
+    [data-theme="light"] .pub-card {
+        background: #fafbfc;
+        border-color: rgba(0, 0, 0, 0.06);
+    }
+
+    [data-theme="light"] .pub-card:hover {
+        border-color: rgba(59, 130, 246, 0.3);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+    }
+
+    [data-theme="light"] .pub-title {
+        color: #1e293b;
+    }
+
+    [data-theme="light"] .pub-authors {
+        color: #475569;
+    }
+
+    [data-theme="light"] .pub-summary {
+        color: #64748b;
+    }
+
+    [data-theme="light"] .pub-link {
+        color: #475569;
+    }
+
+    [data-theme="light"] .section-title {
+        color: #1e293b;
+    }
+
+    [data-theme="light"] .section-subtitle {
+        color: #64748b;
+    }
+
+    /* Reveal animation */
+    .reveal-up {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .reveal-up.revealed {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    @media (max-width: 768px) {
+        .featured-pubs-section {
+            padding: 4rem 1.5rem;
+        }
+
+        .featured-pubs-section .section-title {
+            font-size: 2rem;
+        }
+
+        .pub-card {
+            padding: 1.25rem;
+        }
+    }
+</style>

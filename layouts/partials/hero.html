@@ -18,7 +18,13 @@
 <!-- Scroll Navbar - appears when scrolling -->
 <nav class="scroll-navbar" id="scrollNavbar">
     <div class="navbar-container">
-        <span class="navbar-brand">{{ $author.name | default site.Title }}</span>
+        <a href="#hero" class="navbar-brand">
+            {{ $favicon := resources.Get "images/site/favicon.png" }}
+            {{ if $favicon }}
+            <img src="{{ $favicon.RelPermalink }}" alt="" class="navbar-favicon">
+            {{ end }}
+            {{ $author.name | default site.Title }}
+        </a>
         <div class="navbar-links">
             <a href="#experiences" class="navbar-link">Experience</a>
             <a href="#education" class="navbar-link">Education</a>
@@ -175,10 +181,29 @@
     }
 
     .navbar-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
         font-family: 'Inter', sans-serif;
         font-size: 1.125rem;
         font-weight: 500;
         color: var(--text-primary, #fff);
+        text-decoration: none !important;
+        transition: transform 0.3s ease, color 0.3s;
+    }
+
+    .navbar-brand:hover,
+    .navbar-brand:focus,
+    .navbar-brand:active {
+        transform: translateY(-2px);
+        color: #3b82f6;
+        text-decoration: none !important;
+    }
+
+    .navbar-favicon {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
     }
 
     .navbar-links {
@@ -191,12 +216,17 @@
         font-size: 0.875rem;
         font-weight: 400;
         color: var(--text-secondary, rgba(255, 255, 255, 0.7));
-        text-decoration: none;
-        transition: color 0.3s;
+        text-decoration: none !important;
+        transition: transform 0.3s ease, color 0.3s;
+        display: inline-block;
     }
 
-    .navbar-link:hover {
+    .navbar-link:hover,
+    .navbar-link:focus,
+    .navbar-link:active {
+        transform: translateY(-2px);
         color: var(--text-primary, #fff);
+        text-decoration: none !important;
     }
 
     .theme-toggle-navbar {
@@ -241,7 +271,75 @@
 
     /* Light theme navbar */
     [data-theme="light"] .scroll-navbar {
-        --navbar-bg: rgba(248, 250, 252, 0.95);
+        --navbar-bg: rgba(255, 255, 255, 0.98);
+        box-shadow: 0 1px 8px rgba(0, 0, 0, 0.05);
+        border-bottom-color: transparent;
+    }
+
+    /* Light theme - Clean white background, no boxes */
+    [data-theme="light"] .hero-section {
+        background: #fafbfc;
+    }
+
+    [data-theme="light"] .gradient-orb {
+        opacity: 0.12;
+    }
+
+    [data-theme="light"] .orb-1 {
+        background: radial-gradient(circle, #60a5fa 0%, transparent 70%);
+    }
+
+    [data-theme="light"] .orb-2 {
+        background: radial-gradient(circle, #818cf8 0%, transparent 70%);
+    }
+
+    [data-theme="light"] .profile-photo {
+        border-color: rgba(59, 130, 246, 0.25);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    }
+
+    [data-theme="light"] .social-btn {
+        background: transparent;
+        border-color: rgba(0, 0, 0, 0.1);
+        color: #475569;
+    }
+
+    [data-theme="light"] .social-btn:hover {
+        background: #3b82f6;
+        border-color: #3b82f6;
+        color: #fff;
+    }
+
+    [data-theme="light"] .scroll-indicator {
+        color: #94a3b8;
+    }
+
+    [data-theme="light"] .mouse {
+        border-color: rgba(0, 0, 0, 0.12);
+    }
+
+    [data-theme="light"] .wheel {
+        background: rgba(0, 0, 0, 0.2);
+    }
+
+    [data-theme="light"] .hero-name {
+        color: #1e293b;
+    }
+
+    [data-theme="light"] .hero-summary {
+        color: #475569;
+    }
+
+    [data-theme="light"] .designation-text {
+        color: #1e293b;
+    }
+
+    [data-theme="light"] .company-text {
+        color: #475569;
+    }
+
+    [data-theme="light"] .company-text a {
+        color: #3b82f6;
     }
 
     /* Hero Section */

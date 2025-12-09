@@ -5,7 +5,7 @@
     <div class="section-container">
         <!-- Section Header -->
         <div class="section-header reveal-up">
-            <h2 class="section-label">Career Journey</h2>
+            <h2 class="unified-section-title">Career Journey</h2>
         </div>
 
         <!-- Timeline -->
@@ -97,16 +97,15 @@
     /* Section Header */
     .section-header {
         text-align: center;
-        margin-bottom: 4rem;
+        margin-bottom: 3rem;
     }
 
-    .section-label {
-        display: inline-block;
-        font-size: clamp(1.5rem, 4vw, 2.5rem);
-        font-weight: 400;
-        color: #3b82f6;
-        letter-spacing: 0.02em;
-        margin-bottom: 0;
+    .unified-section-title {
+        font-size: 1.5rem;
+        font-weight: 500;
+        color: var(--text-primary, #fff);
+        letter-spacing: -0.02em;
+        margin: 0;
     }
 
     .section-title {
@@ -410,5 +409,62 @@
         .timeline-card:hover {
             transform: translateX(4px);
         }
+    }
+
+    /* Light Theme Overrides */
+    [data-theme="light"] .experience-section {
+        background: #ffffff;
+    }
+
+    [data-theme="light"] .timeline-card {
+        background: #fafbfc;
+        border-color: rgba(0, 0, 0, 0.06);
+    }
+
+    [data-theme="light"] .timeline-card:hover {
+        background: #f8fafc;
+        border-color: rgba(59, 130, 246, 0.3);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+    }
+
+    [data-theme="light"] .company-name {
+        color: #1e293b;
+    }
+
+    [data-theme="light"] .company-name a:hover {
+        color: #3b82f6;
+    }
+
+    [data-theme="light"] .company-location {
+        color: #475569;
+    }
+
+    [data-theme="light"] .position-title {
+        color: #3b82f6;
+    }
+
+    [data-theme="light"] .position-dates {
+        color: #475569;
+        background: rgba(0, 0, 0, 0.04);
+    }
+
+    [data-theme="light"] .responsibilities li {
+        color: #475569;
+    }
+
+    [data-theme="light"] .position {
+        border-top-color: rgba(0, 0, 0, 0.06);
+    }
+
+    [data-theme="light"] .dot-inner {
+        border-color: #ffffff;
+    }
+
+    [data-theme="light"] .section-title {
+        color: #1e293b;
+    }
+
+    [data-theme="light"] .unified-section-title {
+        color: #1e293b;
     }
 </style>

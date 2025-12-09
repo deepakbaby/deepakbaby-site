@@ -1,450 +1,579 @@
-{{/* Blog Posts Slider - Spotify Style */}}
+{{/* Blog Posts Carousel - iTunes CoverFlow Style */}}
 {{ $posts := where site.RegularPages "Type" "posts" }}
 
-<section id="posts" class="posts-section">
-    <div class="section-container">
+<section id="posts" class="coverflow-section">
+    <div class="coverflow-container">
         <!-- Section Header -->
-        <div class="posts-header reveal-up">
-            <div class="header-text">
-                <h2 class="section-label">From the Blog</h2>
-            </div>
-            <a href="/posts" class="view-all-link">
+        <div class="coverflow-header">
+            <h2 class="unified-section-title">From the Blog</h2>
+            <a href="/posts" class="coverflow-view-all">
                 View All
-                <svg class="arrow-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
             </a>
         </div>
 
-        <!-- Slider Container -->
-        <div class="slider-wrapper reveal-up">
-            <!-- Navigation Arrows -->
-            <button class="slider-arrow arrow-prev" aria-label="Previous posts">
+        <!-- CoverFlow Carousel -->
+        <div class="coverflow-wrapper">
+            <!-- Navigation -->
+            <button class="coverflow-nav coverflow-prev" id="cfPrev">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
             </button>
-            <button class="slider-arrow arrow-next" aria-label="Next posts">
+            <button class="coverflow-nav coverflow-next" id="cfNext">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
             </button>
 
-            <!-- Posts Track -->
-            <div class="slider-track">
-                {{ range first 8 $posts }}
-                <a href="{{ .Permalink }}" class="post-card">
-                    <!-- Cover Image -->
-                    <div class="post-cover">
-                        {{ $image := "" }}
-                        {{ with .Resources.GetMatch "hero.*" }}{{ $image = .RelPermalink }}{{ end }}
-                        {{ if $image }}
-                        <img src="{{ $image }}" alt="{{ .Title }}" class="cover-image">
-                        {{ else }}
-                        <div class="cover-placeholder">
-                            <svg class="placeholder-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                    d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                            </svg>
-                        </div>
-                        {{ end }}
-                        <div class="cover-overlay"></div>
-                        <div class="play-button">
-                            <svg fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M8 5v14l11-7z" />
-                            </svg>
-                        </div>
-                    </div>
-
-                    <!-- Post Info -->
-                    <div class="post-info">
-                        <span class="post-date">{{ .Date.Format "Jan 2, 2006" }}</span>
-                        <h3 class="post-title">{{ .Title }}</h3>
-                        <p class="post-excerpt">{{ .Summary | plainify | truncate 100 }}</p>
-                    </div>
-                </a>
-                {{ end }}
+            <!-- Stage -->
+            <div class="coverflow-stage">
+                <div class="coverflow-track" id="cfTrack">
+                    {{ range $index, $post := first 5 $posts }}
+                    <article class="coverflow-item" data-index="{{ $index }}">
+                        <a href="{{ $post.Permalink }}" class="coverflow-link">
+                            <div class="coverflow-cover">
+                                {{ $image := "" }}
+                                {{ with $post.Resources.GetMatch "hero.*" }}{{ $image = .RelPermalink }}{{ end }}
+                                {{ if $image }}
+                                <img src="{{ $image }}" alt="{{ $post.Title }}">
+                                {{ else }}
+                                <div class="coverflow-placeholder">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                                    </svg>
+                                </div>
+                                {{ end }}
+                            </div>
+                            <div class="coverflow-info">
+                                <span class="coverflow-date">{{ $post.Date.Format "Jan 2, 2006" }}</span>
+                                <h3 class="coverflow-title">{{ $post.Title }}</h3>
+                                <p class="coverflow-excerpt">{{ $post.Summary | plainify | truncate 80 }}</p>
+                            </div>
+                        </a>
+                    </article>
+                    {{ end }}
+                </div>
             </div>
         </div>
 
-        <!-- Pagination Dots -->
-        <div class="slider-dots reveal-up">
-            <span class="dot active"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
+        <!-- Dots -->
+        <div class="coverflow-dots" id="cfDots">
+            {{ range $index, $post := first 5 $posts }}
+            <button class="coverflow-dot" data-index="{{ $index }}"></button>
+            {{ end }}
         </div>
     </div>
 </section>
 
 <style>
-    /* Posts Section Styles */
-    .posts-section {
-        background: var(--bg-primary);
-        padding: 6rem 0;
+    .coverflow-section {
+        background: var(--bg-primary, #0a0a0b);
+        padding: 5rem 0;
         overflow: hidden;
         font-family: 'Inter', -apple-system, sans-serif;
     }
 
-    .section-container {
-        max-width: 1400px;
+    .coverflow-container {
+        max-width: 1200px;
         margin: 0 auto;
         padding: 0 2rem;
     }
 
-    /* Posts Header */
-    .posts-header {
+    .coverflow-header {
         display: flex;
         justify-content: space-between;
-        align-items: flex-end;
+        align-items: center;
         margin-bottom: 3rem;
-        flex-wrap: wrap;
         gap: 1rem;
+        flex-wrap: wrap;
     }
 
-    .header-text {
-        flex: 1;
-    }
-
-    .section-label {
-        display: inline-block;
-        font-size: clamp(1.5rem, 4vw, 2.5rem);
-        font-weight: 400;
-        color: #3b82f6;
-        letter-spacing: 0.02em;
-        margin-bottom: 0;
-    }
-
-    .section-title {
-        font-size: clamp(2rem, 5vw, 3rem);
-        font-weight: 800;
-        color: #fff;
+    .coverflow-section .unified-section-title {
+        font-size: 1.5rem;
+        font-weight: 500;
+        color: var(--text-primary, #fff);
+        letter-spacing: -0.02em;
         margin: 0;
     }
 
-    .gradient-text-green {
-        background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-
-    .view-all-link {
-        display: inline-flex;
+    .coverflow-view-all {
+        display: flex;
         align-items: center;
         gap: 0.5rem;
-        color: #9ca3af;
+        color: var(--text-secondary, #9ca3af);
         text-decoration: none;
+        font-size: 0.875rem;
         font-weight: 500;
-        transition: all 0.3s;
+        transition: color 0.3s;
     }
 
-    .view-all-link:hover {
-        color: #34d399;
+    .coverflow-view-all:hover {
+        color: #3b82f6;
     }
 
-    .view-all-link .arrow-icon {
-        width: 18px;
-        height: 18px;
-        transition: transform 0.3s;
-    }
-
-    .view-all-link:hover .arrow-icon {
-        transform: translateX(4px);
-    }
-
-    /* Slider Wrapper */
-    .slider-wrapper {
+    /* CoverFlow Wrapper */
+    .coverflow-wrapper {
         position: relative;
+        padding: 2rem 0;
     }
 
-    /* Navigation Arrows */
-    .slider-arrow {
+    .coverflow-nav {
         position: absolute;
         top: 50%;
         transform: translateY(-50%);
-        width: 48px;
-        height: 48px;
-        background: rgba(0, 0, 0, 0.8);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        width: 50px;
+        height: 50px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 50%;
         color: #fff;
         cursor: pointer;
-        z-index: 10;
+        z-index: 100;
         display: flex;
         align-items: center;
         justify-content: center;
         transition: all 0.3s;
-        opacity: 0;
+        backdrop-filter: blur(10px);
     }
 
-    .slider-wrapper:hover .slider-arrow {
-        opacity: 1;
-    }
-
-    .slider-arrow:hover {
-        background: #34d399;
-        border-color: #34d399;
+    .coverflow-nav:hover {
+        background: #3b82f6;
+        border-color: #3b82f6;
         transform: translateY(-50%) scale(1.1);
     }
 
-    .slider-arrow svg {
+    .coverflow-nav svg {
         width: 24px;
         height: 24px;
     }
 
-    .arrow-prev {
-        left: -24px;
+    .coverflow-prev {
+        left: 20px;
     }
 
-    .arrow-next {
-        right: -24px;
+    .coverflow-next {
+        right: 20px;
     }
 
-    /* Slider Track */
-    .slider-track {
+    /* CoverFlow Stage - the 3D container */
+    .coverflow-stage {
+        perspective: 1200px;
+        perspective-origin: center center;
+        height: 420px;
         display: flex;
-        gap: 1.5rem;
-        overflow-x: auto;
-        scroll-snap-type: x mandatory;
-        scroll-behavior: smooth;
-        padding: 1rem 0;
-        margin: -1rem 0;
-        -webkit-overflow-scrolling: touch;
+        align-items: center;
+        justify-content: center;
+        overflow: visible;
     }
 
-    .slider-track::-webkit-scrollbar {
-        display: none;
-    }
-
-    .slider-track {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-    }
-
-    /* Post Card */
-    .post-card {
-        flex: 0 0 280px;
-        scroll-snap-align: start;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        border-radius: 16px;
-        overflow: hidden;
-        text-decoration: none;
-        transition: all 0.4s ease;
-    }
-
-    .post-card:hover {
-        background: rgba(255, 255, 255, 0.05);
-        border-color: rgba(52, 211, 153, 0.3);
-        transform: translateY(-8px) scale(1.02);
-        box-shadow: 0 20px 50px rgba(52, 211, 153, 0.15);
-    }
-
-    /* Post Cover */
-    .post-cover {
+    .coverflow-track {
         position: relative;
-        aspect-ratio: 1;
-        overflow: hidden;
-    }
-
-    .cover-image {
         width: 100%;
         height: 100%;
-        object-fit: cover;
-        transition: transform 0.6s ease;
-    }
-
-    .post-card:hover .cover-image {
-        transform: scale(1.1);
-    }
-
-    .cover-placeholder {
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        transform-style: preserve-3d;
         display: flex;
         align-items: center;
         justify-content: center;
     }
 
-    .placeholder-icon {
+    /* CoverFlow Item */
+    .coverflow-item {
+        position: absolute;
+        width: 320px;
+        background: var(--bg-card, rgba(255, 255, 255, 0.05));
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        overflow: hidden;
+        transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        transform-style: preserve-3d;
+        backface-visibility: hidden;
+        cursor: pointer;
+    }
+
+    /* Default state - hidden in back */
+    .coverflow-item {
+        opacity: 0;
+        transform: translateX(0) translateZ(-400px) rotateY(0deg) scale(0.6);
+        pointer-events: none;
+    }
+
+    /* Active center item */
+    .coverflow-item.cf-active {
+        opacity: 1;
+        transform: translateX(0) translateZ(0) rotateY(0deg) scale(1);
+        z-index: 50;
+        pointer-events: auto;
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4),
+            0 0 80px rgba(59, 130, 246, 0.15);
+    }
+
+    /* Left items */
+    .coverflow-item.cf-left-1 {
+        opacity: 0.8;
+        transform: translateX(-280px) translateZ(-150px) rotateY(35deg) scale(0.85);
+        z-index: 40;
+        pointer-events: auto;
+    }
+
+    .coverflow-item.cf-left-2 {
+        opacity: 0.5;
+        transform: translateX(-450px) translateZ(-300px) rotateY(45deg) scale(0.7);
+        z-index: 30;
+        pointer-events: auto;
+    }
+
+    /* Right items */
+    .coverflow-item.cf-right-1 {
+        opacity: 0.8;
+        transform: translateX(280px) translateZ(-150px) rotateY(-35deg) scale(0.85);
+        z-index: 40;
+        pointer-events: auto;
+    }
+
+    .coverflow-item.cf-right-2 {
+        opacity: 0.5;
+        transform: translateX(450px) translateZ(-300px) rotateY(-45deg) scale(0.7);
+        z-index: 30;
+        pointer-events: auto;
+    }
+
+    .coverflow-link {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .coverflow-cover {
+        height: 180px;
+        overflow: hidden;
+        background: linear-gradient(135deg, #1f2937, #111827);
+    }
+
+    .coverflow-cover img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s;
+    }
+
+    .coverflow-item.cf-active:hover .coverflow-cover img {
+        transform: scale(1.05);
+    }
+
+    .coverflow-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #1f2937, #111827);
+    }
+
+    .coverflow-placeholder svg {
         width: 48px;
         height: 48px;
         color: #374151;
     }
 
-    .cover-overlay {
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.8) 100%);
-    }
-
-    /* Play Button */
-    .play-button {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) scale(0);
-        width: 56px;
-        height: 56px;
-        background: #34d399;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #0a0a0b;
-        transition: all 0.3s ease;
-        box-shadow: 0 8px 30px rgba(52, 211, 153, 0.4);
-    }
-
-    .post-card:hover .play-button {
-        transform: translate(-50%, -50%) scale(1);
-    }
-
-    .play-button svg {
-        width: 24px;
-        height: 24px;
-        margin-left: 2px;
-    }
-
-    /* Post Info */
-    .post-info {
+    .coverflow-info {
         padding: 1.25rem;
     }
 
-    .post-date {
+    .coverflow-date {
         font-size: 0.75rem;
         font-family: ui-monospace, monospace;
-        color: #34d399;
+        color: #3b82f6;
         display: block;
         margin-bottom: 0.5rem;
     }
 
-    .post-title {
-        font-size: 1rem;
+    .coverflow-title {
+        font-size: 1.125rem;
         font-weight: 600;
-        color: #fff;
+        color: var(--text-primary, #fff);
         margin: 0 0 0.5rem 0;
         line-height: 1.4;
         display: -webkit-box;
         -webkit-line-clamp: 2;
+        line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
-        transition: color 0.3s;
     }
 
-    .post-card:hover .post-title {
-        color: #34d399;
-    }
-
-    .post-excerpt {
-        font-size: 0.875rem;
-        color: #6b7280;
-        margin: 0;
+    .coverflow-excerpt {
+        font-size: 0.85rem;
+        color: var(--text-secondary, #9ca3af);
         line-height: 1.5;
+        margin: 0;
         display: -webkit-box;
         -webkit-line-clamp: 2;
+        line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
 
-    /* Pagination Dots */
-    .slider-dots {
+    /* Dots */
+    .coverflow-dots {
         display: flex;
         justify-content: center;
-        gap: 0.5rem;
+        gap: 8px;
         margin-top: 2rem;
     }
 
-    .dot {
-        width: 8px;
-        height: 8px;
+    .coverflow-dot {
+        width: 10px;
+        height: 10px;
         background: rgba(255, 255, 255, 0.2);
+        border: none;
         border-radius: 50%;
         cursor: pointer;
         transition: all 0.3s;
+        padding: 0;
     }
 
-    .dot.active {
-        width: 24px;
-        border-radius: 4px;
-        background: #34d399;
+    .coverflow-dot.cf-dot-active {
+        width: 30px;
+        border-radius: 5px;
+        background: #3b82f6;
     }
 
-    .dot:hover {
+    .coverflow-dot:hover:not(.cf-dot-active) {
         background: rgba(255, 255, 255, 0.4);
     }
 
-    /* Reveal Animation */
-    .reveal-up {
-        opacity: 0;
-        transform: translateY(40px);
-        transition: all 0.6s ease;
+    /* Light Theme */
+    [data-theme="light"] .coverflow-section {
+        background: #ffffff;
     }
 
-    .reveal-up.revealed {
-        opacity: 1;
-        transform: translateY(0);
+    [data-theme="light"] .coverflow-section .unified-section-title {
+        color: #1e293b;
+    }
+
+    [data-theme="light"] .coverflow-view-all {
+        color: #64748b;
+    }
+
+    [data-theme="light"] .coverflow-item {
+        background: #ffffff;
+        border-color: rgba(0, 0, 0, 0.08);
+    }
+
+    [data-theme="light"] .coverflow-item.cf-active {
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15),
+            0 0 80px rgba(59, 130, 246, 0.08);
+    }
+
+    [data-theme="light"] .coverflow-title {
+        color: #1e293b;
+    }
+
+    [data-theme="light"] .coverflow-excerpt {
+        color: #64748b;
+    }
+
+    [data-theme="light"] .coverflow-nav {
+        background: rgba(255, 255, 255, 0.9);
+        border-color: rgba(0, 0, 0, 0.1);
+        color: #1e293b;
+    }
+
+    [data-theme="light"] .coverflow-nav:hover {
+        background: #3b82f6;
+        color: #fff;
+    }
+
+    [data-theme="light"] .coverflow-dot {
+        background: rgba(0, 0, 0, 0.15);
+    }
+
+    [data-theme="light"] .coverflow-placeholder {
+        background: linear-gradient(135deg, #e2e8f0, #f1f5f9);
+    }
+
+    [data-theme="light"] .coverflow-placeholder svg {
+        color: #94a3b8;
     }
 
     /* Responsive */
-    @media (max-width: 768px) {
-        .post-card {
-            flex: 0 0 260px;
+    @media (max-width: 900px) {
+        .coverflow-stage {
+            height: 380px;
         }
 
-        .slider-arrow {
+        .coverflow-item {
+            width: 280px;
+        }
+
+        .coverflow-item.cf-left-1 {
+            transform: translateX(-200px) translateZ(-100px) rotateY(30deg) scale(0.8);
+        }
+
+        .coverflow-item.cf-right-1 {
+            transform: translateX(200px) translateZ(-100px) rotateY(-30deg) scale(0.8);
+        }
+
+        .coverflow-item.cf-left-2,
+        .coverflow-item.cf-right-2 {
+            opacity: 0;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .coverflow-stage {
+            height: 360px;
+        }
+
+        .coverflow-item {
+            width: 260px;
+        }
+
+        .coverflow-nav {
             display: none;
         }
 
-        .posts-header {
-            flex-direction: column;
-            align-items: flex-start;
+        .coverflow-item.cf-left-1 {
+            transform: translateX(-140px) translateZ(-80px) rotateY(25deg) scale(0.75);
+            opacity: 0.6;
+        }
+
+        .coverflow-item.cf-right-1 {
+            transform: translateX(140px) translateZ(-80px) rotateY(-25deg) scale(0.75);
+            opacity: 0.6;
         }
     }
 </style>
 
 <script>
-    // Slider JavaScript
-    document.addEventListener('DOMContentLoaded', function () {
-        const track = document.querySelector('.slider-track');
-        const prevBtn = document.querySelector('.arrow-prev');
-        const nextBtn = document.querySelector('.arrow-next');
-        const dots = document.querySelectorAll('.slider-dots .dot');
+    (function () {
+        function initCoverFlow() {
+            const items = document.querySelectorAll('.coverflow-item');
+            const dots = document.querySelectorAll('.coverflow-dot');
+            const prevBtn = document.getElementById('cfPrev');
+            const nextBtn = document.getElementById('cfNext');
 
-        if (!track) return;
+            if (!items.length) return;
 
-        const cardWidth = 280 + 24; // card width + gap
-        const scrollAmount = cardWidth * 2;
+            const total = items.length;
+            let current = 0;
+            let autoInterval;
 
-        prevBtn?.addEventListener('click', () => {
-            track.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-        });
+            function updateCoverFlow() {
+                items.forEach((item, index) => {
+                    // Remove all classes
+                    item.classList.remove('cf-active', 'cf-left-1', 'cf-left-2', 'cf-right-1', 'cf-right-2');
 
-        nextBtn?.addEventListener('click', () => {
-            track.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-        });
+                    // Calculate relative position
+                    let diff = index - current;
 
-        // Update dots on scroll
-        track.addEventListener('scroll', () => {
-            const scrollPosition = track.scrollLeft;
-            const maxScroll = track.scrollWidth - track.clientWidth;
-            const scrollPercentage = scrollPosition / maxScroll;
+                    // Wrap around for circular effect
+                    if (diff > total / 2) diff -= total;
+                    if (diff < -total / 2) diff += total;
 
-            dots.forEach((dot, index) => {
-                const isActive = Math.round(scrollPercentage * (dots.length - 1)) === index;
-                dot.classList.toggle('active', isActive);
+                    // Apply appropriate class
+                    if (diff === 0) {
+                        item.classList.add('cf-active');
+                    } else if (diff === -1) {
+                        item.classList.add('cf-left-1');
+                    } else if (diff === -2) {
+                        item.classList.add('cf-left-2');
+                    } else if (diff === 1) {
+                        item.classList.add('cf-right-1');
+                    } else if (diff === 2) {
+                        item.classList.add('cf-right-2');
+                    }
+                });
+
+                // Update dots
+                dots.forEach((dot, index) => {
+                    dot.classList.toggle('cf-dot-active', index === current);
+                });
+            }
+
+            function goTo(index) {
+                current = ((index % total) + total) % total;
+                updateCoverFlow();
+            }
+
+            function next() {
+                goTo(current + 1);
+            }
+
+            function prev() {
+                goTo(current - 1);
+            }
+
+            function startAuto() {
+                stopAuto();
+                autoInterval = setInterval(next, 4000);
+            }
+
+            function stopAuto() {
+                if (autoInterval) clearInterval(autoInterval);
+            }
+
+            // Event listeners
+            if (prevBtn) prevBtn.addEventListener('click', prev);
+            if (nextBtn) nextBtn.addEventListener('click', next);
+
+            dots.forEach((dot, i) => {
+                dot.addEventListener('click', () => goTo(i));
             });
-        });
 
-        // Click on dots
-        dots.forEach((dot, index) => {
-            dot.addEventListener('click', () => {
-                const maxScroll = track.scrollWidth - track.clientWidth;
-                const scrollTo = (maxScroll / (dots.length - 1)) * index;
-                track.scrollTo({ left: scrollTo, behavior: 'smooth' });
+            // Click on side items to navigate
+            items.forEach((item, i) => {
+                item.addEventListener('click', (e) => {
+                    if (!item.classList.contains('cf-active')) {
+                        e.preventDefault();
+                        goTo(i);
+                    }
+                });
             });
-        });
-    });
+
+            // Pause on hover
+            const stage = document.querySelector('.coverflow-stage');
+            if (stage) {
+                stage.addEventListener('mouseenter', stopAuto);
+                stage.addEventListener('mouseleave', startAuto);
+            }
+
+            // Touch/swipe support
+            let touchStartX = 0;
+            const track = document.getElementById('cfTrack');
+            if (track) {
+                track.addEventListener('touchstart', (e) => {
+                    touchStartX = e.touches[0].clientX;
+                    stopAuto();
+                }, { passive: true });
+
+                track.addEventListener('touchend', (e) => {
+                    const touchEndX = e.changedTouches[0].clientX;
+                    const diff = touchStartX - touchEndX;
+                    if (Math.abs(diff) > 50) {
+                        if (diff > 0) next();
+                        else prev();
+                    }
+                    startAuto();
+                }, { passive: true });
+            }
+
+            // Initialize
+            updateCoverFlow();
+            startAuto();
+
+            console.log('CoverFlow initialized with', total, 'items');
+        }
+
+        // Run when ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initCoverFlow);
+        } else {
+            initCoverFlow();
+        }
+    })();
 </script>

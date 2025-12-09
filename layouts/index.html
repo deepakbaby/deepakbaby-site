@@ -1,5 +1,5 @@
 {{ define "content" }}
-<div class="homepage-wrapper" style="margin-top: -80px;">
+<div class="homepage-wrapper">
     <!-- Hero Section -->
     <div class="section-wrapper">
         {{ partial "hero.html" . }}
@@ -10,22 +10,22 @@
         {{ partial "experience.html" . }}
     </div>
 
-    <!-- Education Section -->
-    <div class="section-wrapper">
-        {{ partial "education.html" . }}
-    </div>
-
     <!-- Blog Posts Slide Deck -->
     <div class="section-wrapper">
         {{ partial "posts_slider.html" . }}
     </div>
 
-    <!-- Floating Navigation -->
+    <!-- Featured Publications Section -->
+    <div class="section-wrapper">
+        {{ partial "featured_publications.html" . }}
+    </div>
+
+    <!-- Floating Navigation (hidden) -->
     <nav class="floating-nav" id="floatingNav">
         <a href="#hero" class="nav-dot active" data-section="hero" title="Home"></a>
         <a href="#experiences" class="nav-dot" data-section="experiences" title="Experience"></a>
-        <a href="#education" class="nav-dot" data-section="education" title="Education"></a>
         <a href="#posts" class="nav-dot" data-section="posts" title="Blog"></a>
+        <a href="#publications" class="nav-dot" data-section="publications" title="Publications"></a>
     </nav>
 </div>
 
@@ -51,22 +51,27 @@
     }
 
     [data-theme="light"] {
-        --bg-primary: #f8fafc;
-        --bg-secondary: #f1f5f9;
-        --bg-card: rgba(0, 0, 0, 0.02);
+        --bg-primary: #fafbfc;
+        --bg-secondary: #ffffff;
+        --bg-card: transparent;
         --text-primary: #1e293b;
-        --text-secondary: #64748b;
+        --text-secondary: #475569;
         --text-muted: #94a3b8;
-        --border-color: rgba(0, 0, 0, 0.08);
-        --orb-opacity: 0.25;
-        --toggle-bg: rgba(0, 0, 0, 0.05);
-        --toggle-border: rgba(0, 0, 0, 0.1);
-        --social-bg: rgba(0, 0, 0, 0.03);
-        --social-border: rgba(0, 0, 0, 0.08);
-        --mouse-border: rgba(0, 0, 0, 0.2);
-        --wheel-bg: rgba(0, 0, 0, 0.4);
-        --card-hover-border: rgba(59, 130, 246, 0.4);
-        --card-hover-shadow: rgba(59, 130, 246, 0.1);
+        --border-color: rgba(0, 0, 0, 0.06);
+        --orb-opacity: 0.1;
+        --toggle-bg: rgba(0, 0, 0, 0.04);
+        --toggle-border: rgba(0, 0, 0, 0.08);
+        --social-bg: transparent;
+        --social-border: rgba(0, 0, 0, 0.1);
+        --mouse-border: rgba(0, 0, 0, 0.12);
+        --wheel-bg: rgba(0, 0, 0, 0.2);
+        --card-hover-border: rgba(59, 130, 246, 0.3);
+        --card-hover-shadow: rgba(59, 130, 246, 0.08);
+        --card-bg: transparent;
+        --card-border: rgba(0, 0, 0, 0.04);
+        --timeline-color: #3b82f6;
+        --section-bg: #ffffff;
+        --glow-color: rgba(59, 130, 246, 0.08);
     }
 
     /* Homepage Global Styles */
