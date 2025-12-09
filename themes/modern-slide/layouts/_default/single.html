@@ -1,0 +1,66 @@
+{{ define "main" }}
+<div
+    class="min-h-screen bg-gray-900 text-gray-300 font-sans selection:bg-pink-600 selection:text-white overflow-y-auto">
+
+    <!-- Navigation (Sticky) -->
+    <nav class="sticky top-0 z-50 bg-gray-900/80 backdrop-blur-md border-b border-white/10">
+        <div class="container mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="/"
+                class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-pink-600">
+                {{ site.Title }}
+            </a>
+            <div class="flex gap-6">
+                <a href="/#about" class="text-sm font-medium hover:text-white transition-colors">About</a>
+                <a href="/posts" class="text-sm font-medium hover:text-white transition-colors">Posts</a>
+                <a href="/#contact" class="text-sm font-medium hover:text-white transition-colors">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-12 max-w-4xl">
+        <article class="prose prose-invert prose-lg md:prose-xl max-w-none">
+            <header class="mb-12 text-center">
+                <div class="text-blue-400 text-sm font-bold uppercase tracking-wide mb-4">
+                    {{ .Date.Format "January 2, 2006" }}
+                </div>
+                <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-6 leading-tight">
+                    {{ .Title }}
+                </h1>
+                {{ with .Params.tags }}
+                <div class="flex justify-center gap-2 flex-wrap">
+                    {{ range . }}
+                    <span
+                        class="bg-white/10 hover:bg-white/20 text-gray-300 text-xs px-3 py-1 rounded-full transition-colors cursor-default">
+                        #{{ . }}
+                    </span>
+                    {{ end }}
+                </div>
+                {{ end }}
+            </header>
+
+            {{ if .Params.featuredImage }}
+            <div class="mb-12 rounded-2xl overflow-hidden shadow-2xl border border-white/10">
+                <img src="{{ .Params.featuredImage }}" alt="{{ .Title }}" class="w-full object-cover">
+            </div>
+            {{ end }}
+
+            <div class="content">
+                {{ .Content }}
+            </div>
+        </article>
+
+        <!-- Social Share / Comments placeholder -->
+        <hr class="border-white/10 my-12">
+        <div class="flex justify-between items-center">
+            <a href="/posts" class="text-blue-400 hover:text-blue-300 flex items-center gap-2 transition-colors">
+                &larr; Back to Posts
+            </a>
+        </div>
+    </main>
+
+    <footer class="bg-black py-8 mt-12 border-t border-white/10 text-center text-gray-600 text-sm">
+        &copy; {{ now.Year }} {{ site.Title }}.
+    </footer>
+</div>
+{{ end }}

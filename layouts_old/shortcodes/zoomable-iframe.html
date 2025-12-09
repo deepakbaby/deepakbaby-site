@@ -1,0 +1,152 @@
+<style>
+.zoomable-iframe-container {
+  position: relative;
+  margin: 2rem 0;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #ddd;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.zoom-controls button {
+  background: #4a9eff;
+  border: none;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.zoom-controls button:hover {
+  background: #3d8eeb;
+  transform: scale(1.05);
+}
+
+.zoom-controls button:active {
+  transform: scale(0.95);
+}
+
+.zoom-level {
+  font-size: 14px;
+  font-weight: 600;
+  min-width: 50px;
+  text-align: center;
+  color: #333;
+}
+
+.zoom-label {
+  font-size: 12px;
+  color: #666;
+  margin-left: auto;
+}
+
+.iframe-wrapper {
+  overflow: auto;
+  background: #1a1a1a;
+  position: relative;
+}
+
+.iframe-wrapper iframe {
+  display: block;
+  transform-origin: top left;
+  transition: transform 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .zoom-label {
+    display: none;
+  }
+  
+  .zoom-controls {
+    padding: 8px 12px;
+    gap: 6px;
+  }
+  
+  .zoom-controls button {
+    padding: 4px 10px;
+    font-size: 14px;
+  }
+}
+</style>
+
+<div class="zoomable-iframe-container" id="zoom-container-{{ .Get "id" | default (printf "%d" now.UnixNano) }}">
+  <div class="zoom-controls">
+    <button class="zoom-out" title="Zoom Out (-)">−</button>
+    <span class="zoom-level">100%</span>
+    <button class="zoom-in" title="Zoom In (+)">+</button>
+    <button class="zoom-reset" title="Reset Zoom">Reset</button>
+    <span class="zoom-label">Scroll to pan • Arrow keys to navigate</span>
+  </div>
+  <div class="iframe-wrapper">
+    <iframe 
+      src="{{ .Get "src" }}" 
+      width="{{ .Get "width" | default "100%" }}" 
+      height="{{ .Get "height" | default "600" }}"
+      style="border: none; background: #1a1a1a;"
+      loading="lazy"
+      allowfullscreen
+    ></iframe>
+  </div>
+</div>
+
+<script>
+(function() {
+  const container = document.getElementById('zoom-container-{{ .Get "id" | default (printf "%d" now.UnixNano) }}');
+  if (!container) return;
+  
+  const iframe = container.querySelector('iframe');
+  const wrapper = container.querySelector('.iframe-wrapper');
+  const zoomLevelSpan = container.querySelector('.zoom-level');
+  const zoomOutBtn = container.querySelector('.zoom-out');
+  const zoomInBtn = container.querySelector('.zoom-in');
+  const zoomResetBtn = container.querySelector('.zoom-reset');
+  
+  let zoomLevel = 100;
+  const minZoom = 25;
+  const maxZoom = 200;
+  const zoomStep = 25;
+  const baseHeight = {{ .Get "height" | default "600" }};
+  
+  function updateZoom() {
+    const scale = zoomLevel / 100;
+    iframe.style.transform = `scale(${scale})`;
+    iframe.style.width = `${100 / scale}%`;
+    iframe.style.height = `${baseHeight}px`;
+    wrapper.style.height = `${baseHeight * scale}px`;
+    zoomLevelSpan.textContent = `${zoomLevel}%`;
+    
+    zoomOutBtn.style.opacity = zoomLevel <= minZoom ? '0.5' : '1';
+    zoomInBtn.style.opacity = zoomLevel >= maxZoom ? '0.5' : '1';
+  }
+  
+  zoomOutBtn.addEventListener('click', () => {
+    if (zoomLevel > minZoom) { zoomLevel -= zoomStep; updateZoom(); }
+  });
+  
+  zoomInBtn.addEventListener('click', () => {
+    if (zoomLevel < maxZoom) { zoomLevel += zoomStep; updateZoom(); }
+  });
+  
+  zoomResetBtn.addEventListener('click', () => {
+    zoomLevel = 100;
+    updateZoom();
+    wrapper.scrollLeft = 0;
+    wrapper.scrollTop = 0;
+  });
+  
+  updateZoom();
+})();
+</script>
+

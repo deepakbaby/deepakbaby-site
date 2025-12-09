@@ -1,0 +1,453 @@
+{{/* Blog Posts Slider - Spotify Style */}}
+{{ $posts := where site.RegularPages "Type" "posts" }}
+
+<section id="posts" class="posts-section">
+    <div class="section-container">
+        <!-- Section Header -->
+        <div class="posts-header reveal-up">
+            <div class="header-text">
+                <span class="section-label">From the Blog</span>
+                <h2 class="section-title">
+                    Latest <span class="gradient-text-green">Thoughts</span>
+                </h2>
+            </div>
+            <a href="/posts" class="view-all-link">
+                View All
+                <svg class="arrow-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+            </a>
+        </div>
+
+        <!-- Slider Container -->
+        <div class="slider-wrapper reveal-up">
+            <!-- Navigation Arrows -->
+            <button class="slider-arrow arrow-prev" aria-label="Previous posts">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </button>
+            <button class="slider-arrow arrow-next" aria-label="Next posts">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </button>
+
+            <!-- Posts Track -->
+            <div class="slider-track">
+                {{ range first 8 $posts }}
+                <a href="{{ .Permalink }}" class="post-card">
+                    <!-- Cover Image -->
+                    <div class="post-cover">
+                        {{ $image := "" }}
+                        {{ with .Resources.GetMatch "hero.*" }}{{ $image = .RelPermalink }}{{ end }}
+                        {{ if $image }}
+                        <img src="{{ $image }}" alt="{{ .Title }}" class="cover-image">
+                        {{ else }}
+                        <div class="cover-placeholder">
+                            <svg class="placeholder-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                            </svg>
+                        </div>
+                        {{ end }}
+                        <div class="cover-overlay"></div>
+                        <div class="play-button">
+                            <svg fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Post Info -->
+                    <div class="post-info">
+                        <span class="post-date">{{ .Date.Format "Jan 2, 2006" }}</span>
+                        <h3 class="post-title">{{ .Title }}</h3>
+                        <p class="post-excerpt">{{ .Summary | plainify | truncate 100 }}</p>
+                    </div>
+                </a>
+                {{ end }}
+            </div>
+        </div>
+
+        <!-- Pagination Dots -->
+        <div class="slider-dots reveal-up">
+            <span class="dot active"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+        </div>
+    </div>
+</section>
+
+<style>
+    /* Posts Section Styles */
+    .posts-section {
+        background: #0a0a0b;
+        padding: 6rem 0;
+        overflow: hidden;
+    }
+
+    .section-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 2rem;
+    }
+
+    /* Posts Header */
+    .posts-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 3rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .header-text {
+        flex: 1;
+    }
+
+    .section-label {
+        display: inline-block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #34d399;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 0.5rem;
+    }
+
+    .section-title {
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-weight: 800;
+        color: #fff;
+        margin: 0;
+    }
+
+    .gradient-text-green {
+        background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .view-all-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #9ca3af;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+
+    .view-all-link:hover {
+        color: #34d399;
+    }
+
+    .view-all-link .arrow-icon {
+        width: 18px;
+        height: 18px;
+        transition: transform 0.3s;
+    }
+
+    .view-all-link:hover .arrow-icon {
+        transform: translateX(4px);
+    }
+
+    /* Slider Wrapper */
+    .slider-wrapper {
+        position: relative;
+    }
+
+    /* Navigation Arrows */
+    .slider-arrow {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 48px;
+        height: 48px;
+        background: rgba(0, 0, 0, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        color: #fff;
+        cursor: pointer;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s;
+        opacity: 0;
+    }
+
+    .slider-wrapper:hover .slider-arrow {
+        opacity: 1;
+    }
+
+    .slider-arrow:hover {
+        background: #34d399;
+        border-color: #34d399;
+        transform: translateY(-50%) scale(1.1);
+    }
+
+    .slider-arrow svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    .arrow-prev {
+        left: -24px;
+    }
+
+    .arrow-next {
+        right: -24px;
+    }
+
+    /* Slider Track */
+    .slider-track {
+        display: flex;
+        gap: 1.5rem;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scroll-behavior: smooth;
+        padding: 1rem 0;
+        margin: -1rem 0;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .slider-track::-webkit-scrollbar {
+        display: none;
+    }
+
+    .slider-track {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    /* Post Card */
+    .post-card {
+        flex: 0 0 280px;
+        scroll-snap-align: start;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 16px;
+        overflow: hidden;
+        text-decoration: none;
+        transition: all 0.4s ease;
+    }
+
+    .post-card:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(52, 211, 153, 0.3);
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 20px 50px rgba(52, 211, 153, 0.15);
+    }
+
+    /* Post Cover */
+    .post-cover {
+        position: relative;
+        aspect-ratio: 1;
+        overflow: hidden;
+    }
+
+    .cover-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.6s ease;
+    }
+
+    .post-card:hover .cover-image {
+        transform: scale(1.1);
+    }
+
+    .cover-placeholder {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .placeholder-icon {
+        width: 48px;
+        height: 48px;
+        color: #374151;
+    }
+
+    .cover-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.8) 100%);
+    }
+
+    /* Play Button */
+    .play-button {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        width: 56px;
+        height: 56px;
+        background: #34d399;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #0a0a0b;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 30px rgba(52, 211, 153, 0.4);
+    }
+
+    .post-card:hover .play-button {
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    .play-button svg {
+        width: 24px;
+        height: 24px;
+        margin-left: 2px;
+    }
+
+    /* Post Info */
+    .post-info {
+        padding: 1.25rem;
+    }
+
+    .post-date {
+        font-size: 0.75rem;
+        font-family: ui-monospace, monospace;
+        color: #34d399;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    .post-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #fff;
+        margin: 0 0 0.5rem 0;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        transition: color 0.3s;
+    }
+
+    .post-card:hover .post-title {
+        color: #34d399;
+    }
+
+    .post-excerpt {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin: 0;
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* Pagination Dots */
+    .slider-dots {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 2rem;
+    }
+
+    .dot {
+        width: 8px;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .dot.active {
+        width: 24px;
+        border-radius: 4px;
+        background: #34d399;
+    }
+
+    .dot:hover {
+        background: rgba(255, 255, 255, 0.4);
+    }
+
+    /* Reveal Animation */
+    .reveal-up {
+        opacity: 0;
+        transform: translateY(40px);
+        transition: all 0.6s ease;
+    }
+
+    .reveal-up.revealed {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .post-card {
+            flex: 0 0 260px;
+        }
+
+        .slider-arrow {
+            display: none;
+        }
+
+        .posts-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+
+<script>
+    // Slider JavaScript
+    document.addEventListener('DOMContentLoaded', function () {
+        const track = document.querySelector('.slider-track');
+        const prevBtn = document.querySelector('.arrow-prev');
+        const nextBtn = document.querySelector('.arrow-next');
+        const dots = document.querySelectorAll('.slider-dots .dot');
+
+        if (!track) return;
+
+        const cardWidth = 280 + 24; // card width + gap
+        const scrollAmount = cardWidth * 2;
+
+        prevBtn?.addEventListener('click', () => {
+            track.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+        });
+
+        nextBtn?.addEventListener('click', () => {
+            track.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+        });
+
+        // Update dots on scroll
+        track.addEventListener('scroll', () => {
+            const scrollPosition = track.scrollLeft;
+            const maxScroll = track.scrollWidth - track.clientWidth;
+            const scrollPercentage = scrollPosition / maxScroll;
+
+            dots.forEach((dot, index) => {
+                const isActive = Math.round(scrollPercentage * (dots.length - 1)) === index;
+                dot.classList.toggle('active', isActive);
+            });
+        });
+
+        // Click on dots
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                const maxScroll = track.scrollWidth - track.clientWidth;
+                const scrollTo = (maxScroll / (dots.length - 1)) * index;
+                track.scrollTo({ left: scrollTo, behavior: 'smooth' });
+            });
+        });
+    });
+</script>

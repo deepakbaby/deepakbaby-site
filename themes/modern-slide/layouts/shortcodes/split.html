@@ -1,0 +1,9 @@
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6 my-6">
+    {{ $chunks := split .Inner "---" }}
+    {{ range $index, $chunk := $chunks }}
+    {{ $colSpan := index $.Params $index | default 12 }}
+    <div class="col-span-12 md:col-span-{{ $colSpan }}">
+        {{ $chunk | markdownify }}
+    </div>
+    {{ end }}
+</div>

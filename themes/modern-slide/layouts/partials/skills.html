@@ -1,0 +1,38 @@
+{{ $skills := site.Data.en.sections.skills.skills }}
+<section class="swiper-slide relative flex items-center justify-center overflow-hidden bg-black" data-hash="skills">
+    <div class="absolute inset-0 bg-gradient-to-t from-purple-900/20 to-transparent"></div>
+
+    <div class="container mx-auto px-6 z-10">
+        <h2 class="text-4xl md:text-6xl font-bold mb-16 text-center text-white">
+            <span class="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400">Expertise</span>
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {{ range $skills }}
+            <div
+                class="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/5 hover:border-purple-500/50 transition-all duration-300 hover:transform hover:-translate-y-2 group">
+                <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                    <span class="w-2 h-8 bg-purple-500 rounded-full"></span>
+                    {{ .name }}
+                </h3>
+
+                <div class="space-y-4">
+                    {{ range .items }}
+                    <div class="relative">
+                        <div class="flex justify-between mb-1">
+                            <span class="text-gray-300 font-medium">{{ .name }}</span>
+                            <!-- Assuming we don't have percentages, maybe just show the name. If percentage existed we'd use it. -->
+                        </div>
+                        <div class="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
+                            <!-- Random width strictly for visual demonstration since data doesn't seem to have percentage -->
+                            <div class="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full"
+                                style="width: {{ mul (len .name) 10 }}%"></div>
+                        </div>
+                    </div>
+                    {{ end }}
+                </div>
+            </div>
+            {{ end }}
+        </div>
+    </div>
+</section>

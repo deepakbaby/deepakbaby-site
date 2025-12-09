@@ -1,0 +1,277 @@
+<div class="publications-list">
+
+{{ if or site.Data.publications.highlighted site.Data.publications.articles }}
+  <section class="publication-section">
+    <h2><i class="fas fa-book"></i> Journal Articles</h2>
+    <div class="publication-items">
+      {{ $counter := 1 }}
+      {{/* First add highlighted publications (they are journal articles) */}}
+      {{ range sort site.Data.publications.highlighted "year" "desc" }}
+        <div class="publication-item featured">
+          <span class="pub-number">[{{ $counter }}]</span>
+          <div class="pub-content">
+            <div class="pub-title">{{ .title }}</div>
+            <div class="pub-authors">{{ .author }}</div>
+            <div class="pub-venue">
+              <em>{{ .journal }}</em>, {{ .year }}
+              {{ with .doi }}<span class="pub-doi">DOI: {{ . }}</span>{{ end }}
+            </div>
+            <div class="pub-links">
+              {{ with .url }}<a href="{{ . }}" target="_blank" rel="noopener"><i class="fas fa-file-pdf"></i> Paper</a>{{ end }}
+              {{ with .preprint }}<a href="{{ . }}" target="_blank" rel="noopener"><i class="fas fa-file-alt"></i> Preprint</a>{{ end }}
+              {{ with .code }}<a href="{{ . }}" target="_blank" rel="noopener"><i class="fab fa-github"></i> Code</a>{{ end }}
+            </div>
+          </div>
+        </div>
+        {{ $counter = add $counter 1 }}
+      {{ end }}
+      {{/* Then add regular journal articles */}}
+      {{ range sort site.Data.publications.articles "year" "desc" }}
+        <div class="publication-item">
+          <span class="pub-number">[{{ $counter }}]</span>
+          <div class="pub-content">
+            <div class="pub-title">{{ .title }}</div>
+            <div class="pub-authors">{{ .author }}</div>
+            <div class="pub-venue">
+              <em>{{ .journal }}</em>, {{ .year }}
+              {{ with .doi }}<span class="pub-doi">DOI: {{ . }}</span>{{ end }}
+            </div>
+            <div class="pub-links">
+              {{ with .url }}<a href="{{ . }}" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i> View</a>{{ end }}
+            </div>
+          </div>
+        </div>
+        {{ $counter = add $counter 1 }}
+      {{ end }}
+    </div>
+  </section>
+{{ end }}
+
+{{ if site.Data.publications.conferences_and_workshops }}
+  <section class="publication-section">
+    <h2><i class="fas fa-users"></i> Conference & Workshop Papers</h2>
+    <div class="publication-items">
+      {{ $counter := 1 }}
+      {{ range sort site.Data.publications.conferences_and_workshops "year" "desc" }}
+        <div class="publication-item">
+          <span class="pub-number">[{{ $counter }}]</span>
+          <div class="pub-content">
+            <div class="pub-title">{{ .title }}</div>
+            <div class="pub-authors">{{ .author }}</div>
+            <div class="pub-venue">
+              <em>{{ .booktitle }}</em>, {{ .year }}
+              {{ with .doi }}<span class="pub-doi">DOI: {{ . }}</span>{{ end }}
+            </div>
+            <div class="pub-links">
+              {{ with .url }}<a href="{{ . }}" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i> View</a>{{ end }}
+            </div>
+          </div>
+        </div>
+        {{ $counter = add $counter 1 }}
+      {{ end }}
+    </div>
+  </section>
+{{ end }}
+
+{{ if site.Data.publications.preprints }}
+  <section class="publication-section">
+    <h2><i class="fas fa-file-alt"></i> Preprints</h2>
+    <div class="publication-items">
+      {{ $counter := 1 }}
+      {{ range sort site.Data.publications.preprints "year" "desc" }}
+        <div class="publication-item">
+          <span class="pub-number">[{{ $counter }}]</span>
+          <div class="pub-content">
+            <div class="pub-title">{{ .title }}</div>
+            <div class="pub-authors">{{ .author }}</div>
+            <div class="pub-venue">
+              {{ .archive }}{{ with .id }}: {{ . }}{{ end }}, {{ .year }}
+            </div>
+            <div class="pub-links">
+              {{ with .url }}<a href="{{ . }}" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i> View</a>{{ end }}
+            </div>
+          </div>
+        </div>
+        {{ $counter = add $counter 1 }}
+      {{ end }}
+    </div>
+  </section>
+{{ end }}
+
+{{ if site.Data.publications.patents }}
+  <section class="publication-section">
+    <h2><i class="fas fa-certificate"></i> Patents</h2>
+    <div class="publication-items">
+      {{ $counter := 1 }}
+      {{ range sort site.Data.publications.patents "year" "desc" }}
+        <div class="publication-item">
+          <span class="pub-number">[{{ $counter }}]</span>
+          <div class="pub-content">
+            <div class="pub-title">{{ .title }}</div>
+            <div class="pub-authors">{{ .author }}</div>
+            <div class="pub-venue">
+              {{ with .patent_number }}<strong>{{ . }}</strong>, {{ end }}{{ .year }}
+            </div>
+            <div class="pub-links">
+              {{ with .url }}<a href="{{ . }}" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i> View Patent</a>{{ end }}
+            </div>
+          </div>
+        </div>
+        {{ $counter = add $counter 1 }}
+      {{ end }}
+    </div>
+  </section>
+{{ end }}
+
+</div>
+
+<style>
+.publications-list {
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.publication-section {
+  margin-bottom: 3rem;
+}
+
+.publication-section h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid currentColor;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  opacity: 0.9;
+}
+
+.publication-section h2 i {
+  font-size: 1.25rem;
+}
+
+.publication-items {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.publication-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 8px;
+  border: 1px solid rgba(128, 128, 128, 0.2);
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.publication-item.featured {
+  border-left: 4px solid #d69e2e;
+}
+
+.publication-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.pub-number {
+  font-size: 0.9rem;
+  font-weight: 700;
+  min-width: 40px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  flex-shrink: 0;
+  border: 1px solid rgba(128, 128, 128, 0.3);
+  opacity: 0.8;
+}
+
+.pub-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.pub-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+}
+
+.pub-authors {
+  font-size: 0.95rem;
+  opacity: 0.7;
+  margin-bottom: 0.4rem;
+}
+
+.pub-venue {
+  font-size: 0.9rem;
+  opacity: 0.6;
+  margin-bottom: 0.6rem;
+}
+
+.pub-venue em {
+  font-style: italic;
+  opacity: 1;
+}
+
+.pub-doi {
+  display: inline-block;
+  font-size: 0.8rem;
+  opacity: 0.5;
+  margin-left: 0.5rem;
+}
+
+.pub-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.pub-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: 1px solid rgba(128, 128, 128, 0.3);
+  border-radius: 4px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.pub-links a:hover {
+  opacity: 0.8;
+}
+
+.pub-links a i {
+  font-size: 0.8rem;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .publication-item {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .pub-number {
+    align-self: flex-start;
+  }
+
+  .pub-links {
+    gap: 0.5rem;
+  }
+
+  .pub-links a {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+  }
+}
+</style>

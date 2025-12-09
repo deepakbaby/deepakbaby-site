@@ -1,0 +1,316 @@
+{{ $sectionID := replace (lower .section.name) " " "-"  }}
+{{ if .section.id }}
+  {{ $sectionID = .section.id }}
+{{ end }}
+
+<div class="container-fluid anchor pb-5 about-section" id="{{ $sectionID }}">
+  {{ if not (.section.hideTitle) }}
+    <h1 class="text-center">
+      <span id="{{ $sectionID }}"></span>{{ .section.name }}
+    </h1>
+  {{ end }}
+
+  <div class="container mt-5">
+    <div class="about-content">
+      {{/* Profile Photo - floated left with text wrap */}}
+      {{ $author := site.Data.en.author }}
+      {{ if $author.image }}
+        <div class="profile-photo-wrapper">
+          {{/* Handle image path - support both Hugo resources and static files */}}
+          {{ $imagePath := $author.image }}
+          {{ $imageSrc := "" }}
+          
+          {{/* Try Hugo resources.Get from assets directory - use high quality */}}
+          {{ $imageResource := resources.Get $imagePath }}
+          {{ if $imageResource }}
+            {{/* Process with high quality - resize to max 600px while maintaining aspect ratio */}}
+            {{ $processedImage := $imageResource.Resize "600x q90" }}
+            {{ $imageSrc = $processedImage.RelPermalink }}
+          {{ else }}
+            {{/* Fallback: construct static path */}}
+            {{ if not (hasPrefix $imagePath "/") }}
+              {{ $imagePath = printf "/%s" $imagePath }}
+            {{ end }}
+            {{ $imageSrc = $imagePath }}
+          {{ end }}
+          
+          <img src="{{ $imageSrc }}" alt="{{ $author.name }}" class="profile-photo">
+        </div>
+      {{ end }}
+
+      {{/* Designation */}}
+      {{ if .designation }}
+        <div class="designation-wrapper mb-4">
+          <h2 class="designation-text mb-2">
+            {{ .designation }}
+            {{ if .company }}
+              {{ if .company.url }}
+                <span class="company-link">at <a href="{{ .company.url }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none">{{ .company.name }}</a></span>
+              {{ else }}
+                <span class="company-link">at {{ .company.name }}</span>
+              {{ end }}
+            {{ end }}
+          </h2>
+        </div>
+      {{ end }}
+
+      {{/* Summary - text wraps around photo */}}
+      {{ if .summary }}
+        <div class="summary-content">
+          {{ .summary | markdownify }}
+        </div>
+      {{ end }}
+
+      {{/* Clear float before links */}}
+      <div class="clearfix"></div>
+
+      <!-- Resource Links -->
+      {{ if .resourceLinks }}
+        <div class="resource-links mt-4 pt-4 border-top">
+          {{ range .resourceLinks }}
+            <a href="{{ .url }}" class="btn btn-outline-primary me-2 mb-2" target="_blank" rel="noopener noreferrer">
+              {{ .title }}
+            </a>
+          {{ end }}
+        </div>
+      {{ end }}
+
+      <!-- Social Links -->
+      {{ if .socialLinks }}
+        <div class="social-links mt-4 pt-4 border-top">
+          <div class="d-flex flex-wrap gap-3">
+            {{ range .socialLinks }}
+              {{ $iconClass := .icon }}
+              {{ $url := .url }}
+              {{ if eq .name "Email" }}
+                <a href="mailto:{{ $url }}" class="social-link" aria-label="{{ .name }}" title="{{ .name }}">
+                  <i class="{{ $iconClass }}"></i>
+                </a>
+              {{ else }}
+                <a href="{{ $url }}" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="{{ .name }}" title="{{ .name }}">
+                  <i class="{{ $iconClass }}"></i>
+                </a>
+              {{ end }}
+            {{ end }}
+          </div>
+        </div>
+      {{ end }}
+    </div>
+  </div>
+</div>
+
+<style>
+.about-section {
+  background: linear-gradient(to bottom, var(--section-bg, #ffffff) 0%, var(--section-bg-alt, #f8f9fa) 100%);
+  padding-top: 6rem;
+  margin-top: 0 !important;
+  position: relative;
+  z-index: 1;
+}
+
+/* When hero section is hidden, About should be first */
+body:not(:has(.home)) .about-section,
+body:not(:has(#home)) .about-section {
+  padding-top: 6rem !important;
+  margin-top: 0 !important;
+}
+
+/* Ensure About section appears right after navbar when hero is hidden */
+body > .container-fluid:first-of-type.about-section,
+body > div:first-of-type .about-section,
+body > main > .about-section:first-child {
+  margin-top: 0 !important;
+  padding-top: 6rem !important;
+}
+
+/* If hero section is hidden, reduce top padding */
+body:not(:has(.home)) .about-section {
+  padding-top: 6rem !important;
+}
+
+.about-section h1 {
+  font-weight: 700;
+  color: var(--heading-color, #2c3e50);
+  margin-bottom: 2rem;
+  font-size: 2.5rem;
+}
+
+.profile-photo-wrapper {
+  float: left;
+  width: 280px;
+  margin: 0 2rem 1.5rem 0;
+  shape-outside: margin-box;
+}
+
+.profile-photo {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  object-fit: cover;
+  aspect-ratio: 1;
+}
+
+.profile-photo:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15), 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.about-content {
+  background: var(--card-bg, #ffffff);
+  border-radius: 12px;
+  padding: 3rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden; /* Contains floated elements */
+}
+
+.about-content:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
+}
+
+.clearfix {
+  clear: both;
+}
+
+.designation-text {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--primary-color, #007bff);
+  line-height: 1.4;
+}
+
+.company-link {
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: var(--text-color, #495057);
+  display: block;
+  margin-top: 0.5rem;
+}
+
+.company-link a {
+  color: var(--primary-color, #007bff);
+  transition: color 0.2s ease;
+}
+
+.company-link a:hover {
+  color: var(--primary-hover, #0056b3);
+  text-decoration: underline;
+}
+
+.summary-content {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: var(--text-color, #495057);
+  text-align: justify;
+}
+
+.summary-content p {
+  margin-bottom: 1.5rem;
+}
+
+.summary-content a {
+  color: var(--primary-color, #007bff);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.summary-content a:hover {
+  border-bottom-color: var(--primary-color, #007bff);
+}
+
+.resource-links {
+  border-top: 1px solid var(--border-color, #e9ecef) !important;
+}
+
+.social-links {
+  border-top: 1px solid var(--border-color, #e9ecef) !important;
+}
+
+.social-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--social-bg, #f8f9fa);
+  color: var(--text-color, #495057);
+  font-size: 1.5rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.social-link:hover {
+  background: var(--primary-color, #007bff);
+  color: #ffffff;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+  border-color: var(--primary-color, #007bff);
+}
+
+/* Dark theme support */
+[data-theme="dark"] .about-section {
+  background: linear-gradient(to bottom, var(--section-bg-dark, #1a1a1a) 0%, var(--section-bg-alt-dark, #2d2d2d) 100%);
+}
+
+[data-theme="dark"] .about-content {
+  background: var(--card-bg-dark, #2d2d2d);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .about-content:hover {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5), 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .summary-content {
+  color: var(--text-color-dark, #e0e0e0);
+}
+
+[data-theme="dark"] .social-link {
+  background: var(--social-bg-dark, #3a3a3a);
+  color: var(--text-color-dark, #e0e0e0);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .about-content {
+    padding: 2rem 1.5rem;
+  }
+
+  .profile-photo-wrapper {
+    float: none;
+    width: 200px;
+    max-width: 200px;
+    margin: 0 auto 2rem auto;
+    display: block;
+  }
+
+  .designation-text {
+    font-size: 1.5rem;
+    text-align: center;
+  }
+
+  .designation-wrapper {
+    text-align: center;
+  }
+
+  .company-link {
+    font-size: 1.1rem;
+  }
+
+  .summary-content {
+    font-size: 1rem;
+    text-align: left;
+  }
+
+  .about-section h1 {
+    font-size: 2rem;
+  }
+}
+</style>
+

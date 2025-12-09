@@ -1,0 +1,197 @@
+{{/* Skills Section - Modern Visual Design */}}
+{{ $skills := site.Data.en.sections.skills }}
+
+<section id="skills" class="skills-section">
+    <div class="section-container">
+        <!-- Section Header -->
+        <div class="section-header reveal-up">
+            <span class="section-label">Technical Expertise</span>
+            <h2 class="section-title">
+                <span class="gradient-text-cyan">Skills</span>
+            </h2>
+        </div>
+
+        <!-- Skills Grid -->
+        <div class="skills-grid">
+            {{ range $catIndex, $category := $skills.skills }}
+            <div class="skill-category reveal-up" style="--delay: {{ $catIndex }}">
+                <h3 class="category-title">
+                    {{ if .icon }}<i class="{{ .icon }}"></i>{{ end }}
+                    {{ .name }}
+                </h3>
+                <div class="skill-tags">
+                    {{ range $skillIndex, $skill := .skills }}
+                    <span class="skill-tag" style="--skill-delay: {{ $skillIndex }}">
+                        {{ if .icon }}<i class="{{ .icon }}"></i>{{ end }}
+                        {{ .name }}
+                        {{ if .percentage }}
+                        <span class="skill-level" style="--level: {{ .percentage }}%"></span>
+                        {{ end }}
+                    </span>
+                    {{ end }}
+                </div>
+            </div>
+            {{ end }}
+        </div>
+    </div>
+</section>
+
+<style>
+    /* Skills Section Styles */
+    .skills-section {
+        background: linear-gradient(180deg, #0f0f12 0%, #0a0a0b 100%);
+        padding: 6rem 0;
+        position: relative;
+    }
+
+    .section-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 2rem;
+    }
+
+    .section-header {
+        text-align: center;
+        margin-bottom: 4rem;
+    }
+
+    .section-label {
+        display: inline-block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #06b6d4;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 0.5rem;
+    }
+
+    .section-title {
+        font-size: clamp(2rem, 5vw, 3.5rem);
+        font-weight: 800;
+        color: #fff;
+    }
+
+    .gradient-text-cyan {
+        background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    /* Skills Grid */
+    .skills-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    /* Skill Category */
+    .skill-category {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        padding: 2rem;
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.4s ease;
+    }
+
+    .skill-category.revealed {
+        animation: fadeSlideUp 0.6s ease forwards;
+        animation-delay: calc(var(--delay) * 0.1s);
+    }
+
+    @keyframes fadeSlideUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .skill-category:hover {
+        border-color: rgba(6, 182, 212, 0.3);
+        box-shadow: 0 10px 40px rgba(6, 182, 212, 0.1);
+    }
+
+    .category-title {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #fff;
+        margin: 0 0 1.5rem 0;
+    }
+
+    .category-title i {
+        color: #06b6d4;
+    }
+
+    /* Skill Tags */
+    .skill-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .skill-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 30px;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        color: #d1d5db;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .skill-tag:hover {
+        background: rgba(6, 182, 212, 0.1);
+        border-color: rgba(6, 182, 212, 0.3);
+        color: #fff;
+        transform: translateY(-2px);
+    }
+
+    .skill-tag i {
+        font-size: 1rem;
+        color: #06b6d4;
+    }
+
+    /* Skill Level Indicator */
+    .skill-level {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 2px;
+        width: var(--level, 0%);
+        background: linear-gradient(90deg, #06b6d4, #3b82f6);
+        transition: width 1s ease;
+    }
+
+    /* Reveal Animation */
+    .reveal-up {
+        opacity: 0;
+        transform: translateY(40px);
+        transition: all 0.6s ease;
+    }
+
+    .reveal-up.revealed {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .skills-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .skill-category {
+            padding: 1.5rem;
+        }
+    }
+</style>

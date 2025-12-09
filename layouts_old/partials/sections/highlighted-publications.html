@@ -1,0 +1,42 @@
+{{ $sectionID := replace (lower .section.name) " " "-"  }}
+{{ if .section.id }}
+  {{ $sectionID = .section.id }}
+{{ end }}
+
+<div class="container-fluid anchor pb-5 publications-section" id="{{ $sectionID }}">
+
+  {{ if not (.section.hideTitle) }}
+    <h1 class="text-center">
+        <span id="{{ $sectionID }}"></span>{{ .section.name }}</h1>
+  {{ else }}
+    <h1 class="text-center" style="display: none">
+        <span id="{{ $sectionID }}"></span>{{ .section.name }}</h1>
+  {{ end }}
+  
+  <div class="text-center mt-4">
+    {{ if .section.moreUrl }}
+      <a href="{{ .section.moreUrl }}" class="btn btn-outline-primary me-2">{{ .section.moreText | default "View all publications" }}</a>
+    {{ end }}
+    <a href="https://scholar.google.com/citations?hl=en&user=69q7FOYAAAAJ" target="_blank" rel="noopener" class="btn btn-outline-secondary">
+      <i class="fa-brands fa-google-scholar me-1"></i> Google Scholar
+    </a>
+  </div>
+  
+  <div class="container ms-auto text-center">
+    <div class="btn-group flex-wrap" role="pub-group" id="publication-filter-buttons">
+      {{ range .buttons }}
+      <button type="button" class="btn btn-dark pub-filtr-control" data-filter="pub-{{ .filter }}">
+        {{ .name }}
+      </button>
+      {{ end }}
+    </div>
+  </div>
+  <div class="container filtr-publications">
+    <div class="row" id="publication-card-holder">
+      {{ range .publications }}
+        {{ partial "cards/publication" . }}
+      {{ end }}
+    </div>
+  </div> 
+</div>
+

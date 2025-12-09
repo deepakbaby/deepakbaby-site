@@ -1,0 +1,178 @@
+{{ $sectionID := replace (lower .section.name) " " "-"  }}
+{{ if .section.id }}
+  {{ $sectionID = .section.id }}
+{{ end }}
+
+<div class="container-fluid anchor pb-5" id="{{ $sectionID }}">
+  {{ if not (.section.hideTitle) }}
+    <h1 class="text-center">
+      <span id="{{ $sectionID }}"></span>{{ .section.name }}
+    </h1>
+  {{ end }}
+
+  <div class="container timeline text-justify">
+    {{ range $index, $experience := .experiences }}
+      <div class="row align-items-center d-flex">
+        <div class="col-1 col-lg-2 text-center vertical-line d-inline-flex justify-content-center">
+          <div class="circle fw-bold">{{ add $index 1 }}</div>
+        </div>
+
+        <div class="col-10 col-lg-8">
+          <div class="experience-entry-heading">
+            {{/* Column 1: Logo - on the left */}}
+            {{ if $experience.company.logo }}
+              <div class="exp-logo-col">
+                {{ $logoPath := $experience.company.logo }}
+                {{ $darkLogoPath := $experience.company.darkLogo }}
+                {{ if not (hasPrefix $logoPath "/") }}
+                  {{ $logoPath = printf "/%s" $logoPath }}
+                {{ end }}
+                <img class="company-logo light-logo" src="{{ $logoPath }}" alt="{{ $experience.company.name }}" />
+                {{ if $darkLogoPath }}
+                  {{ if not (hasPrefix $darkLogoPath "/") }}
+                    {{ $darkLogoPath = printf "/%s" $darkLogoPath }}
+                  {{ end }}
+                  <img class="company-logo dark-logo d-none" src="{{ $darkLogoPath }}" alt="{{ $experience.company.name }}" />
+                {{ end }}
+              </div>
+            {{ end }}
+
+            {{/* Column 2: Company name and location - in the middle */}}
+            <div class="exp-info-col">
+              <h5 class="company-name mb-1">
+                {{ if $experience.company.url }}
+                  <a href="{{ $experience.company.url }}" title="{{ $experience.company.name }}" target="_blank" rel="noopener">
+                    {{ $experience.company.name }}
+                  </a>
+                {{ else }}
+                  {{ $experience.company.name }}
+                {{ end }}
+              </h5>
+              {{ if $experience.company.location }}
+                <p class="company-location text-muted mb-0">
+                  <i class="fa-solid fa-location-dot"></i> {{ $experience.company.location }}
+                </p>
+              {{ end }}
+            </div>
+
+            {{/* Column 3: Dates - pushed to the right */}}
+            <div class="exp-dates-col">
+              {{ range $positionIndex, $position := $experience.positions }}
+                {{ if eq $positionIndex 0 }}
+                  <p class="experience-dates text-muted mb-0">
+                    {{ if $position.end }}
+                      {{ $position.start }} - {{ $position.end }}
+                    {{ else }}
+                      {{ $position.start }} - Present
+                    {{ end }}
+                  </p>
+                {{ end }}
+              {{ end }}
+            </div>
+          </div>
+
+          {{/* Positions and responsibilities */}}
+          {{ range $positionIndex, $position := $experience.positions }}
+            {{ if gt $positionIndex 0 }}
+              <div class="company-heading mt-3">
+                <p class="text-muted mb-1">
+                  {{ if $position.end }}
+                    {{ $position.start }} - {{ $position.end }}
+                  {{ else }}
+                    {{ $position.start }} - Present
+                  {{ end }}
+                </p>
+              </div>
+            {{ end }}
+            
+            {{ if $position.designation }}
+              <h6 class="fw-bold mt-2">{{ $position.designation }}</h6>
+            {{ end }}
+
+            {{ if $position.responsibilities }}
+              <ul class="mt-2">
+                {{ range $position.responsibilities }}
+                  <li>{{ . }}</li>
+                {{ end }}
+              </ul>
+            {{ end }}
+          {{ end }}
+
+          {{ if $experience.company.overview }}
+            <p class="text-muted mt-2">{{ $experience.company.overview }}</p>
+          {{ end }}
+        </div>
+      </div>
+    {{ end }}
+  </div>
+</div>
+
+<style>
+  /* 3-column layout: Logo | Company Name + Location | Dates */
+  .experience-entry-heading {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1.5rem;
+    width: 100%;
+  }
+  
+  /* Column 1: Logo */
+  .exp-logo-col {
+    flex-shrink: 0;
+    width: 80px;
+  }
+  
+  .company-logo {
+    max-width: 80px;
+    max-height: 80px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+  }
+  
+  /* Column 2: Company name and location */
+  .exp-info-col {
+    flex-grow: 1;
+    min-width: 0;
+  }
+  
+  .exp-info-col .company-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+  
+  .exp-info-col .company-location {
+    font-size: 0.9rem;
+  }
+  
+  /* Column 3: Dates - pushed to right */
+  .exp-dates-col {
+    flex-shrink: 0;
+    text-align: right;
+    white-space: nowrap;
+  }
+  
+  .exp-dates-col .experience-dates {
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+  
+  /* Responsive: stack on mobile */
+  @media (max-width: 768px) {
+    .experience-entry-heading {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    
+    .exp-logo-col {
+      width: auto;
+    }
+    
+    .exp-dates-col {
+      text-align: left;
+    }
+  }
+</style>
+

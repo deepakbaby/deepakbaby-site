@@ -1,0 +1,323 @@
+{{/* Education Section - Modern Card Design */}}
+{{ $degrees := site.Data.en.sections.education.degrees }}
+
+<section id="education" class="education-section">
+    <div class="section-container">
+        <!-- Section Header -->
+        <div class="section-header reveal-up">
+            <span class="section-label">Academic Background</span>
+            <h2 class="section-title">
+                <span class="gradient-text-purple">Education</span>
+            </h2>
+        </div>
+
+        <!-- Education Grid -->
+        <div class="education-grid">
+            {{ range $index, $edu := $degrees }}
+            <div class="education-card reveal-up" style="--delay: {{ $index }}">
+                <div class="card-glow"></div>
+                <div class="card-content">
+                    <!-- Institution Logo -->
+                    {{ if $edu.institution.logo }}
+                    <div class="institution-logo-wrapper">
+                        <img src="{{ $edu.institution.logo | relURL }}" alt="{{ $edu.institution.name }}"
+                            class="institution-logo">
+                    </div>
+                    {{ end }}
+
+                    <!-- Degree Info -->
+                    <div class="degree-info">
+                        <h3 class="degree-name">{{ $edu.name }}</h3>
+                        <div class="institution-name">
+                            {{ if $edu.institution.url }}
+                            <a href="{{ $edu.institution.url }}" target="_blank" rel="noopener">{{ $edu.institution.name
+                                }}</a>
+                            {{ else }}
+                            {{ $edu.institution.name }}
+                            {{ end }}
+                        </div>
+                        <div class="timeframe">
+                            <svg class="calendar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            {{ $edu.timeframe }}
+                        </div>
+                    </div>
+
+                    <!-- Grade Badge -->
+                    {{ if $edu.grade }}
+                    <div class="grade-badge">
+                        <span class="grade-value">{{ $edu.grade.achieved }}</span>
+                        <span class="grade-scale">/{{ $edu.grade.outOf }} {{ $edu.grade.scale }}</span>
+                    </div>
+                    {{ end }}
+
+                    <!-- Custom Sections -->
+                    {{ if $edu.customSections }}
+                    <div class="custom-sections">
+                        {{ range $edu.customSections }}
+                        <div class="custom-section">
+                            <span class="custom-label">{{ .name }}</span>
+                            <span class="custom-content">{{ .content }}</span>
+                        </div>
+                        {{ end }}
+                    </div>
+                    {{ end }}
+                </div>
+            </div>
+            {{ end }}
+        </div>
+    </div>
+</section>
+
+<style>
+    /* Education Section Styles */
+    .education-section {
+        background: linear-gradient(180deg, #0a0a0b 0%, #0f0f12 100%);
+        padding: 6rem 0;
+        position: relative;
+    }
+
+    .section-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 2rem;
+    }
+
+    .section-header {
+        text-align: center;
+        margin-bottom: 4rem;
+    }
+
+    .section-label {
+        display: inline-block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #a78bfa;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 0.5rem;
+    }
+
+    .section-title {
+        font-size: clamp(2rem, 5vw, 3.5rem);
+        font-weight: 800;
+        color: #fff;
+    }
+
+    .gradient-text-purple {
+        background: linear-gradient(135deg, #a78bfa 0%, #ec4899 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    /* Education Grid */
+    .education-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        gap: 2rem;
+    }
+
+    /* Education Card */
+    .education-card {
+        position: relative;
+        border-radius: 20px;
+        overflow: hidden;
+        opacity: 0;
+        transform: translateY(40px);
+    }
+
+    .education-card.revealed {
+        animation: cardReveal 0.6s ease forwards;
+        animation-delay: calc(var(--delay) * 0.15s);
+    }
+
+    @keyframes cardReveal {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .card-glow {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg,
+                rgba(139, 92, 246, 0.1) 0%,
+                rgba(236, 72, 153, 0.1) 100%);
+        opacity: 0;
+        transition: opacity 0.4s;
+    }
+
+    .education-card:hover .card-glow {
+        opacity: 1;
+    }
+
+    .card-content {
+        position: relative;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 20px;
+        padding: 2rem;
+        height: 100%;
+        transition: all 0.4s ease;
+    }
+
+    .education-card:hover .card-content {
+        border-color: rgba(139, 92, 246, 0.3);
+        transform: translateY(-8px);
+        box-shadow:
+            0 20px 50px rgba(139, 92, 246, 0.15),
+            0 0 0 1px rgba(139, 92, 246, 0.1);
+    }
+
+    /* Institution Logo */
+    .institution-logo-wrapper {
+        width: 72px;
+        height: 72px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px;
+        margin-bottom: 1.5rem;
+        transition: transform 0.3s;
+    }
+
+    .education-card:hover .institution-logo-wrapper {
+        transform: scale(1.05);
+    }
+
+    .institution-logo {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+
+    /* Degree Info */
+    .degree-info {
+        margin-bottom: 1.5rem;
+    }
+
+    .degree-name {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #fff;
+        margin: 0 0 0.5rem 0;
+        line-height: 1.3;
+    }
+
+    .institution-name {
+        font-size: 1rem;
+        color: #a78bfa;
+        margin-bottom: 0.5rem;
+    }
+
+    .institution-name a {
+        color: inherit;
+        text-decoration: none;
+        transition: color 0.3s;
+    }
+
+    .institution-name a:hover {
+        color: #c4b5fd;
+    }
+
+    .timeframe {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        font-size: 0.875rem;
+        color: #6b7280;
+        font-family: ui-monospace, monospace;
+    }
+
+    .calendar-icon {
+        width: 14px;
+        height: 14px;
+    }
+
+    /* Grade Badge */
+    .grade-badge {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.25rem;
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.15));
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 30px;
+        padding: 0.5rem 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .grade-value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #34d399;
+    }
+
+    .grade-scale {
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+
+    /* Custom Sections */
+    .custom-sections {
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        padding-top: 1rem;
+    }
+
+    .custom-section {
+        margin-bottom: 0.75rem;
+    }
+
+    .custom-section:last-child {
+        margin-bottom: 0;
+    }
+
+    .custom-label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.25rem;
+    }
+
+    .custom-content {
+        font-size: 0.9rem;
+        color: #d1d5db;
+        line-height: 1.5;
+    }
+
+    /* Reveal Animation */
+    .reveal-up {
+        opacity: 0;
+        transform: translateY(40px);
+        transition: all 0.6s ease;
+    }
+
+    .reveal-up.revealed {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .education-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .card-content {
+            padding: 1.5rem;
+        }
+
+        .institution-logo-wrapper {
+            width: 56px;
+            height: 56px;
+        }
+    }
+</style>

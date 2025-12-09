@@ -1,0 +1,8 @@
+<figure class="my-6 {{ with .Get " float" }}float-{{.}}{{end}} {{ with .Get "align" }}text-{{.}}{{end}}">
+    <img src="{{ .Get " src" }}" alt="{{ .Get " title" | default "Image" }}"
+        class="rounded-lg shadow-lg max-w-full h-auto" {{ with .Get "width" }}width="{{.}}" {{end}} {{ with
+        .Get "height" }}height="{{.}}" {{end}} loading="lazy">
+    {{ with .Get "title" }}
+    <figcaption class="text-center text-sm text-gray-500 mt-2">{{ . }}</figcaption>
+    {{ end }}
+</figure>

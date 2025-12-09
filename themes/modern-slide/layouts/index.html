@@ -1,0 +1,50 @@
+{{ define "main" }}
+<div class="swiper-container-vertical h-screen w-screen relative">
+    <div class="swiper-wrapper">
+
+        <!-- Slide 1: Hero -->
+        {{ partial "hero.html" . }}
+
+        <!-- Slide 2: Experience -->
+        {{ partial "experience.html" . }}
+
+        <!-- Slide 3: Skills -->
+        {{ partial "skills.html" . }}
+
+        <!-- Slide 4: Projects -->
+        {{ partial "projects.html" . }}
+
+        <!-- Slide 5: Recent Posts -->
+        <section class="swiper-slide relative flex items-center justify-center overflow-hidden bg-black"
+            data-hash="posts">
+            <div class="container mx-auto px-6 z-10 w-full">
+                <h2 class="text-4xl md:text-6xl font-bold mb-12 text-center text-white">Recent Thoughts</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {{ range first 3 (where site.RegularPages "Type" "posts") }}
+                    <a href="{{ .Permalink }}"
+                        class="group block bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-white/30 transition-all duration-300 hover:-translate-y-2">
+                        <div class="text-sm text-blue-400 mb-2">{{ .Date.Format "Jan 2, 2006" }}</div>
+                        <h3 class="text-xl font-bold mb-3 text-white group-hover:text-blue-300 transition-colors">{{
+                            .Title }}</h3>
+                        <p class="text-gray-400 text-sm line-clamp-3">{{ .Summary }}</p>
+                    </a>
+                    {{ end }}
+                </div>
+                <div class="text-center mt-12">
+                    <a href="/posts"
+                        class="px-8 py-3 rounded-full border border-white/30 hover:bg-white hover:text-black transition-all duration-300">View
+                        All Architecture Notes</a>
+                </div>
+            </div>
+            <!-- Footer in last slide -->
+            <footer class="absolute bottom-4 w-full text-center text-gray-700 text-xs z-10">
+                &copy; {{ now.Year }} {{ site.Title }}. Made with Modern Slide Theme.
+            </footer>
+        </section>
+
+    </div>
+
+    <!-- Vertical Pagination -->
+    <div class="swiper-pagination !right-6"></div>
+</div>
+{{ end }}

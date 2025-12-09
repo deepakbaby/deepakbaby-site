@@ -1,0 +1,8 @@
+<div class="pdf-container my-6 h-[80vh] w-full border border-gray-700 rounded-lg overflow-hidden">
+    <object data="{{ .Get " url" | default (.Get 0) }}" type="application/pdf" width="100%" height="100%">
+        <p class="p-4 text-center text-gray-400">
+            Unable to display PDF file. <a href="{{ .Get " url" | default (.Get 0) }}"
+                class="text-blue-400 hover:underline">Download</a> instead.
+        </p>
+    </object>
+</div>

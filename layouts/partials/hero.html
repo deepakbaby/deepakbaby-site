@@ -1,1 +1,463 @@
-{{/* COMPLETELY EMPTY - This prevents the hero section from rendering */}}
+{{/* Hero Section - Animated Modern Design */}}
+{{ $author := site.Data.en.author }}
+{{ $about := site.Data.en.sections.about }}
+{{ $siteData := site.Data.en.site }}
+
+<section id="hero" class="hero-section">
+    <!-- Animated Background -->
+    <div class="hero-bg">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+        <div class="gradient-orb orb-3"></div>
+        <div class="grid-overlay"></div>
+    </div>
+
+    <!-- Content -->
+    <div class="hero-content">
+        <!-- Profile Photo -->
+        <div class="profile-wrapper reveal-item" style="--delay: 0">
+            <div class="profile-ring">
+                {{ if $author.image }}
+                <img src="{{ $author.image | relURL }}" alt="{{ $author.name }}" class="profile-photo">
+                {{ end }}
+            </div>
+        </div>
+
+        <!-- Name -->
+        <h1 class="hero-name reveal-item" style="--delay: 1">
+            {{ $author.name | default site.Title }}
+        </h1>
+
+        <!-- Designation -->
+        <div class="hero-designation reveal-item" style="--delay: 2">
+            <span class="designation-text">{{ $about.designation }}</span>
+            {{ if $about.company }}
+            <span class="company-text">
+                at <a href="{{ $about.company.url }}" target="_blank" rel="noopener">{{ $about.company.name }}</a>
+            </span>
+            {{ end }}
+        </div>
+
+        <!-- Tagline -->
+        <p class="hero-tagline reveal-item" style="--delay: 3">
+            {{ $siteData.description | default "Machine Learning • Speech Processing • Neural Networks" }}
+        </p>
+
+        <!-- Social Links -->
+        <div class="hero-social reveal-item" style="--delay: 4">
+            {{ range $about.socialLinks }}
+            {{ $url := .url }}
+            {{ if eq .name "Email" }}
+            <a href="mailto:{{ $url }}" class="social-btn" aria-label="{{ .name }}" title="{{ .name }}">
+                <i class="{{ .icon }}"></i>
+            </a>
+            {{ else }}
+            <a href="{{ $url }}" class="social-btn" target="_blank" rel="noopener noreferrer" aria-label="{{ .name }}"
+                title="{{ .name }}">
+                <i class="{{ .icon }}"></i>
+            </a>
+            {{ end }}
+            {{ end }}
+        </div>
+
+        <!-- CTA Buttons -->
+        <div class="hero-cta reveal-item" style="--delay: 5">
+            <a href="#experiences" class="btn-primary">
+                <span>View Experience</span>
+                <svg class="btn-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+            </a>
+            <a href="/posts" class="btn-secondary">Read Blog</a>
+        </div>
+    </div>
+
+    <!-- Scroll Indicator -->
+    <div class="scroll-indicator">
+        <div class="mouse">
+            <div class="wheel"></div>
+        </div>
+        <span>Scroll to explore</span>
+    </div>
+</section>
+
+<style>
+    /* Hero Section Styles */
+    .hero-section {
+        position: relative;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background: #0a0a0b;
+    }
+
+    /* Animated Background */
+    .hero-bg {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+    }
+
+    .gradient-orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.6;
+        animation: float 8s ease-in-out infinite;
+    }
+
+    .orb-1 {
+        width: 400px;
+        height: 400px;
+        background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+        top: 10%;
+        left: 20%;
+        animation-delay: 0s;
+    }
+
+    .orb-2 {
+        width: 350px;
+        height: 350px;
+        background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+        top: 60%;
+        right: 15%;
+        animation-delay: -2s;
+    }
+
+    .orb-3 {
+        width: 300px;
+        height: 300px;
+        background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
+        bottom: 20%;
+        left: 10%;
+        animation-delay: -4s;
+    }
+
+    @keyframes float {
+
+        0%,
+        100% {
+            transform: translate(0, 0) scale(1);
+        }
+
+        25% {
+            transform: translate(30px, -30px) scale(1.05);
+        }
+
+        50% {
+            transform: translate(-20px, 20px) scale(0.95);
+        }
+
+        75% {
+            transform: translate(25px, 10px) scale(1.02);
+        }
+    }
+
+    .grid-overlay {
+        position: absolute;
+        inset: 0;
+        background-image:
+            linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        background-size: 50px 50px;
+    }
+
+    /* Content */
+    .hero-content {
+        position: relative;
+        z-index: 10;
+        text-align: center;
+        padding: 2rem;
+        max-width: 800px;
+    }
+
+    /* Profile */
+    .profile-wrapper {
+        margin-bottom: 2rem;
+    }
+
+    .profile-ring {
+        width: 180px;
+        height: 180px;
+        margin: 0 auto;
+        padding: 4px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #8b5cf6, #3b82f6, #ec4899);
+        animation: ring-rotate 4s linear infinite;
+    }
+
+    @keyframes ring-rotate {
+        0% {
+            background: linear-gradient(0deg, #8b5cf6, #3b82f6, #ec4899);
+        }
+
+        25% {
+            background: linear-gradient(90deg, #8b5cf6, #3b82f6, #ec4899);
+        }
+
+        50% {
+            background: linear-gradient(180deg, #8b5cf6, #3b82f6, #ec4899);
+        }
+
+        75% {
+            background: linear-gradient(270deg, #8b5cf6, #3b82f6, #ec4899);
+        }
+
+        100% {
+            background: linear-gradient(360deg, #8b5cf6, #3b82f6, #ec4899);
+        }
+    }
+
+    .profile-photo {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 4px solid #0a0a0b;
+    }
+
+    /* Name */
+    .hero-name {
+        font-size: clamp(2.5rem, 8vw, 5rem);
+        font-weight: 800;
+        background: linear-gradient(135deg, #fff 0%, #a78bfa 50%, #60a5fa 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1rem;
+        letter-spacing: -0.02em;
+    }
+
+    /* Designation */
+    .hero-designation {
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+    }
+
+    .designation-text {
+        color: #a78bfa;
+        font-weight: 600;
+    }
+
+    .company-text {
+        color: #9ca3af;
+    }
+
+    .company-text a {
+        color: #60a5fa;
+        text-decoration: none;
+        transition: color 0.3s;
+    }
+
+    .company-text a:hover {
+        color: #93c5fd;
+    }
+
+    /* Tagline */
+    .hero-tagline {
+        font-size: 1.1rem;
+        color: #6b7280;
+        margin-bottom: 2rem;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* Social Links */
+    .hero-social {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .social-btn {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #9ca3af;
+        font-size: 1.25rem;
+        transition: all 0.3s ease;
+    }
+
+    .social-btn:hover {
+        background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+        border-color: transparent;
+        color: #fff;
+        transform: translateY(-4px);
+        box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3);
+    }
+
+    /* CTA Buttons */
+    .hero-cta {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.875rem 2rem;
+        background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+        color: #fff;
+        font-weight: 600;
+        border-radius: 50px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(139, 92, 246, 0.5);
+    }
+
+    .btn-arrow {
+        width: 18px;
+        height: 18px;
+        transition: transform 0.3s;
+    }
+
+    .btn-primary:hover .btn-arrow {
+        transform: translateY(3px);
+    }
+
+    .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.875rem 2rem;
+        background: transparent;
+        color: #fff;
+        font-weight: 600;
+        border-radius: 50px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    /* Scroll Indicator */
+    .scroll-indicator {
+        position: absolute;
+        bottom: 2rem;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        color: #6b7280;
+        font-size: 0.75rem;
+        animation: bounce 2s infinite;
+    }
+
+    .mouse {
+        width: 24px;
+        height: 40px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        position: relative;
+    }
+
+    .wheel {
+        width: 4px;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.4);
+        border-radius: 2px;
+        position: absolute;
+        top: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        animation: scroll-wheel 1.5s infinite;
+    }
+
+    @keyframes scroll-wheel {
+        0% {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        100% {
+            opacity: 0;
+            transform: translateX(-50%) translateY(10px);
+        }
+    }
+
+    @keyframes bounce {
+
+        0%,
+        20%,
+        50%,
+        80%,
+        100% {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        40% {
+            transform: translateX(-50%) translateY(-8px);
+        }
+
+        60% {
+            transform: translateX(-50%) translateY(-4px);
+        }
+    }
+
+    /* Reveal Animation */
+    .reveal-item {
+        opacity: 0;
+        transform: translateY(30px);
+        animation: reveal 0.8s ease-out forwards;
+        animation-delay: calc(var(--delay) * 0.15s);
+    }
+
+    @keyframes reveal {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .profile-ring {
+            width: 140px;
+            height: 140px;
+        }
+
+        .hero-social {
+            gap: 0.75rem;
+        }
+
+        .social-btn {
+            width: 44px;
+            height: 44px;
+        }
+
+        .hero-cta {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .btn-primary,
+        .btn-secondary {
+            width: 100%;
+            max-width: 280px;
+            justify-content: center;
+        }
+    }
+</style>

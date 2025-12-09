@@ -1,0 +1,154 @@
+{{ $sectionID := replace (lower .section.name) " " "-"  }}
+{{ if .section.id }}
+  {{ $sectionID = .section.id }}
+{{ end }}
+
+{{ $pubData := site.Data.publications }}
+{{ $highlighted := $pubData.highlighted | default slice }}
+
+<div class="container-fluid anchor pb-5 publications-section" id="{{ $sectionID }}">
+  {{ if not (.section.hideTitle) }}
+    <h1 class="text-center">
+        <span id="{{ $sectionID }}"></span>{{ .section.name }}</h1>
+  {{ else }}
+    <h1 class="text-center" style="display: none">
+        <span id="{{ $sectionID }}"></span>{{ .section.name }}</h1>
+  {{ end }}
+
+  <div class="text-center mb-4 publication-links-header">
+    {{ if .section.moreUrl }}
+      <a href="{{ .section.moreUrl }}" class="btn btn-outline-primary me-2">{{ .section.moreText | default "View all publications" }}</a>
+    {{ end }}
+    <a href="https://scholar.google.com/citations?hl=en&user=69q7FOYAAAAJ" target="_blank" rel="noopener" class="btn btn-outline-secondary">
+      <i class="fa-brands fa-google-scholar me-1"></i> Google Scholar
+    </a>
+  </div>
+
+  <div class="container mt-5">
+    <div class="row">
+      {{ if gt (len $highlighted) 0 }}
+        {{ range $highlighted }}
+          <div class="col-lg-6 col-md-12 mb-4">
+            <div class="publication-card">
+              <h3 class="publication-title">{{ .title }}</h3>
+              <div class="publication-meta">
+                <p class="mb-2">
+                  <strong>Author:</strong> {{ .author }}
+                </p>
+                {{ if .year }}
+                  <p class="mb-2">
+                    <strong>Year:</strong> {{ .year }}
+                  </p>
+                {{ end }}
+              </div>
+              {{ if .url }}
+                <div class="publication-link mt-3">
+                  <a href="{{ .url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary">
+                    View Publication <i class="fas fa-external-link-alt ms-1"></i>
+                  </a>
+                </div>
+              {{ end }}
+            </div>
+          </div>
+        {{ end }}
+      {{ else if .publications }}
+        {{ range .publications }}
+          <div class="col-lg-6 col-md-12 mb-4">
+            {{ partial "cards/publication" . }}
+          </div>
+        {{ end }}
+      {{ end }}
+    </div>
+  </div>
+</div>
+
+<style>
+.publications-section h1 {
+  font-weight: 700;
+  color: var(--heading-color, #2c3e50);
+  margin-bottom: 2rem;
+  font-size: 2.5rem;
+}
+
+.publication-card {
+  background: var(--card-bg, #ffffff);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  border-left: 4px solid var(--primary-color, #007bff);
+  height: 100%;
+}
+
+.publication-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
+}
+
+.publication-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--heading-color, #2c3e50);
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+
+.publication-meta {
+  color: var(--text-color, #495057);
+  font-size: 0.95rem;
+}
+
+.publication-meta strong {
+  color: var(--heading-color, #2c3e50);
+}
+
+.publication-link a {
+  transition: all 0.2s ease;
+}
+
+.publication-link a:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+/* Dark theme support */
+[data-theme="dark"] .publications-section h1 {
+  color: var(--heading-color-dark, #ffffff);
+}
+
+[data-theme="dark"] .publication-card {
+  background: var(--card-bg-dark, #2d2d2d);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .publication-card:hover {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5), 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .publication-title {
+  color: var(--heading-color-dark, #ffffff);
+}
+
+[data-theme="dark"] .publication-meta {
+  color: var(--text-color-dark, #e0e0e0);
+}
+
+[data-theme="dark"] .publication-meta strong {
+  color: var(--heading-color-dark, #ffffff);
+}
+
+@media (max-width: 768px) {
+  .publications-section h1 {
+    font-size: 2rem;
+  }
+
+  .publication-card {
+    padding: 1.5rem;
+  }
+
+  .publication-title {
+    font-size: 1.1rem;
+  }
+}
+</style>
+

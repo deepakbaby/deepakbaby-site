@@ -1,0 +1,215 @@
+{{/* Footer - Modern Design */}}
+{{ $about := site.Data.en.sections.about }}
+
+<footer class="modern-footer">
+    <div class="footer-glow"></div>
+    <div class="footer-container">
+        <!-- Footer Content -->
+        <div class="footer-content">
+            <!-- Brand -->
+            <div class="footer-brand">
+                <span class="brand-name">{{ site.Title }}</span>
+                <p class="brand-tagline">Building intelligent systems for tomorrow</p>
+            </div>
+
+            <!-- Social Links -->
+            <div class="footer-social">
+                {{ range $about.socialLinks }}
+                {{ $url := .url }}
+                {{ if eq .name "Email" }}
+                <a href="mailto:{{ $url }}" class="social-icon" aria-label="{{ .name }}" title="{{ .name }}">
+                    <i class="{{ .icon }}"></i>
+                </a>
+                {{ else }}
+                <a href="{{ $url }}" class="social-icon" target="_blank" rel="noopener noreferrer"
+                    aria-label="{{ .name }}" title="{{ .name }}">
+                    <i class="{{ .icon }}"></i>
+                </a>
+                {{ end }}
+                {{ end }}
+            </div>
+
+            <!-- Quick Links -->
+            <div class="footer-links">
+                <a href="#hero">Home</a>
+                <a href="#experiences">Experience</a>
+                <a href="#education">Education</a>
+                <a href="/posts">Blog</a>
+                <a href="/publications">Publications</a>
+            </div>
+        </div>
+
+        <!-- Copyright -->
+        <div class="footer-bottom">
+            <p class="copyright">
+                © {{ now.Year }} {{ site.Title }}. All rights reserved.
+            </p>
+            <p class="credits">
+                Made with <span class="heart">❤</span> and Hugo
+            </p>
+        </div>
+    </div>
+</footer>
+
+<style>
+    /* Modern Footer Styles */
+    .modern-footer {
+        position: relative;
+        background: #050506;
+        padding: 4rem 0 2rem;
+        overflow: hidden;
+    }
+
+    .footer-glow {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 600px;
+        height: 2px;
+        background: linear-gradient(90deg,
+                transparent 0%,
+                #8b5cf6 25%,
+                #3b82f6 50%,
+                #8b5cf6 75%,
+                transparent 100%);
+        filter: blur(1px);
+    }
+
+    .footer-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 2rem;
+    }
+
+    /* Footer Content */
+    .footer-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    /* Brand */
+    .footer-brand {
+        margin-bottom: 0.5rem;
+    }
+
+    .brand-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #fff 0%, #a78bfa 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .brand-tagline {
+        font-size: 0.9rem;
+        color: #6b7280;
+        margin: 0.5rem 0 0 0;
+    }
+
+    /* Social Icons */
+    .footer-social {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .social-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #9ca3af;
+        font-size: 1.1rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .social-icon:hover {
+        background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
+        border-color: transparent;
+        color: #fff;
+        transform: translateY(-4px);
+        box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+    }
+
+    /* Quick Links */
+    .footer-links {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1.5rem;
+    }
+
+    .footer-links a {
+        color: #6b7280;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: color 0.3s;
+    }
+
+    .footer-links a:hover {
+        color: #a78bfa;
+    }
+
+    /* Footer Bottom */
+    .footer-bottom {
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        padding-top: 2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .copyright {
+        font-size: 0.875rem;
+        color: #4b5563;
+        margin: 0;
+    }
+
+    .credits {
+        font-size: 0.75rem;
+        color: #374151;
+        margin: 0;
+    }
+
+    .heart {
+        color: #ef4444;
+        animation: heartbeat 1.5s infinite;
+    }
+
+    @keyframes heartbeat {
+
+        0%,
+        100% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.2);
+        }
+    }
+
+    /* Responsive */
+    @media (min-width: 768px) {
+        .footer-content {
+            flex-direction: row;
+            justify-content: space-between;
+            text-align: left;
+        }
+
+        .footer-bottom {
+            flex-direction: row;
+            justify-content: space-between;
+        }
+    }
+</style>

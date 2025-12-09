@@ -1,0 +1,94 @@
+{{ define "main" }}
+<!-- This is needed for the baseof template -->
+{{ end }}
+
+{{ define "navbar" }}
+  {{ partial "navigators/navbar.html" . }}
+{{ end }}
+
+{{ define "content" }}
+<div class="container-fluid anchor pb-5 publications-page-section">
+  <h1 class="text-center">{{ .Title }}</h1>
+  
+  <div class="text-center mt-3 mb-5">
+    <a href="https://scholar.google.com/citations?hl=en&user=69q7FOYAAAAJ" target="_blank" rel="noopener" class="btn btn-outline-primary">
+      <i class="fa-brands fa-google-scholar me-1"></i> Google Scholar
+    </a>
+  </div>
+
+  <div class="container">
+    {{ .Content }}
+  </div>
+</div>
+
+<style>
+.publications-page-section {
+  padding-top: 6rem;
+  margin-top: 2rem;
+}
+
+.publications-page-section h1 {
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+/* Override shortcode styles to match theme */
+.publications-page-section .publications-list {
+  max-width: 100%;
+}
+
+.publications-page-section .publication-section h2 {
+  color: inherit;
+  border-bottom-color: var(--accent-color, #007bff);
+}
+
+.publications-page-section .publication-item {
+  background: var(--card-bg, #ffffff);
+  border-color: var(--border-color, #e2e8f0);
+}
+
+.publications-page-section .pub-title {
+  color: var(--text-color, #1a202c);
+}
+
+.publications-page-section .pub-number {
+  background: var(--accent-color-light, #ebf8ff);
+  color: var(--accent-color, #007bff);
+}
+
+.publications-page-section .pub-links a {
+  color: var(--accent-color, #007bff);
+  background: var(--accent-color-light, #ebf8ff);
+}
+
+.publications-page-section .pub-links a:hover {
+  background: var(--accent-color, #007bff);
+  color: #ffffff;
+}
+
+/* Dark theme */
+[data-theme="dark"] .publications-page-section .publication-item {
+  background: var(--card-bg-dark, #2d3748);
+  border-color: var(--border-color-dark, #4a5568);
+}
+
+[data-theme="dark"] .publications-page-section .pub-title {
+  color: var(--text-color-dark, #f7fafc);
+}
+
+[data-theme="dark"] .publications-page-section .pub-number {
+  background: var(--accent-color-dark-bg, #2a4365);
+  color: var(--accent-color-dark, #90cdf4);
+}
+
+[data-theme="dark"] .publications-page-section .pub-links a {
+  background: var(--accent-color-dark-bg, #2a4365);
+  color: var(--accent-color-dark, #90cdf4);
+}
+
+[data-theme="dark"] .publications-page-section .pub-links a:hover {
+  background: var(--accent-color, #4299e1);
+  color: #ffffff;
+}
+</style>
+{{ end }}

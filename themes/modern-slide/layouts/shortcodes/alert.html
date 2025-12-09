@@ -1,0 +1,24 @@
+{{ $type := .Get "type" | default "info" }}
+{{ $borderClass := "border-blue-500" }}
+{{ $bgClass := "bg-blue-900/20" }}
+{{ $textClass := "text-blue-400" }}
+
+{{ if eq $type "success" }}
+{{ $borderClass = "border-green-500" }}
+{{ $bgClass = "bg-green-900/20" }}
+{{ $textClass = "text-green-400" }}
+{{ else if eq $type "danger" }}
+{{ $borderClass = "border-red-500" }}
+{{ $bgClass = "bg-red-900/20" }}
+{{ $textClass = "text-red-400" }}
+{{ else if eq $type "warning" }}
+{{ $borderClass = "border-yellow-500" }}
+{{ $bgClass = "bg-yellow-900/20" }}
+{{ $textClass = "text-yellow-400" }}
+{{ end }}
+
+<div class="border-l-4 {{ $borderClass }} {{ $bgClass }} p-4 my-4 rounded-r">
+    <div class="{{ $textClass }} prose prose-invert max-w-none">
+        {{ .Inner | markdownify }}
+    </div>
+</div>

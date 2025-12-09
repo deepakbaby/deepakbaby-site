@@ -1,0 +1,17 @@
+{{ with .utteranc }}
+{{ $repo        := .repo }}
+{{ $issueTerm   := .issueTerm }}
+{{ $theme       := .theme }}
+
+<div id="comments-container">
+  <script src="https://utteranc.es/client.js"
+          repo="{{ $repo }}"
+          issue-term="{{ $issueTerm }}"
+          theme="{{ $theme }}"
+          crossorigin="anonymous"
+          async>
+  </script>
+</div>
+{{ end }}
+
+

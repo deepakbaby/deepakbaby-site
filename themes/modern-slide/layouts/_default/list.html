@@ -1,0 +1,62 @@
+{{ define "main" }}
+<div class="min-h-screen bg-gray-900 text-gray-300 font-sans overflow-y-auto">
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 bg-gray-900/80 backdrop-blur-md border-b border-white/10">
+        <div class="container mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="/"
+                class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-pink-600">
+                {{ site.Title }}
+            </a>
+            <div class="flex gap-6">
+                <a href="/#about" class="text-sm font-medium hover:text-white transition-colors">About</a>
+                <a href="/posts" class="text-sm font-medium text-white transition-colors">Posts</a>
+                <a href="/#contact" class="text-sm font-medium hover:text-white transition-colors">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-6 py-12 max-w-4xl">
+        <header class="mb-16">
+            <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">{{ .Title }}</h1>
+            {{ with .Content }}<div class="text-xl text-gray-400">{{ . }}</div>{{ end }}
+        </header>
+
+        <div class="grid gap-8">
+            {{ range .Paginator.Pages }}
+            <article
+                class="bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-8 transition-colors duration-300 group">
+                <div class="flex flex-col md:flex-row gap-6 md:items-center">
+                    <div class="flex-1">
+                        <div class="text-blue-400 text-sm font-bold mb-2">{{ .Date.Format "Jan 2, 2006" }}</div>
+                        <h2 class="text-2xl font-bold text-white mb-3 group-hover:text-blue-300 transition-colors">
+                            <a href="{{ .Permalink }}">{{ .Title }}</a>
+                        </h2>
+                        <p class="text-gray-400 line-clamp-2 md:line-clamp-3 mb-4">
+                            {{ .Summary }}
+                        </p>
+                        <a href="{{ .Permalink }}"
+                            class="inline-flex items-center text-sm font-bold text-white hover:text-blue-400 transition-colors">
+                            Read Article &rarr;
+                        </a>
+                    </div>
+                </div>
+            </article>
+            {{ end }}
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-12 flex justify-center gap-2">
+            {{ if .Paginator.HasPrev }}
+            <a href="{{ .Paginator.Prev.URL }}"
+                class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors">Previous</a>
+            {{ end }}
+            {{ if .Paginator.HasNext }}
+            <a href="{{ .Paginator.Next.URL }}"
+                class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors">Next</a>
+            {{ end }}
+        </div>
+
+    </main>
+</div>
+{{ end }}
