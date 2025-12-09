@@ -36,10 +36,32 @@
                     <article class="coverflow-item" data-index="{{ $index }}">
                         <a href="{{ $post.Permalink }}" class="coverflow-link">
                             <div class="coverflow-cover">
-                                {{ $image := "" }}
-                                {{ with $post.Resources.GetMatch "hero.*" }}{{ $image = .RelPermalink }}{{ end }}
-                                {{ if $image }}
-                                <img src="{{ $image }}" alt="{{ $post.Title }}">
+                                {{/* Get hero image using same logic as theme helper */}}
+                                {{ $heroImage := "" }}
+
+                                {{/* First: Check if hero is specified in frontmatter */}}
+                                {{ if $post.Params.hero }}
+                                {{/* Try to read from page bundle first */}}
+                                {{ with $post.Resources.Get $post.Params.hero }}
+                                {{ $heroImage = .RelPermalink }}
+                                {{ else }}
+                                {{/* Try looking in assets folder */}}
+                                {{ with resources.Get $post.Params.hero }}
+                                {{ $heroImage = .RelPermalink }}
+                                {{ else }}
+                                {{/* Use as direct path */}}
+                                {{ $heroImage = $post.Params.hero }}
+                                {{ end }}
+                                {{ end }}
+                                {{ else }}
+                                {{/* Fallback: Look for hero.* file in page bundle */}}
+                                {{ with $post.Resources.GetMatch "hero.*" }}
+                                {{ $heroImage = .RelPermalink }}
+                                {{ end }}
+                                {{ end }}
+
+                                {{ if $heroImage }}
+                                <img src="{{ $heroImage }}" alt="{{ $post.Title }}">
                                 {{ else }}
                                 <div class="coverflow-placeholder">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -208,8 +230,10 @@
         transform: translateX(0) translateZ(0) rotateY(0deg) scale(1);
         z-index: 50;
         pointer-events: auto;
-        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4),
-            0 0 80px rgba(59, 130, 246, 0.15);
+        background: var(--card-solid-bg, #1a1a1f);
+        border-color: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5),
+            0 0 80px rgba(59, 130, 246, 0.2);
     }
 
     /* Left items */
@@ -365,8 +389,10 @@
     }
 
     [data-theme="light"] .coverflow-item.cf-active {
-        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15),
-            0 0 80px rgba(59, 130, 246, 0.08);
+        background: #ffffff;
+        border-color: rgba(0, 0, 0, 0.1);
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.12),
+            0 0 80px rgba(59, 130, 246, 0.06);
     }
 
     [data-theme="light"] .coverflow-title {
