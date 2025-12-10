@@ -32,10 +32,12 @@
             <!-- Quick Links -->
             <div class="footer-links">
                 <a href="#hero">Home</a>
-                <a href="#experiences">Experience</a>
-                <a href="#education">Education</a>
-                <a href="/posts">Blog</a>
-                <a href="/publications">Publications</a>
+                {{ range sort site.Data.en.sections "section.weight" }}
+                {{ if and .section.enable .section.showOnNavbar }}
+                {{ $sectionID := .section.id }}
+                <a href="#{{ $sectionID }}">{{ .section.name }}</a>
+                {{ end }}
+                {{ end }}
             </div>
         </div>
 
@@ -45,7 +47,7 @@
                 © {{ now.Year }} {{ site.Title }}. All rights reserved.
             </p>
             <p class="credits">
-                Made with <span class="heart">❤</span> and Hugo
+                Made with <span class="heart">❤</span>, Hugo and Claude
             </p>
         </div>
     </div>

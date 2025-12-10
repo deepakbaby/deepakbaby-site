@@ -26,10 +26,12 @@
             {{ $author.name | default site.Title }}
         </a>
         <div class="navbar-links">
-            <a href="#experiences" class="navbar-link">Experience</a>
-
-            <a href="#posts" class="navbar-link">Blog</a>
-            <a href="/publications" class="navbar-link">Publications</a>
+            {{ range sort site.Data.en.sections "section.weight" }}
+            {{ if and .section.enable .section.showOnNavbar }}
+            {{ $sectionID := .section.id }}
+            <a href="#{{ $sectionID }}" class="navbar-link">{{ .section.name }}</a>
+            {{ end }}
+            {{ end }}
         </div>
         <button class="theme-toggle-navbar" id="themeToggleNav" aria-label="Toggle theme">
             <svg class="sun-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -159,7 +161,7 @@
         top: 0;
         left: 0;
         right: 0;
-        background: var(--navbar-bg, rgba(10, 10, 11, 0.95));
+        background: var(--navbar-bg, rgba(15, 23, 42, 0.95));
         backdrop-filter: blur(20px);
         border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
         z-index: 999;
@@ -350,7 +352,7 @@
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        background: var(--bg-primary, #0a0a0b);
+        background: var(--bg-primary, #0f172a);
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
