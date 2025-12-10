@@ -1,58 +1,110 @@
 <!DOCTYPE html>
 <html lang="{{ .Site.Language.Lang }}">
-  <head>
-    <title>{{ .Page.Title }}</title>
-    <!------ ADD COMMON HEADERS -------->
-    {{- partial "header.html" . -}}
-    {{- partial "opengraph.html" . -}}
-    <!------ ADD PAGE SPECIFIC HEADERS ------->
-    {{ block "header" . }} {{ end }}
 
-    <!------ ADD CUSTOM CSS FOR COLLAPSIBLE SIDEBARS ------->
-    <link rel="stylesheet" href="/css/collapsible-sidebars.css">
-    <!------ ADD CUSTOM CSS FOR COMMENTS ------->
-    <link rel="stylesheet" href="/css/comments.css">
+<head>
+  <title>{{ .Page.Title }}</title>
+  <!------ ADD COMMON HEADERS -------->
+  <style>
+    /* Global Theme CSS Variables */
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-card: rgba(255, 255, 255, 0.03);
+      --text-primary: #fff;
+      --text-secondary: #9ca3af;
+      --text-muted: #6b7280;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --orb-opacity: 0.5;
+      --toggle-bg: rgba(255, 255, 255, 0.1);
+      --toggle-border: rgba(255, 255, 255, 0.2);
+      --social-bg: rgba(255, 255, 255, 0.05);
+      --social-border: rgba(255, 255, 255, 0.1);
+      --mouse-border: rgba(255, 255, 255, 0.2);
+      --wheel-bg: rgba(255, 255, 255, 0.4);
+      --card-hover-border: rgba(59, 130, 246, 0.3);
+      --card-hover-shadow: rgba(59, 130, 246, 0.15);
+    }
 
-    <!--================= add analytics if enabled =========================-->
-    {{- partial "analytics.html" . -}}
-    {{ with resources.Get "scripts/core/theme-scheme.js" | fingerprint }}
-    <script integrity="{{.Data.Integrity}}">
-     {{ .Content | safeJS }}
-    </script>
-    {{ end }}
-  </head>
+    [data-theme="light"] {
+      --bg-primary: #fafbfc;
+      --bg-secondary: #ffffff;
+      --bg-card: transparent;
+      --text-primary: #1e293b;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --border-color: rgba(0, 0, 0, 0.06);
+      --orb-opacity: 0.1;
+      --toggle-bg: rgba(0, 0, 0, 0.04);
+      --toggle-border: rgba(0, 0, 0, 0.08);
+      --social-bg: transparent;
+      --social-border: rgba(0, 0, 0, 0.1);
+      --mouse-border: rgba(0, 0, 0, 0.12);
+      --wheel-bg: rgba(0, 0, 0, 0.2);
+      --card-hover-border: rgba(59, 130, 246, 0.3);
+      --card-hover-shadow: rgba(59, 130, 246, 0.08);
+      --card-bg: transparent;
+      --card-border: rgba(0, 0, 0, 0.04);
+      --timeline-color: #3b82f6;
+      --section-bg: #ffffff;
+      --glow-color: rgba(59, 130, 246, 0.08);
+    }
 
-  <body class="type-{{ .Page.Type }} kind-{{ .Page.Kind }}" data-bs-spy="scroll" data-bs-target="#TableOfContents" data-bs-offset="80">
-    <div class="container-fluid bg-secondary wrapper">
-      <!----- ADD NAVBAR --------------->
-      {{ block "navbar" . }} {{ end }}
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+    }
+  </style>
+  {{- partial "header.html" . -}}
+  {{- partial "opengraph.html" . -}}
+  <!------ ADD PAGE SPECIFIC HEADERS ------->
+  {{ block "header" . }} {{ end }}
 
-      <!----- ADD SIDEBAR --------------->
-      {{ block "sidebar" . }} {{ end }}
+  <!------ ADD CUSTOM CSS FOR COLLAPSIBLE SIDEBARS ------->
+  <link rel="stylesheet" href="/css/collapsible-sidebars.css">
+  <!------ ADD CUSTOM CSS FOR COMMENTS ------->
+  <link rel="stylesheet" href="/css/comments.css">
 
-      <!----- ADD PAGE CONTENT --------->
-      {{ block "content" . }} {{ end }}
+  <!--================= add analytics if enabled =========================-->
+  {{- partial "analytics.html" . -}}
+  {{ with resources.Get "scripts/core/theme-scheme.js" | fingerprint }}
+  <script integrity="{{.Data.Integrity}}">
+    { { .Content | safeJS } }
+  </script>
+  {{ end }}
+</head>
 
-      <!----- ADD TABLE OF CONTENTS ----------->
-      {{ block "toc" . }} {{ end }}
-    </div>
+<body class="type-{{ .Page.Type }} kind-{{ .Page.Kind }}" data-bs-spy="scroll" data-bs-target="#TableOfContents"
+  data-bs-offset="80">
+  <div class="container-fluid wrapper">
+    <!----- ADD NAVBAR --------------->
+    {{ block "navbar" . }} {{ end }}
 
-    <!------- ADD FOOTER ------------>
-    {{ $footerTemplate:= site.Params.footer.template | default "footer.html" }}
-    {{- partial $footerTemplate . -}}
+    <!----- ADD SIDEBAR --------------->
+    {{ block "sidebar" . }} {{ end }}
 
-    <!------- ADD COMMON SCRIPTS ------->
-    {{ partial "scripts.html" . }}
+    <!----- ADD PAGE CONTENT --------->
+    {{ block "content" . }} {{ end }}
 
-    <!------- ADD PAGE SPECIFIC SCRIPTS ------>
-    {{ block "scripts" . }} {{ end }}
+    <!----- ADD TABLE OF CONTENTS ----------->
+    {{ block "toc" . }} {{ end }}
+  </div>
 
-    <!------ ADD CUSTOM JS FOR COLLAPSIBLE SIDEBARS -------->
-    <script src="/js/collapsible-sidebars.js"></script>
+  <!------- ADD FOOTER ------------>
+  {{ $footerTemplate:= site.Params.footer.template | default "footer.html" }}
+  {{- partial $footerTemplate . -}}
 
-    <!------ IF WANTED, ADD SUPPORT LINKS -------->
-    {{- partial "misc/support.html" . -}}
+  <!------- ADD COMMON SCRIPTS ------->
+  {{ partial "scripts.html" . }}
 
-  </body>
+  <!------- ADD PAGE SPECIFIC SCRIPTS ------>
+  {{ block "scripts" . }} {{ end }}
+
+  <!------ ADD CUSTOM JS FOR COLLAPSIBLE SIDEBARS -------->
+  <script src="/js/collapsible-sidebars.js"></script>
+
+  <!------ IF WANTED, ADD SUPPORT LINKS -------->
+  {{- partial "misc/support.html" . -}}
+
+</body>
+
 </html>
-

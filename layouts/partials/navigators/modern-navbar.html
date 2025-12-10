@@ -1,0 +1,290 @@
+{{ $author := site.Data.en.author }}
+<!-- Theme Toggle - Always on top right -->
+<button class="theme-toggle-fixed" id="themeToggle" aria-label="Toggle theme">
+    <svg class="sun-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+    </svg>
+    <svg class="moon-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+    </svg>
+</button>
+
+<!-- Scroll Navbar -->
+<nav class="scroll-navbar" id="scrollNavbar">
+    <div class="navbar-container">
+        <a href="{{ if .IsHome }}#hero{{ else }}{{ site.BaseURL }}{{ end }}" class="navbar-brand">
+            {{ $favicon := resources.Get "images/site/favicon.png" }}
+            {{ if $favicon }}
+            <img src="{{ $favicon.RelPermalink }}" alt="" class="navbar-favicon">
+            {{ end }}
+            {{ $author.name | default site.Title }}
+        </a>
+        <div class="navbar-links">
+            {{ $isHome := .IsHome }}
+            {{ $baseURL := site.BaseURL }}
+            {{ range sort site.Data.en.sections "section.weight" }}
+            {{ if and .section.enable .section.showOnNavbar }}
+            {{ $sectionID := .section.id }}
+            {{ $linkURL := printf "#%s" $sectionID }}
+            {{ if not $isHome }}
+            {{ $linkURL = printf "%s#%s" $baseURL $sectionID }}
+            {{ end }}
+
+            {{ if and (eq .section.id "publications") (eq $isHome false) }}
+            {{/* Special case: If we are on publications page, the publications link goes to top or stays sane */}}
+            <a href="{{ $baseURL }}publications" class="navbar-link">{{ .section.name }}</a>
+            {{ else if eq .section.id "publications" }}
+            <a href="/publications" class="navbar-link">{{ .section.name }}</a>
+            {{ else }}
+            <a href="{{ $linkURL }}" class="navbar-link">{{ .section.name }}</a>
+            {{ end }}
+
+            {{ end }}
+            {{ end }}
+        </div>
+        <button class="theme-toggle-navbar" id="themeToggleNav" aria-label="Toggle theme">
+            <svg class="sun-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <svg class="moon-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+        </button>
+    </div>
+</nav>
+
+<style>
+    /* Fixed Theme Toggle - Always top right */
+    .theme-toggle-fixed {
+        position: fixed;
+        top: 1.5rem;
+        right: 1.5rem;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: var(--toggle-bg, rgba(255, 255, 255, 0.1));
+        border: 1px solid var(--toggle-border, rgba(255, 255, 255, 0.2));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        color: var(--text-primary, #fff);
+        z-index: 1000;
+    }
+
+    .theme-toggle-fixed:hover {
+        background: var(--toggle-hover-bg, rgba(255, 255, 255, 0.2));
+        transform: scale(1.05);
+    }
+
+    .theme-toggle-fixed svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    /* Hide fixed toggle when navbar visible */
+    .scroll-navbar.visible~.theme-toggle-fixed,
+    .theme-toggle-fixed.hidden {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    /* Fix for when this partial is near the top of body */
+    .scroll-navbar.visible~.section-wrapper .theme-toggle-fixed,
+    body:has(.scroll-navbar.visible) .theme-toggle-fixed {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    /* Scroll Navbar */
+    .scroll-navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: var(--navbar-bg, rgba(15, 23, 42, 0.95));
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+        z-index: 999;
+        transform: translateY(-100%);
+        transition: transform 0.3s ease;
+    }
+
+    .scroll-navbar.visible {
+        transform: translateY(0);
+    }
+
+    .navbar-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .navbar-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-family: 'Inter', sans-serif;
+        font-size: 1.125rem;
+        font-weight: 500;
+        color: var(--text-primary, #fff);
+        text-decoration: none !important;
+        transition: transform 0.3s ease, color 0.3s;
+    }
+
+    .navbar-brand:hover,
+    .navbar-brand:focus,
+    .navbar-brand:active {
+        transform: translateY(-2px);
+        color: #3b82f6;
+        text-decoration: none !important;
+    }
+
+    .navbar-favicon {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+    }
+
+    .navbar-links {
+        display: flex;
+        gap: 2rem;
+    }
+
+    .navbar-link {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.875rem;
+        font-weight: 400;
+        color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+        text-decoration: none !important;
+        transition: transform 0.3s ease, color 0.3s;
+        display: inline-block;
+    }
+
+    .navbar-link:hover,
+    .navbar-link:focus,
+    .navbar-link:active {
+        transform: translateY(-2px);
+        color: var(--text-primary, #fff);
+        text-decoration: none !important;
+    }
+
+    .theme-toggle-navbar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--toggle-bg, rgba(255, 255, 255, 0.1));
+        border: 1px solid var(--toggle-border, rgba(255, 255, 255, 0.2));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        color: var(--text-primary, #fff);
+    }
+
+    .theme-toggle-navbar:hover {
+        background: var(--toggle-hover-bg, rgba(255, 255, 255, 0.2));
+    }
+
+    .theme-toggle-navbar svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    /* Theme toggle icon states */
+    .sun-icon {
+        display: none;
+    }
+
+    .moon-icon {
+        display: block;
+    }
+
+    [data-theme="light"] .sun-icon {
+        display: block;
+    }
+
+    [data-theme="light"] .moon-icon {
+        display: none;
+    }
+
+    /* Light theme navbar */
+    [data-theme="light"] .scroll-navbar {
+        --navbar-bg: rgba(255, 255, 255, 0.98);
+        box-shadow: 0 1px 8px rgba(0, 0, 0, 0.05);
+        border-bottom-color: transparent;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .theme-toggle-fixed {
+            top: 1rem;
+            right: 1rem;
+            width: 40px;
+            height: 40px;
+        }
+
+        .navbar-links {
+            display: none;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const themeToggle = document.getElementById('themeToggle');
+        const themeToggleNav = document.getElementById('themeToggleNav');
+        const scrollNavbar = document.getElementById('scrollNavbar');
+        const html = document.documentElement;
+
+        // Check for saved theme
+        const savedTheme = localStorage.getItem('theme') ||
+            (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        html.setAttribute('data-theme', savedTheme);
+
+        // Toggle theme function
+        function toggleTheme() {
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+        }
+
+        themeToggle?.addEventListener('click', toggleTheme);
+        themeToggleNav?.addEventListener('click', toggleTheme);
+
+        // Show/hide navbar on scroll
+        const heroSection = document.querySelector('.hero-section');
+        // If hero section exists, wait until 0.6 of its height. 
+        // If not (e.g. publications page), show navbar earlier or immediately
+        const triggerHeight = heroSection ? heroSection.offsetHeight * 0.6 : 100;
+
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.pageYOffset;
+
+            // Show navbar
+            if (scrollTop > triggerHeight) {
+                scrollNavbar?.classList.add('visible');
+                themeToggle?.classList.add('hidden');
+            } else {
+                scrollNavbar?.classList.remove('visible');
+                themeToggle?.classList.remove('hidden');
+            }
+        });
+
+        // Initial check in case we reload mid-scroll
+        if (window.pageYOffset > triggerHeight) {
+            scrollNavbar?.classList.add('visible');
+            themeToggle?.classList.add('hidden');
+        }
+    });
+</script>
