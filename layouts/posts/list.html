@@ -1,0 +1,865 @@
+{{ define "main" }}
+<!-- This is needed for the baseof template -->
+{{ end }}
+
+{{ define "navbar" }}
+{{ partial "navigators/modern-navbar.html" . }}
+{{ end }}
+
+{{ define "content" }}
+<div class="posts-page-wrapper">
+    {{ $posts := where site.RegularPages "Type" "posts" }}
+
+    <!-- Search Bar (integrated into navbar position) -->
+    <section class="search-bar-section">
+        <div class="search-bar-container">
+            <div class="search-input-wrapper">
+                <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <input type="text" id="searchInput" placeholder="Search posts..." autocomplete="off" aria-label="Search posts">
+                <button class="clear-btn" id="clearBtn" aria-label="Clear search" style="display: none;">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Category Pills -->
+            <div class="category-filters">
+                <button class="filter-pill active" data-category="all">All</button>
+                {{ $allTags := slice }}
+                {{ range $posts }}
+                    {{ $allTags = $allTags | append .Params.tags }}
+                {{ end }}
+                {{ $uniqueTags := $allTags | uniq }}
+                {{ range first 5 $uniqueTags }}
+                    {{ if . }}
+                    <button class="filter-pill" data-category="{{ . }}">{{ . }}</button>
+                    {{ end }}
+                {{ end }}
+            </div>
+        </div>
+    </section>
+
+    <!-- Bento Grid -->
+    <section class="posts-grid-section">
+        <div class="posts-grid-container">
+            <div class="bento-grid">
+                {{ range $index, $post := $posts }}
+                {{ $hero := partial "helpers/get-hero.html" $post }}
+                {{ $cardClass := "card-small" }}
+                {{ if eq $index 0 }}
+                    {{ $cardClass = "card-featured" }}
+                {{ else if and (ge $index 1) (le $index 3) }}
+                    {{ if eq (mod $index 2) 0 }}
+                        {{ $cardClass = "card-medium-wide" }}
+                    {{ else }}
+                        {{ $cardClass = "card-medium-tall" }}
+                    {{ end }}
+                {{ end }}
+
+                <article class="bento-card {{ $cardClass }}"
+                         data-tags="{{ if $post.Params.tags }}{{ delimit $post.Params.tags "," }}{{ end }}"
+                         data-title="{{ $post.Title }}"
+                         data-summary="{{ $post.Summary }}">
+
+                    <!-- Full Card Link -->
+                    <a href="{{ $post.RelPermalink }}" class="card-overlay-link" aria-label="Read {{ $post.Title }}"></a>
+
+                    <!-- Card Image Background -->
+                    <div class="card-bg-image">
+                        {{ if $hero }}
+                        <img src="{{ $hero }}" alt="{{ $post.Title }}" loading="lazy">
+                        {{ else }}
+                        <div class="card-placeholder">
+                            <svg width="60" height="60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        {{ end }}
+                    </div>
+
+                    <!-- Gradient Overlay -->
+                    <div class="card-gradient-overlay"></div>
+
+                    <!-- Category Badge -->
+                    {{ if $post.Params.tags }}
+                    {{ $firstTag := index $post.Params.tags 0 }}
+                    <div class="card-badge">{{ $firstTag }}</div>
+                    {{ end }}
+
+                    <!-- Card Content -->
+                    <div class="card-content-wrapper">
+                        <div class="card-meta-info">
+                            <span class="meta-item">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                {{ $post.Date.Format "Jan 2, 2006" }}
+                            </span>
+                            <span class="meta-divider">•</span>
+                            <span class="meta-item">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                {{ $post.ReadingTime }} min
+                            </span>
+                        </div>
+
+                        <h2 class="card-title-text">{{ $post.Title }}</h2>
+
+                        {{ if or (eq $index 0) (and (ge $index 1) (le $index 3)) }}
+                        <p class="card-description">{{ $post.Summary | plainify | truncate 150 }}</p>
+                        {{ end }}
+
+                        {{ if $post.Params.tags }}
+                        <div class="card-tag-list">
+                            {{ range first 3 $post.Params.tags }}
+                            <span class="card-tag">#{{ . }}</span>
+                            {{ end }}
+                        </div>
+                        {{ end }}
+                    </div>
+                </article>
+                {{ end }}
+            </div>
+
+            <!-- No Results -->
+            <div class="no-results-message" id="noResults" style="display: none;">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <h3>No posts found</h3>
+                <p>Try adjusting your search or category filter</p>
+            </div>
+        </div>
+    </section>
+</div>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+    /* ============================================
+       RESET & GLOBAL OVERRIDES
+    ============================================ */
+    body.type-posts,
+    body.type-posts * {
+        box-sizing: border-box;
+    }
+
+    .type-posts .container-fluid.wrapper,
+    .type-posts .wrapper,
+    .type-posts .content-section,
+    .type-posts .page-content {
+        max-width: none !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .type-posts .wrapper .sidebar-section,
+    .type-posts .toc-section {
+        display: none !important;
+    }
+
+    .posts-page-wrapper {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow-x: hidden !important;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        min-height: 100vh;
+        padding-top: 5rem;
+    }
+
+    /* ============================================
+       SEARCH BAR SECTION
+    ============================================ */
+    .search-bar-section {
+        position: sticky;
+        top: 5rem;
+        z-index: 99;
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 1.5rem 2rem;
+    }
+
+    [data-theme="light"] .search-bar-section {
+        background: rgba(250, 251, 252, 0.95);
+        border-bottom-color: rgba(0, 0, 0, 0.06);
+    }
+
+    .search-bar-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .search-input-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 600px;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 1.25rem;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 18px;
+        height: 18px;
+        color: var(--text-muted);
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    #searchInput {
+        width: 100%;
+        height: 48px;
+        padding: 0 3.5rem 0 3.5rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50px;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.3s ease;
+    }
+
+    [data-theme="light"] #searchInput {
+        background: rgba(255, 255, 255, 0.8);
+        border-color: rgba(0, 0, 0, 0.1);
+    }
+
+    #searchInput:focus {
+        outline: none;
+        border-color: rgba(59, 130, 246, 0.5);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    #searchInput::placeholder {
+        color: var(--text-muted);
+    }
+
+    .clear-btn {
+        position: absolute;
+        right: 1.25rem;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        border-radius: 50%;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+    }
+
+    .clear-btn svg {
+        width: 12px;
+        height: 12px;
+    }
+
+    .clear-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .category-filters {
+        display: flex;
+        gap: 0.625rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .filter-pill {
+        padding: 0.5rem 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50px;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        font-weight: 500;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-transform: capitalize;
+    }
+
+    .filter-pill:hover {
+        border-color: rgba(59, 130, 246, 0.5);
+        color: #3b82f6;
+        transform: translateY(-2px);
+    }
+
+    .filter-pill.active {
+        background: #3b82f6;
+        border-color: #3b82f6;
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    /* ============================================
+       POSTS GRID SECTION
+    ============================================ */
+    .posts-grid-section {
+        padding: 4rem 2rem;
+        background: var(--bg-primary);
+    }
+
+    .posts-grid-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .bento-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.5rem;
+        grid-auto-flow: dense;
+    }
+
+    /* ============================================
+       CARD SIZE VARIANTS
+    ============================================ */
+    .card-featured {
+        grid-column: span 2;
+        grid-row: span 2;
+    }
+
+    .card-medium-wide {
+        grid-column: span 2;
+        grid-row: span 1;
+    }
+
+    .card-medium-tall {
+        grid-column: span 1;
+        grid-row: span 2;
+    }
+
+    .card-small {
+        grid-column: span 1;
+        grid-row: span 1;
+    }
+
+    /* ============================================
+       BENTO CARD STYLES
+    ============================================ */
+    .bento-card {
+        position: relative;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        display: flex;
+        flex-direction: column;
+        opacity: 0;
+        transform: scale(0.95);
+        animation: cardFadeIn 0.6s ease-out forwards;
+    }
+
+    @keyframes cardFadeIn {
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    .bento-card:nth-child(1) { animation-delay: 0ms; }
+    .bento-card:nth-child(2) { animation-delay: 80ms; }
+    .bento-card:nth-child(3) { animation-delay: 160ms; }
+    .bento-card:nth-child(4) { animation-delay: 240ms; }
+    .bento-card:nth-child(5) { animation-delay: 320ms; }
+    .bento-card:nth-child(6) { animation-delay: 400ms; }
+    .bento-card:nth-child(7) { animation-delay: 480ms; }
+    .bento-card:nth-child(8) { animation-delay: 560ms; }
+    .bento-card:nth-child(n+9) { animation-delay: 640ms; }
+
+    .bento-card.hidden {
+        display: none;
+    }
+
+    /* 3D Tilt on Desktop */
+    @media (hover: hover) and (min-width: 1200px) {
+        .bento-card {
+            transform-style: preserve-3d;
+        }
+
+        .bento-card:hover {
+            border-color: rgba(59, 130, 246, 0.3);
+            box-shadow: 0 30px 80px rgba(59, 130, 246, 0.25);
+            transform: perspective(1000px)
+                       rotateX(var(--rotate-x, 0deg))
+                       rotateY(var(--rotate-y, 0deg))
+                       translateZ(10px);
+        }
+    }
+
+    @media (hover: hover) and (max-width: 1199px) {
+        .bento-card:hover {
+            border-color: rgba(59, 130, 246, 0.3);
+            box-shadow: 0 20px 50px rgba(59, 130, 246, 0.2);
+            transform: translateY(-4px);
+        }
+    }
+
+    /* Card Overlay Link */
+    .card-overlay-link {
+        position: absolute;
+        inset: 0;
+        z-index: 10;
+    }
+
+    /* Card Background Image */
+    .card-bg-image {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        background: var(--bg-secondary);
+    }
+
+    .card-bg-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .bento-card:hover .card-bg-image img {
+        transform: scale(1.08);
+    }
+
+    .card-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+        color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Gradient Overlay */
+    .card-gradient-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.5) 50%, transparent 100%);
+        z-index: 1;
+    }
+
+    [data-theme="light"] .card-gradient-overlay {
+        background: linear-gradient(to top, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.5) 50%, transparent 100%);
+    }
+
+    /* Category Badge */
+    .card-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.375rem 0.875rem;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(10px);
+        border-radius: 50px;
+        color: #fff;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        z-index: 2;
+    }
+
+    [data-theme="light"] .card-badge {
+        background: rgba(255, 255, 255, 0.9);
+        color: #1e293b;
+    }
+
+    /* Card Content */
+    .card-content-wrapper {
+        position: relative;
+        z-index: 2;
+        padding: 1.5rem;
+        margin-top: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .card-featured .card-content-wrapper {
+        padding: 2rem;
+    }
+
+    .card-meta-info {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .card-meta-info svg {
+        width: 13px;
+        height: 13px;
+        margin-right: 0.25rem;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+    }
+
+    .meta-divider {
+        opacity: 0.5;
+    }
+
+    .card-title-text {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #fff;
+        margin: 0;
+        line-height: 1.3;
+        letter-spacing: -0.01em;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    [data-theme="light"] .card-title-text {
+        color: #1e293b;
+    }
+
+    .card-featured .card-title-text {
+        font-size: clamp(1.5rem, 2.5vw, 2rem);
+        font-weight: 700;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+    }
+
+    .card-medium-wide .card-title-text,
+    .card-medium-tall .card-title-text {
+        font-size: 1.25rem;
+    }
+
+    .card-description {
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.65);
+        margin: 0;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    [data-theme="light"] .card-description {
+        color: #64748b;
+    }
+
+    .card-featured .card-description {
+        font-size: 1rem;
+        -webkit-line-clamp: 4;
+        line-clamp: 4;
+    }
+
+    .card-tag-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .card-tag {
+        padding: 0.25rem 0.625rem;
+        background: rgba(59, 130, 246, 0.15);
+        border: 1px solid rgba(59, 130, 246, 0.25);
+        border-radius: 50px;
+        color: #60a5fa;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+
+    /* No Results */
+    .no-results-message {
+        text-align: center;
+        padding: 5rem 2rem;
+        color: var(--text-secondary);
+    }
+
+    .no-results-message svg {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 1.5rem;
+        color: var(--text-muted);
+    }
+
+    .no-results-message h3 {
+        font-size: 1.5rem;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    /* Light Theme */
+    [data-theme="light"] .bento-card {
+        background: rgba(255, 255, 255, 0.8);
+        border-color: rgba(0, 0, 0, 0.06);
+    }
+
+    /* ============================================
+       RESPONSIVE DESIGN
+    ============================================ */
+
+    /* Tablet */
+    @media (max-width: 1199px) {
+        .bento-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.25rem;
+        }
+
+        .card-featured {
+            grid-column: span 2;
+            grid-row: span 1;
+        }
+
+        .card-medium-wide {
+            grid-column: span 2;
+            grid-row: span 1;
+        }
+
+        .card-medium-tall {
+            grid-column: span 1;
+            grid-row: span 1;
+        }
+
+        .card-small {
+            grid-column: span 1;
+            grid-row: span 1;
+        }
+    }
+
+    /* Mobile */
+    @media (max-width: 767px) {
+        .posts-page-wrapper {
+            padding-top: 4rem;
+        }
+
+        .search-bar-section {
+            top: 4rem;
+            padding: 1.25rem 1.5rem;
+        }
+
+        .search-input-wrapper {
+            max-width: 100%;
+        }
+
+        .category-filters {
+            overflow-x: auto;
+            flex-wrap: nowrap;
+            justify-content: flex-start;
+            width: 100%;
+            padding-bottom: 0.5rem;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .posts-grid-section {
+            padding: 3rem 1.5rem;
+        }
+
+        .bento-grid {
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+        }
+
+        .card-featured,
+        .card-medium-wide,
+        .card-medium-tall,
+        .card-small {
+            grid-column: span 1;
+            grid-row: span 1;
+        }
+
+        .card-title-text {
+            font-size: 1.05rem;
+        }
+
+        .card-featured .card-title-text {
+            font-size: 1.35rem;
+        }
+
+        .card-content-wrapper,
+        .card-featured .card-content-wrapper {
+            padding: 1.25rem;
+        }
+
+        .card-description {
+            font-size: 0.9rem;
+        }
+    }
+
+    /* Reduced Motion */
+    @media (prefers-reduced-motion: reduce) {
+        .bento-card,
+        .card-bg-image img,
+        #searchInput,
+        .filter-pill {
+            animation: none;
+            transition: none;
+        }
+
+        .bento-card {
+            opacity: 1;
+            transform: none;
+        }
+    }
+</style>
+
+<script>
+(function() {
+    'use strict';
+
+    // Debounce utility
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    // 3D Tilt Effect (Desktop only)
+    function init3DTilt() {
+        if (window.innerWidth < 1200 || !window.matchMedia('(hover: hover)').matches) {
+            return;
+        }
+
+        const cards = document.querySelectorAll('.bento-card');
+
+        cards.forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+
+                const rotateY = ((x - centerX) / centerX) * 8;
+                const rotateX = ((centerY - y) / centerY) * 8;
+
+                card.style.setProperty('--rotate-x', `${rotateX}deg`);
+                card.style.setProperty('--rotate-y', `${rotateY}deg`);
+            });
+
+            card.addEventListener('mouseleave', () => {
+                card.style.setProperty('--rotate-x', '0deg');
+                card.style.setProperty('--rotate-y', '0deg');
+            });
+        });
+    }
+
+    // Search and Filter
+    function initSearchAndFilter() {
+        const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearBtn');
+        const filterPills = document.querySelectorAll('.filter-pill');
+        const cards = document.querySelectorAll('.bento-card');
+        const noResults = document.getElementById('noResults');
+        let activeCategory = 'all';
+
+        function filterCards() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const title = card.dataset.title.toLowerCase();
+                const summary = card.dataset.summary.toLowerCase();
+                const tags = card.dataset.tags.toLowerCase();
+
+                const matchesSearch = !searchTerm ||
+                                    title.includes(searchTerm) ||
+                                    summary.includes(searchTerm) ||
+                                    tags.includes(searchTerm);
+
+                const matchesCategory = activeCategory === 'all' ||
+                                       tags.split(',').some(tag =>
+                                           tag.trim().toLowerCase() === activeCategory.toLowerCase()
+                                       );
+
+                if (matchesSearch && matchesCategory) {
+                    card.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+
+            noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+            clearBtn.style.display = searchTerm ? 'flex' : 'none';
+        }
+
+        // Debounced search
+        const debouncedFilter = debounce(filterCards, 300);
+        searchInput.addEventListener('input', debouncedFilter);
+
+        // Clear button
+        clearBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            clearBtn.style.display = 'none';
+            filterCards();
+            searchInput.focus();
+        });
+
+        // Category filter
+        filterPills.forEach(pill => {
+            pill.addEventListener('click', () => {
+                filterPills.forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+                activeCategory = pill.dataset.category;
+                filterCards();
+            });
+        });
+    }
+
+    // Initialize
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            init3DTilt();
+            initSearchAndFilter();
+        });
+    } else {
+        init3DTilt();
+        initSearchAndFilter();
+    }
+
+    // Re-init tilt on resize
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(init3DTilt, 250);
+    });
+})();
+</script>
+{{ end }}
