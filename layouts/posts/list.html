@@ -79,16 +79,13 @@
                             </svg>
                         </div>
                         {{ end }}
+
+                        <!-- Category Badge -->
+                        {{ if $post.Params.tags }}
+                        {{ $firstTag := index $post.Params.tags 0 }}
+                        <div class="card-badge">{{ $firstTag }}</div>
+                        {{ end }}
                     </div>
-
-                    <!-- Gradient Overlay -->
-                    <div class="card-gradient-overlay"></div>
-
-                    <!-- Category Badge -->
-                    {{ if $post.Params.tags }}
-                    {{ $firstTag := index $post.Params.tags 0 }}
-                    <div class="card-badge">{{ $firstTag }}</div>
-                    {{ end }}
 
                     <!-- Card Content -->
                     <div class="card-content-wrapper">
@@ -375,6 +372,23 @@
         opacity: 0;
         transform: scale(0.95);
         animation: cardFadeIn 0.6s ease-out forwards;
+        min-height: 400px;
+    }
+
+    .card-featured {
+        min-height: 550px;
+    }
+
+    .card-medium-wide {
+        min-height: 380px;
+    }
+
+    .card-medium-tall {
+        min-height: 500px;
+    }
+
+    .card-small {
+        min-height: 400px;
     }
 
     @keyframes cardFadeIn {
@@ -431,10 +445,28 @@
 
     /* Card Background Image */
     .card-bg-image {
-        position: absolute;
-        inset: 0;
+        position: relative;
+        width: 100%;
+        flex-shrink: 0;
         overflow: hidden;
         background: var(--bg-secondary);
+    }
+
+    /* Image Heights for Different Card Types */
+    .card-featured .card-bg-image {
+        height: 350px;
+    }
+
+    .card-medium-wide .card-bg-image {
+        height: 220px;
+    }
+
+    .card-medium-tall .card-bg-image {
+        height: 280px;
+    }
+
+    .card-small .card-bg-image {
+        height: 220px;
     }
 
     .card-bg-image img {
@@ -458,17 +490,7 @@
         color: rgba(255, 255, 255, 0.2);
     }
 
-    /* Gradient Overlay */
-    .card-gradient-overlay {
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.5) 50%, transparent 100%);
-        z-index: 1;
-    }
-
-    [data-theme="light"] .card-gradient-overlay {
-        background: linear-gradient(to top, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.5) 50%, transparent 100%);
-    }
+    /* Gradient Overlay - removed */
 
     /* Category Badge */
     .card-badge {
@@ -497,10 +519,15 @@
         position: relative;
         z-index: 2;
         padding: 1.5rem;
-        margin-top: auto;
         display: flex;
         flex-direction: column;
         gap: 0.75rem;
+        flex-grow: 1;
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    [data-theme="light"] .card-content-wrapper {
+        background: rgba(255, 255, 255, 0.8);
     }
 
     .card-featured .card-content-wrapper {
@@ -620,8 +647,14 @@
 
     /* Light Theme */
     [data-theme="light"] .bento-card {
-        background: rgba(255, 255, 255, 0.8);
-        border-color: rgba(0, 0, 0, 0.06);
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
+    }
+
+    [data-theme="light"] .bento-card:hover {
+        border-color: rgba(59, 130, 246, 0.4);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(59, 130, 246, 0.15);
     }
 
     /* ============================================
@@ -695,6 +728,21 @@
         .card-small {
             grid-column: span 1;
             grid-row: span 1;
+            min-height: 380px;
+        }
+
+        .card-featured {
+            min-height: 450px;
+        }
+
+        .card-featured .card-bg-image {
+            height: 250px;
+        }
+
+        .card-medium-wide .card-bg-image,
+        .card-medium-tall .card-bg-image,
+        .card-small .card-bg-image {
+            height: 200px;
         }
 
         .card-title-text {
