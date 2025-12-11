@@ -37,6 +37,9 @@
             <a href="{{ $baseURL }}publications" class="navbar-link">{{ .section.name }}</a>
             {{ else if eq .section.id "publications" }}
             <a href="/publications" class="navbar-link">{{ .section.name }}</a>
+            {{ else if eq .section.id "posts" }}
+            {{/* Special case: Blog/Posts always goes to /posts page */}}
+            <a href="/posts" class="navbar-link">{{ .section.name }}</a>
             {{ else }}
             <a href="{{ $linkURL }}" class="navbar-link">{{ .section.name }}</a>
             {{ end }}
