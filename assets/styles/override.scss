@@ -29,6 +29,14 @@
     pointer-events: none !important;
     cursor: text !important;
 
+    /* Remove pseudo-elements that might add underlines */
+    &::before, &::after {
+      content: none !important;
+      border: none !important;
+      border-bottom: none !important;
+      text-decoration: none !important;
+    }
+
     /* Ensure no underline on hover or with IDs */
     &:hover, &:target, &[id] {
       text-decoration: none !important;
