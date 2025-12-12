@@ -3,7 +3,7 @@
   "baseUrl": ".",
   "paths": {
    "*": [
-    "../_vendor/github.com/hugo-toha/toha/v4/assets/*"
+    "*"
    ]
   }
  }

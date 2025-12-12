@@ -363,7 +363,7 @@
     .bento-card {
         position: relative;
         background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: 16px;
         overflow: hidden;
         transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
@@ -373,6 +373,7 @@
         transform: scale(0.95);
         animation: cardFadeIn 0.6s ease-out forwards;
         min-height: 400px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.2);
     }
 
     .card-featured {
@@ -555,6 +556,10 @@
 
     .meta-divider {
         opacity: 0.5;
+    }
+
+    [data-theme="light"] .card-meta-info {
+        color: rgba(0, 0, 0, 0.6);
     }
 
     .card-title-text {
