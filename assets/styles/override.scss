@@ -13,3 +13,55 @@
 //     display: block;
 //   }
 // }
+
+/* Override Bootstrap heading styles for blog posts */
+.prose-content {
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif !important;
+    font-weight: 400 !important;
+    border: none !important;
+    border-bottom: none !important;
+    border-top: none !important;
+    text-decoration: none !important;
+    box-shadow: none !important;
+    padding-bottom: 0 !important;
+    background-image: none !important;
+    pointer-events: none !important;
+    cursor: text !important;
+
+    /* Ensure no underline on hover or with IDs */
+    &:hover, &:target, &[id] {
+      text-decoration: none !important;
+      border-bottom: none !important;
+      cursor: text !important;
+    }
+  }
+}
+
+/* Override for post content headings */
+.post-content {
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif !important;
+    font-weight: 400 !important;
+    border: none !important;
+    border-bottom: none !important;
+    border-top: none !important;
+    text-decoration: none !important;
+    box-shadow: none !important;
+    padding-bottom: 0 !important;
+    background-image: none !important;
+  }
+}
+
+/* Override for post title in hero section */
+.post-title {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif !important;
+  font-weight: 400 !important;
+  border: none !important;
+  border-bottom: none !important;
+  border-top: none !important;
+  text-decoration: none !important;
+  box-shadow: none !important;
+  padding-bottom: 0 !important;
+  background-image: none !important;
+}

@@ -1,0 +1,28 @@
+{{ define "main" }}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h1>{{ .Title }}</h1>
+            <p class="text-muted">{{ len .Pages }} {{ if eq (len .Pages) 1 }}post{{ else }}posts{{ end }}</p>
+
+            <div class="row mt-4">
+                {{ range .Pages }}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+                            </h5>
+                            <p class="card-text text-muted">
+                                {{ .Summary | truncate 150 }}
+                            </p>
+                            <small class="text-muted">{{ .Date.Format "January 2, 2006" }}</small>
+                        </div>
+                    </div>
+                </div>
+                {{ end }}
+            </div>
+        </div>
+    </div>
+</div>
+{{ end }}

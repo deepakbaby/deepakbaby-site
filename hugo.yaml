@@ -39,6 +39,9 @@ markup:
   goldmark:
     renderer:
       unsafe: true
+    parser:
+      autoHeadingID: true
+      autoHeadingIDType: github
   tableOfContents:
     startLevel: 2
     endLevel: 6
