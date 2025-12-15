@@ -5,15 +5,21 @@
         {{ partial "hero.html" . }}
     </div>
 
+    <div class="section-separator"></div>
+
     <!-- Experience Section -->
     <div class="section-wrapper">
         {{ partial "experience.html" . }}
     </div>
 
+    <div class="section-separator"></div>
+
     <!-- Blog Posts Slide Deck -->
     <div class="section-wrapper">
         {{ partial "posts_slider.html" . }}
     </div>
+
+    <div class="section-separator"></div>
 
     <!-- Featured Publications Section -->
     <div class="section-wrapper">
@@ -40,6 +46,28 @@
 
     .section-wrapper {
         position: relative;
+    }
+
+    /* Section separators */
+    .section-separator {
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--text-secondary, rgba(128,128,128,0.3)), transparent);
+        position: relative;
+    }
+
+    .section-separator::before {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 8px;
+        height: 8px;
+        background: var(--text-secondary, rgba(128,128,128,0.3));
+        border-radius: 50%;
     }
 
     /* Hide floating nav - hero has its own nav now */

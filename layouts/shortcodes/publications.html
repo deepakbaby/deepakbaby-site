@@ -24,7 +24,7 @@
           </div>
           {{/* Metrics badges */}}
           {{ with .doi }}
-          <div class="pub-metrics">
+          <div class="pub-metrics" style="display:flex;flex-direction:row;gap:0.5rem;">
             <span class="__dimensions_badge_embed__" data-doi="{{ . }}" data-style="small_circle" data-hide-zero-citations="true"></span>
             <div class="altmetric-embed" data-badge-type="donut" data-badge-popover="right" data-doi="{{ . }}" data-hide-no-mentions="true"></div>
             <a href="https://plu.mx/plum/a/?doi={{ . | urlquery }}" data-popup="right" data-size="medium" class="plumx-plum-print-popup" data-site="plum" data-hide-when-empty="true">PlumX</a>
@@ -50,7 +50,7 @@
           </div>
           {{/* Metrics badges */}}
           {{ with .doi }}
-          <div class="pub-metrics">
+          <div class="pub-metrics" style="display:flex;flex-direction:row;gap:0.5rem;">
             <span class="__dimensions_badge_embed__" data-doi="{{ . }}" data-style="small_circle" data-hide-zero-citations="true"></span>
             <div class="altmetric-embed" data-badge-type="donut" data-badge-popover="right" data-doi="{{ . }}" data-hide-no-mentions="true"></div>
             <a href="https://plu.mx/plum/a/?doi={{ . | urlquery }}" data-popup="right" data-size="medium" class="plumx-plum-print-popup" data-site="plum" data-hide-when-empty="true">PlumX</a>
@@ -84,7 +84,7 @@
           </div>
           {{/* Metrics badges */}}
           {{ with .doi }}
-          <div class="pub-metrics">
+          <div class="pub-metrics" style="display:flex;flex-direction:row;gap:0.5rem;">
             <span class="__dimensions_badge_embed__" data-doi="{{ . }}" data-style="small_circle" data-hide-zero-citations="true"></span>
             <div class="altmetric-embed" data-badge-type="donut" data-badge-popover="right" data-doi="{{ . }}" data-hide-no-mentions="true"></div>
             <a href="https://plu.mx/plum/a/?doi={{ . | urlquery }}" data-popup="right" data-size="medium" class="plumx-plum-print-popup" data-site="plum" data-hide-when-empty="true">PlumX</a>
@@ -290,34 +290,23 @@
 
 /* Metrics badges container */
 .pub-metrics {
-  display: grid;
-  grid-template-columns: repeat(2, auto);
-  gap: 0.75rem;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  gap: 0.5rem;
   align-items: center;
-  justify-items: center;
-  min-width: 150px;
+  justify-content: flex-end;
+  min-width: 80px;
   flex-shrink: 0;
 }
 
-/* Dimensions badge styling */
-.pub-metrics .__dimensions_badge_embed__ {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Altmetric badge styling */
-.pub-metrics .altmetric-embed {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* PlumX badge styling */
-.pub-metrics .plumx-plum-print-popup {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Force all badge children to stay in row */
+.pub-metrics > *,
+.pub-metrics > * > *,
+.pub-metrics span,
+.pub-metrics div,
+.pub-metrics a {
+  flex-shrink: 0;
 }
 
 /* Responsive */
@@ -332,8 +321,8 @@
   }
 
   .pub-metrics {
-    grid-template-columns: repeat(2, auto);
     justify-content: flex-start;
+    flex-wrap: wrap !important;
     width: 100%;
     min-width: auto;
   }
