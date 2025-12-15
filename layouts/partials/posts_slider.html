@@ -38,30 +38,41 @@
                             <div class="coverflow-cover">
                                 {{/* Get hero image using same logic as theme helper */}}
                                 {{ $heroImage := "" }}
+                                {{ $heroResource := false }}
 
                                 {{/* First: Check if hero is specified in frontmatter */}}
                                 {{ if $post.Params.hero }}
-                                {{/* Try to read from page bundle first */}}
-                                {{ with $post.Resources.Get $post.Params.hero }}
-                                {{ $heroImage = .RelPermalink }}
+                                    {{/* Try to read from page bundle first */}}
+                                    {{ with $post.Resources.Get $post.Params.hero }}
+                                        {{ $heroResource = . }}
+                                    {{ else }}
+                                        {{/* Try looking in assets folder */}}
+                                        {{ with resources.Get $post.Params.hero }}
+                                            {{ $heroResource = . }}
+                                        {{ else }}
+                                            {{/* Use as direct path */}}
+                                            {{ $heroImage = $post.Params.hero }}
+                                        {{ end }}
+                                    {{ end }}
                                 {{ else }}
-                                {{/* Try looking in assets folder */}}
-                                {{ with resources.Get $post.Params.hero }}
-                                {{ $heroImage = .RelPermalink }}
-                                {{ else }}
-                                {{/* Use as direct path */}}
-                                {{ $heroImage = $post.Params.hero }}
+                                    {{/* Fallback: Look for hero.* file in page bundle */}}
+                                    {{ with $post.Resources.GetMatch "hero.*" }}
+                                        {{ $heroResource = . }}
+                                    {{ end }}
                                 {{ end }}
-                                {{ end }}
-                                {{ else }}
-                                {{/* Fallback: Look for hero.* file in page bundle */}}
-                                {{ with $post.Resources.GetMatch "hero.*" }}
-                                {{ $heroImage = .RelPermalink }}
-                                {{ end }}
+
+                                {{/* Convert to WebP if we have a resource (skip SVG) */}}
+                                {{ if $heroResource }}
+                                    {{ if eq $heroResource.MediaType.SubType "svg" }}
+                                        {{ $heroImage = $heroResource.RelPermalink }}
+                                    {{ else }}
+                                        {{ $processed := $heroResource.Resize "800x webp q85" }}
+                                        {{ $heroImage = $processed.RelPermalink }}
+                                    {{ end }}
                                 {{ end }}
 
                                 {{ if $heroImage }}
-                                <img src="{{ $heroImage }}" alt="{{ $post.Title }}">
+                                <img src="{{ $heroImage }}" alt="{{ $post.Title }}" loading="lazy" width="800" height="450">
                                 {{ else }}
                                 <div class="coverflow-placeholder">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">

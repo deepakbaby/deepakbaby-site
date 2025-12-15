@@ -8,4 +8,6 @@
 
 {{/*  Bundle application.scss  */}}
 {{- $bundle := $scss | css.Sass $options | fingerprint -}}
-<link rel="stylesheet" href="{{ $bundle.RelPermalink }}" integrity="{{ $bundle.Data.Integrity }}" />
+{{/* Preload CSS for better performance */}}
+<link rel="preload" href="{{ $bundle.RelPermalink }}" as="style" integrity="{{ $bundle.Data.Integrity }}" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="{{ $bundle.RelPermalink }}" integrity="{{ $bundle.Data.Integrity }}" /></noscript>

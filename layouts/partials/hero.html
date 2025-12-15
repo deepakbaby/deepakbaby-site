@@ -76,7 +76,13 @@
             <!-- Rectangular Profile Photo floated left -->
             {{ if $author.image }}
             <div class="profile-float">
-                <img src="{{ $author.image | relURL }}" alt="{{ $author.name }}" class="profile-photo">
+                {{ $img := resources.Get $author.image }}
+                {{ if $img }}
+                    {{ $processed := $img.Resize "400x webp q85" }}
+                    <img src="{{ $processed.RelPermalink }}" alt="{{ $author.name }}" class="profile-photo" width="200" height="300">
+                {{ else }}
+                    <img src="{{ $author.image | relURL }}" alt="{{ $author.name }}" class="profile-photo" width="200" height="300">
+                {{ end }}
             </div>
             {{ end }}
 

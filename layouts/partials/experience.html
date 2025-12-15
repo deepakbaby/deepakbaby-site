@@ -27,7 +27,7 @@
                         {{ if $exp.company.logo }}
                         <div class="company-logo-wrapper">
                             <img src="{{ $exp.company.logo | relURL }}" alt="{{ $exp.company.name }}"
-                                class="company-logo">
+                                class="company-logo" width="48" height="48" loading="lazy">
                         </div>
                         {{ end }}
                         <div class="company-info">

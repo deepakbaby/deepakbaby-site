@@ -15,8 +15,8 @@
       {{ $authorImage := resources.Get $author.image }}
       {{ if $authorImage }}
         <div class="profile-photo-wrapper">
-          {{ $processedImage := $authorImage.Resize "400x q95" }}
-          <img src="{{ $processedImage.RelPermalink }}" alt="{{ $author.name }}" class="profile-photo">
+          {{ $processedImage := $authorImage.Resize "400x webp q85" }}
+          <img src="{{ $processedImage.RelPermalink }}" alt="{{ $author.name }}" class="profile-photo" width="400" height="400">
         </div>
       {{ end }}
     {{ end }}
