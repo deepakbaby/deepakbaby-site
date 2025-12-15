@@ -21,20 +21,29 @@
           <div class="experience-entry-heading">
             {{/* Column 1: Logo - on the left */}}
             {{ if $experience.company.logo }}
+              {{ $logoImage := resources.Get $experience.company.logo }}
+              {{ if $logoImage }}
               <div class="exp-logo-col">
-                {{ $logoPath := $experience.company.logo }}
-                {{ $darkLogoPath := $experience.company.darkLogo }}
-                {{ if not (hasPrefix $logoPath "/") }}
-                  {{ $logoPath = printf "/%s" $logoPath }}
+                {{ if eq $logoImage.MediaType.SubType "svg" }}
+                <img class="company-logo light-logo" src="{{ $logoImage.RelPermalink }}" alt="{{ $experience.company.name }}" width="48" height="48" loading="lazy" />
+                {{ else }}
+                {{ $logoWebp := $logoImage.Fit "96x96 webp q90" }}
+                <img class="company-logo light-logo" src="{{ $logoWebp.RelPermalink }}" alt="{{ $experience.company.name }}" width="48" height="48" loading="lazy" />
                 {{ end }}
-                <img class="company-logo light-logo" src="{{ $logoPath }}" alt="{{ $experience.company.name }}" />
+                {{ $darkLogoPath := $experience.company.darkLogo }}
                 {{ if $darkLogoPath }}
-                  {{ if not (hasPrefix $darkLogoPath "/") }}
-                    {{ $darkLogoPath = printf "/%s" $darkLogoPath }}
+                  {{ $darkLogoImage := resources.Get $darkLogoPath }}
+                  {{ if $darkLogoImage }}
+                  {{ if eq $darkLogoImage.MediaType.SubType "svg" }}
+                  <img class="company-logo dark-logo d-none" src="{{ $darkLogoImage.RelPermalink }}" alt="{{ $experience.company.name }}" width="48" height="48" loading="lazy" />
+                  {{ else }}
+                  {{ $darkLogoWebp := $darkLogoImage.Fit "96x96 webp q90" }}
+                  <img class="company-logo dark-logo d-none" src="{{ $darkLogoWebp.RelPermalink }}" alt="{{ $experience.company.name }}" width="48" height="48" loading="lazy" />
                   {{ end }}
-                  <img class="company-logo dark-logo d-none" src="{{ $darkLogoPath }}" alt="{{ $experience.company.name }}" />
+                  {{ end }}
                 {{ end }}
               </div>
+              {{ end }}
             {{ end }}
 
             {{/* Column 2: Company name and location - in the middle */}}

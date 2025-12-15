@@ -4,6 +4,9 @@
 
 @import 'node_modules/include-media/dist/_include-media';
 
+// FontAwesome CSS (webfonts - much smaller than JS)
+@import 'node_modules/@fortawesome/fontawesome-free/css/all.min.css';
+
 // The Mulish font, we use font-weight 300 - 700
 @import 'node_modules/@fontsource/mulish/300';
 @import 'node_modules/@fontsource/mulish/index'; // 400

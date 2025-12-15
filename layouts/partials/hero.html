@@ -21,7 +21,8 @@
         <a href="#hero" class="navbar-brand">
             {{ $favicon := resources.Get "images/site/favicon.png" }}
             {{ if $favicon }}
-            <img src="{{ $favicon.RelPermalink }}" alt="" class="navbar-favicon">
+            {{ $faviconWebp := $favicon.Resize "56x56 webp q90" }}
+            <img src="{{ $faviconWebp.RelPermalink }}" alt="" class="navbar-favicon" width="28" height="28">
             {{ end }}
             {{ $author.name | default site.Title }}
         </a>
