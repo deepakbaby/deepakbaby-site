@@ -1,0 +1,22 @@
+{{- with . -}}
+{{- if .id }}
+<!-- Google Analytics (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ .id }}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  {{- if .respectDoNotTrack }}
+  // Respect Do Not Track setting
+  if (navigator.doNotTrack === '1') {
+    window['ga-disable-{{ .id }}'] = true;
+    console.log('Google Analytics disabled due to Do Not Track setting');
+  } else {
+    gtag('config', '{{ .id }}');
+  }
+  {{- else }}
+  gtag('config', '{{ .id }}');
+  {{- end }}
+</script>
+{{- end -}}
+{{- end -}}

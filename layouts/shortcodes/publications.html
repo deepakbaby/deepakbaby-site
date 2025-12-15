@@ -22,6 +22,13 @@
               {{ with .code }}<a href="{{ . }}" target="_blank" rel="noopener"><i class="fab fa-github"></i> Code</a>{{ end }}
             </div>
           </div>
+          {{/* Metrics badges */}}
+          {{ with .doi }}
+          <div class="pub-metrics">
+            <span class="__dimensions_badge_embed__" data-doi="{{ . }}" data-style="small_circle" data-hide-zero-citations="true"></span>
+            <div class="altmetric-embed" data-badge-type="donut" data-badge-popover="right" data-doi="{{ . }}" data-hide-no-mentions="true"></div>
+          </div>
+          {{ end }}
         </div>
         {{ $counter = add $counter 1 }}
       {{ end }}
@@ -40,6 +47,13 @@
               {{ with .url }}<a href="{{ . }}" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i> View</a>{{ end }}
             </div>
           </div>
+          {{/* Metrics badges */}}
+          {{ with .doi }}
+          <div class="pub-metrics">
+            <span class="__dimensions_badge_embed__" data-doi="{{ . }}" data-style="small_circle" data-hide-zero-citations="true"></span>
+            <div class="altmetric-embed" data-badge-type="donut" data-badge-popover="right" data-doi="{{ . }}" data-hide-no-mentions="true"></div>
+          </div>
+          {{ end }}
         </div>
         {{ $counter = add $counter 1 }}
       {{ end }}
@@ -66,6 +80,13 @@
               {{ with .url }}<a href="{{ . }}" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i> View</a>{{ end }}
             </div>
           </div>
+          {{/* Metrics badges */}}
+          {{ with .doi }}
+          <div class="pub-metrics">
+            <span class="__dimensions_badge_embed__" data-doi="{{ . }}" data-style="small_circle" data-hide-zero-citations="true"></span>
+            <div class="altmetric-embed" data-badge-type="donut" data-badge-popover="right" data-doi="{{ . }}" data-hide-no-mentions="true"></div>
+          </div>
+          {{ end }}
         </div>
         {{ $counter = add $counter 1 }}
       {{ end }}
@@ -125,6 +146,12 @@
 
 </div>
 
+{{/* Load Dimensions badge script */}}
+<script async src="https://badge.dimensions.ai/badge.js" charset="utf-8"></script>
+
+{{/* Load Altmetric badge script */}}
+<script type="text/javascript" src="https://d1bxh8uas1mnw7.cloudfront.net/assets/embed.js"></script>
+
 <style>
 .publications-list {
   max-width: 100%;
@@ -165,6 +192,7 @@
   border: 1px solid rgba(128, 128, 128, 0.2);
   transition: all 0.2s ease;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  align-items: flex-start;
 }
 
 .publication-item.featured {
@@ -254,8 +282,32 @@
   font-size: 0.8rem;
 }
 
+/* Metrics badges container */
+.pub-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+/* Dimensions badge styling */
+.pub-metrics .__dimensions_badge_embed__ {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Altmetric badge styling */
+.pub-metrics .altmetric-embed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Responsive */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .publication-item {
     flex-direction: column;
     gap: 0.75rem;
@@ -263,6 +315,13 @@
 
   .pub-number {
     align-self: flex-start;
+  }
+
+  .pub-metrics {
+    flex-direction: row;
+    justify-content: flex-start;
+    width: 100%;
+    min-width: auto;
   }
 
   .pub-links {

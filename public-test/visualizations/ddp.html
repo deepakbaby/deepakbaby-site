@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Parallelism - Professional Animation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Arial', sans-serif;
+            background: transparent;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            width: 100%;
+            height: 100vh;
+        }
+
+        .container {
+            background: #141414;
+            border-radius: 0;
+            padding: 15px;
+            box-shadow: none;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            text-align: center;
+            color: #ffffff;
+            margin: 0 0 10px 0;
+            font-size: 18px;
+            font-weight: 300;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+
+        .animation-area {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #000000;
+            border-radius: 0;
+            overflow: hidden;
+            border: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 2% 3%;
+            flex: 1;
+            min-height: 0;
+        }
+
+        /* Left Side - Training Data and Model */
+        .data-section {
+            position: relative;
+            width: 250px;
+            z-index: 10;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .data-source {
+            width: 100%;
+            min-height: 250px;
+            background: #111;
+            border: 1px solid #444;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 18px;
+            box-shadow: none;
+        }
+
+        .data-source-label {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .data-batches {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .batch {
+            width: 100%;
+            height: 45px;
+            background: #222;
+            border: 1px solid #666;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: none;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.5s ease;
+            position: relative;
+        }
+
+        .batch.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .batch.moved {
+            opacity: 0.3;
+            filter: grayscale(100%);
+            background: #111 !important;
+            border-color: #333 !important;
+            color: #666 !important;
+        }
+
+        .batch.moving {
+            position: absolute !important;
+            z-index: 1000 !important;
+            background: #333 !important;
+            color: #fff !important;
+            border: 1px solid #fff !important;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2) !important;
+            transform: none !important;
+            margin: 0 !important;
+        }
+
+        /* Model below Training Data */
+        .model-section {
+            position: relative;
+            z-index: 8;
+            flex-shrink: 0;
+            width: 250px;
+        }
+
+        .initial-model {
+            opacity: 0;
+            transition: all 0.6s ease;
+        }
+
+        .initial-model.visible {
+            opacity: 1;
+        }
+
+        .dnn-container {
+            position: relative;
+            width: 100%;
+            max-width: 250px;
+            height: 180px;
+            background: rgba(20, 20, 20, 0.95);
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: none;
+        }
+
+        .dnn-layers {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            height: 100%;
+            position: relative;
+        }
+
+        .dnn-layer {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: relative;
+        }
+
+        .neuron {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #000;
+            border: 2px solid #fff;
+            transition: all 0.4s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .neuron.active {
+            background: #fff;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+            animation: neuronPulse 0.6s ease infinite;
+        }
+
+        .neuron.gradient {
+            background: #ff3333;
+            border-color: #ff0000;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
+            animation: neuronPulse 0.6s ease infinite;
+        }
+
+        .neuron.updated {
+            background: #00ff00;
+            border-color: #00cc00;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.8);
+        }
+
+        @keyframes neuronPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.4); }
+        }
+
+        /* Connections between layers - COLORFUL */
+        .connection {
+            position: absolute;
+            height: 2px;
+            opacity: 0.5;
+            z-index: 1;
+            transition: all 0.4s ease;
+        }
+
+        /* Assign colors to connections cyclically */
+        .connection:nth-of-type(5n+1) { background: #FF00FF; } /* Magenta */
+        .connection:nth-of-type(5n+2) { background: #00FFFF; } /* Cyan */
+        .connection:nth-of-type(5n+3) { background: #FFFF00; } /* Yellow */
+        .connection:nth-of-type(5n+4) { background: #00FF00; } /* Lime */
+        .connection:nth-of-type(5n+5) { background: #FF4500; } /* Orange Red */
+
+        .connection.active {
+            opacity: 1;
+            height: 3px;
+            animation: connectionFlow 1s ease infinite;
+            box-shadow: 0 0 8px currentColor;
+            filter: brightness(1.5);
+        }
+
+        .connection.gradient {
+            background: #ff3333 !important; /* Override for gradient flow */
+            opacity: 0.8;
+            animation: connectionFlow 1s ease infinite reverse;
+            box-shadow: 0 0 8px rgba(255, 51, 51, 0.6);
+        }
+
+        @keyframes connectionFlow {
+            0% { opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { opacity: 0.3; }
+        }
+
+        /* Right Side - GPUs */
+        .gpus-section {
+            position: relative;
+            display: flex;
+            gap: 25px;
+            z-index: 1;
+            flex-shrink: 0;
+        }
+
+        .gpu {
+            width: 220px;
+            height: 580px; /* Increased height */
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            position: relative;
+            box-shadow: none;
+            overflow: visible;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .gpu-label {
+            position: absolute;
+            top: 15px;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            z-index: 2;
+            background: #333;
+            padding: 5px 15px;
+            border-radius: 20px;
+            border: 1px solid #555;
+        }
+
+        .gpu-dnn {
+            margin-top: 60px;
+            width: 100%;
+            height: 140px;
+            opacity: 0;
+            transition: all 0.8s ease;
+            position: relative;
+        }
+
+        .gpu-dnn.visible {
+            opacity: 1;
+        }
+
+        .gpu-dnn-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.3);
+            border: none;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .gpu-dnn-layers {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            height: 100%;
+            position: relative;
+        }
+
+        .gpu-layer {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            position: relative;
+        }
+
+        .gpu-neuron {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #000;
+            border: 2px solid #fff;
+            transition: all 0.4s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .gpu-neuron.active {
+            background: #fff;
+            border-color: #fff;
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.9);
+            animation: neuronPulse 0.6s ease infinite;
+        }
+
+        .gpu-neuron.gradient {
+            background: #ff3333;
+            border-color: #ff0000;
+            box-shadow: 0 0 12px rgba(255, 0, 0, 0.9);
+            animation: neuronPulse 0.6s ease infinite;
+        }
+
+        .gpu-neuron.updated {
+            background: #00ff00;
+            border-color: #00cc00;
+            box-shadow: 0 0 12px rgba(0, 255, 0, 0.9);
+        }
+
+        /* GPU Connections - COLORFUL */
+        .gpu-connection {
+            position: absolute;
+            height: 1.5px;
+            opacity: 0.4;
+            z-index: 1;
+            transition: all 0.4s ease;
+        }
+
+        /* Assign colors to GPU connections cyclically */
+        .gpu-connection:nth-of-type(5n+1) { background: #FF00FF; }
+        .gpu-connection:nth-of-type(5n+2) { background: #00FFFF; }
+        .gpu-connection:nth-of-type(5n+3) { background: #FFFF00; }
+        .gpu-connection:nth-of-type(5n+4) { background: #00FF00; }
+        .gpu-connection:nth-of-type(5n+5) { background: #FF4500; }
+
+        .gpu-connection.active {
+            opacity: 1;
+            height: 2px;
+            animation: connectionFlow 1s ease infinite;
+            box-shadow: 0 0 6px currentColor;
+            filter: brightness(1.5);
+        }
+
+        .gpu-connection.gradient {
+            background: #ff3333 !important;
+            opacity: 0.9;
+            animation: connectionFlow 1s ease infinite reverse;
+            box-shadow: 0 0 6px rgba(255, 0, 0, 0.8);
+        }
+
+        /* Updated Connection Animation */
+        .connection.updated, .gpu-connection.updated {
+            background: #FFD700 !important; /* Gold */
+            opacity: 1;
+            height: 2px;
+            box-shadow: 0 0 8px #FFD700, 0 0 16px #FFA500;
+            z-index: 10;
+            animation: updateFlow 1s ease-in-out;
+        }
+
+        @keyframes updateFlow {
+            0% {
+                opacity: 0.5;
+                box-shadow: 0 0 5px #FFD700;
+                filter: brightness(1);
+            }
+            50% {
+                opacity: 1;
+                height: 3px;
+                box-shadow: 0 0 15px #FFD700, 0 0 25px #FFA500;
+                filter: brightness(2);
+            }
+            100% {
+                opacity: 1;
+                height: 2px;
+                box-shadow: 0 0 8px #FFD700;
+                filter: brightness(1.2);
+            }
+        }
+
+        /* GPU Batch - similar style to moving batch */
+        .gpu-batch {
+            margin-top: 10px;
+            width: 90px;
+            height: 40px;
+            background: #333;
+            border: 1px solid #fff;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            opacity: 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            transition: all 0.5s ease;
+            z-index: 10;
+        }
+
+        .gpu-batch.visible {
+            opacity: 1;
+        }
+
+        /* Gradient DNN - Bottom of GPU */
+        .gradient-dnn {
+            margin-top: 40px;
+            width: 100%;
+            height: 140px;
+            opacity: 0.3; /* Initial low opacity */
+            transition: all 0.8s ease;
+            position: relative;
+            filter: grayscale(100%); /* Grayscale when inactive */
+        }
+
+        .gradient-dnn.active {
+            opacity: 1;
+            filter: grayscale(0%);
+        }
+
+        .grad-label {
+            position: absolute;
+            top: -20px;
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        .gradient-neuron {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #330000; /* Dark red base */
+            border: 2px solid #660000;
+            transition: all 0.4s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .gradient-dnn.active .gradient-neuron {
+            background: #ff3333;
+            border-color: #ffcccc;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+        }
+
+        .gradient-connection {
+            position: absolute;
+            height: 1px;
+            background: #660000;
+            opacity: 0.3;
+            z-index: 1;
+        }
+
+        .gradient-dnn.active .gradient-connection {
+            background: #ff3333;
+            opacity: 0.8;
+            box-shadow: 0 0 5px rgba(255, 0, 0, 0.3);
+        }
+
+        /* Moving Gradient Animation */
+        .moving-gradient {
+            position: absolute;
+            width: 60px;
+            height: 40px;
+            background: rgba(255, 50, 50, 0.8);
+            border: 2px solid #ff9999;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: white;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .moving-gradient.visible {
+            opacity: 1;
+            transition: all 1s cubic-bezier(0.45, 0, 0.55, 1);
+        }
+
+        /* Model Cloning Animation */
+        .model-clone {
+            position: absolute;
+            width: 250px;
+            height: 180px;
+            background: rgba(20, 20, 20, 0.95);
+            border: 1px solid #666;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+            z-index: 50;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 600;
+            font-size: 18px;
+            color: white;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .model-clone.visible {
+            opacity: 1;
+            transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Update Indicator */
+        .update-indicator {
+            margin-top: 20px;
+            width: 150px;
+            height: 35px;
+            background: #000;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            opacity: 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+        }
+
+        .update-indicator.active {
+            opacity: 1;
+            animation: updateFlash 0.6s ease;
+            background: #003300;
+        }
+
+        @keyframes updateFlash {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Status Text */
+        .status {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 20;
+            background: #000;
+            padding: 6px 12px;
+            border-radius: 15px;
+            border: 1px solid #444;
+            box-shadow: none;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+            flex-shrink: 0;
+            padding: 5px 0;
+        }
+
+        button {
+            padding: 8px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid #444;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: none;
+            background: #222;
+            color: #fff;
+        }
+
+        button:hover {
+            background: #333;
+            border-color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Data Parallelism: Distributed Neural Network Training</h1>
+        <div class="animation-area" id="animationArea">
+            <div class="status" id="status">Ready</div>
+            
+            <!-- Left Side: Training Data and Model -->
+            <div class="data-section">
+                <div class="data-source" id="dataSource">
+                    <div class="data-source-label">Training Data</div>
+                    <div class="data-batches" id="dataBatches">
+                        <div class="batch" id="batch0">Batch 0</div>
+                        <div class="batch" id="batch1">Batch 1</div>
+                        <div class="batch" id="batch2">Batch 2</div>
+                    </div>
+                </div>
+                
+                <!-- Model below Training Data -->
+                <div class="model-section">
+                    <div class="initial-model" id="initialModel">
+                        <div class="dnn-container" id="initialDnnContainer">
+                            <div class="dnn-layers" id="initialDnnLayers">
+                                <div class="dnn-layer" id="layer0">
+                                    <div class="neuron" id="n0-0"></div>
+                                    <div class="neuron" id="n0-1"></div>
+                                    <div class="neuron" id="n0-2"></div>
+                                </div>
+                                <div class="dnn-layer" id="layer1">
+                                    <div class="neuron" id="n1-0"></div>
+                                    <div class="neuron" id="n1-1"></div>
+                                    <div class="neuron" id="n1-2"></div>
+                                    <div class="neuron" id="n1-3"></div>
+                                </div>
+                                <div class="dnn-layer" id="layer2">
+                                    <div class="neuron" id="n2-0"></div>
+                                    <div class="neuron" id="n2-1"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Side: GPUs -->
+            <div class="gpus-section">
+                <!-- GPU 0 -->
+                <div class="gpu" id="gpu0">
+                    <div class="gpu-label">GPU 0 (Primary)</div>
+                    <div class="gpu-dnn" id="gpuDnn0">
+                        <div class="gpu-dnn-container">
+                            <div class="gpu-dnn-layers" id="gpu0Layers">
+                                <div class="gpu-layer">
+                                    <div class="gpu-neuron" id="g0-n0-0"></div>
+                                    <div class="gpu-neuron" id="g0-n0-1"></div>
+                                    <div class="gpu-neuron" id="g0-n0-2"></div>
+                                </div>
+                                <div class="gpu-layer">
+                                    <div class="gpu-neuron" id="g0-n1-0"></div>
+                                    <div class="gpu-neuron" id="g0-n1-1"></div>
+                                    <div class="gpu-neuron" id="g0-n1-2"></div>
+                                    <div class="gpu-neuron" id="g0-n1-3"></div>
+                                </div>
+                                <div class="gpu-layer">
+                                    <div class="gpu-neuron" id="g0-n2-0"></div>
+                                    <div class="gpu-neuron" id="g0-n2-1"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="gpu-batch" id="gpuBatch0">Batch 0</div>
+                    
+                    <!-- Gradient Accumulator DNN -->
+                    <div class="gradient-dnn" id="gradDnn0">
+                        <div class="grad-label">Gradients</div>
+                        <div class="gpu-dnn-container">
+                            <div class="gpu-dnn-layers" id="grad0Layers">
+                                <div class="gpu-layer">
+                                    <div class="gradient-neuron"></div>
+                                    <div class="gradient-neuron"></div>
+                                    <div class="gradient-neuron"></div>
+                                </div>
+                                <div class="gpu-layer">
+                                    <div class="gradient-neuron"></div>
+                                    <div class="gradient-neuron"></div>
+                                    <div class="gradient-neuron"></div>
+                                    <div class="gradient-neuron"></div>
+                                </div>
+                                <div class="gpu-layer">
+                                    <div class="gradient-neuron"></div>
+                                    <div class="gradient-neuron"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="update-indicator" id="update0">✓ Updated</div>
+                </div>
+
+                <!-- GPU 1 -->
+                <div class="gpu" id="gpu1">
+                    <div class="gpu-label">GPU 1</div>
+                    <div class="gpu-dnn" id="gpuDnn1">
+                        <div class="gpu-dnn-container">
+                            <div class="gpu-dnn-layers" id="gpu1Layers">
+                                <div class="gpu-layer">
+                                    <div class="gpu-neuron" id="g1-n0-0"></div>
+                                    <div class="gpu-neuron" id="g1-n0-1"></div>
+                                    <div class="gpu-neuron" id="g1-n0-2"></div>
+                                </div>
+                                <div class="gpu-layer">
+                                    <div class="gpu-neuron" id="g1-n1-0"></div>
+                                    <div class="gpu-neuron" id="g1-n1-1"></div>
+                                    <div class="gpu-neuron" id="g1-n1-2"></div>
+                                    <div class="gpu-neuron" id="g1-n1-3"></div>
+                                </div>
+                                <div class="gpu-layer">
+                                    <div class="gpu-neuron" id="g1-n2-0"></div>
+                                    <div class="gpu-neuron" id="g1-n2-1"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="gpu-batch" id="gpuBatch1">Batch 1</div>
+
+                    <!-- Gradient Accumulator DNN -->
+                    <div class="gradient-dnn" id="gradDnn1">
+                        <div class="grad-label">Gradients</div>
+                        <div class="gpu-dnn-container">
+                            <div class="gpu-dnn-layers" id="grad1Layers">
+                                <div class="gpu-layer">
+                                    <div class="gradient-neuron"></div>
+                                    <div class="gradient-neuron"></div>
+                                    <div class="gradient-neuron"></div>
+                                </div>
+                                <div class="gpu-layer">
+                                    <div class="gradient-neuron"></div>
+                                    <div class="gradient-neuron"></div>
+                                    <div class="gradient-neuron"></div>
+                                    <div class="gradient-neuron"></div>
+                                </div>
+                                <div class="gpu-layer">
+                                    <div class="gradient-neuron"></div>
+                                    <div class="gradient-neuron"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="update-indicator" id="update1">✓ Updated</div>
+                </div>
+
+                <!-- GPU 2 -->
+                <div class="gpu" id="gpu2">
+                    <div class="gpu-label">GPU 2</div>
+                    <div class="gpu-dnn" id="gpuDnn2">
+                        <div class="gpu-dnn-container">
+                            <div class="gpu-dnn-layers" id="gpu2Layers">
+                                <div class="gpu-layer">
+                                    <div class="gpu-neuron" id="g2-n0-0"></div>
+                                    <div class="gpu-neuron" id="g2-n0-1"></div>
+                                    <div class="gpu-neuron" id="g2-n0-2"></div>
+                                </div>
+                                <div class="gpu-layer">
+                                    <div class="gpu-neuron" id="g2-n1-0"></div>
+                                    <div class="gpu-neuron" id="g2-n1-1"></div>
+                                    <div class="gpu-neuron" id="g2-n1-2"></div>
+                                    <div class="gpu-neuron" id="g2-n1-3"></div>
+                                </div>
+                                <div class="gpu-layer">
+                                    <div class="gpu-neuron" id="g2-n2-0"></div>
+                                    <div class="gpu-neuron" id="g2-n2-1"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="gpu-batch" id="gpuBatch2">Batch 2</div>
+
+                    <!-- Gradient Accumulator DNN -->
+                    <div class="gradient-dnn" id="gradDnn2">
+                        <div class="grad-label">Gradients</div>
+                        <div class="gpu-dnn-container">
+                            <div class="gpu-dnn-layers" id="grad2Layers">
+                                <div class="gpu-layer">
+                                    <div class="gradient-neuron"></div>
+                                    <div class="gradient-neuron"></div>
+                                    <div class="gradient-neuron"></div>
+                                </div>
+                                <div class="gpu-layer">
+                                    <div class="gradient-neuron"></div>
+                                    <div class="gradient-neuron"></div>
+                                    <div class="gradient-neuron"></div>
+                                    <div class="gradient-neuron"></div>
+                                </div>
+                                <div class="gpu-layer">
+                                    <div class="gradient-neuron"></div>
+                                    <div class="gradient-neuron"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="update-indicator" id="update2">✓ Updated</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="prev-btn" onclick="prevStep()">⏮ Previous</button>
+            <button class="play-btn" onclick="playAnimation()">▶ Play</button>
+            <button class="step-btn" onclick="nextStep()">⏭ Next Step</button>
+            <button class="reset-btn" onclick="resetAnimation()">↻ Reset</button>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 0;
+        let isPlaying = false;
+        let animationInterval = null;
+
+        const steps = [
+            { name: "Initial Setup", duration: 1000 },
+            { name: "Split Data into Batches", duration: 1500 },
+            { name: "Create Initial DNN Model", duration: 1500 },
+            { name: "Copy DNN Model to All GPUs", duration: 2500 },
+            { name: "Distribute Batches to GPUs", duration: 2500 },
+            { name: "Forward Pass Through DNN", duration: 3500 },
+            { name: "Backward Pass Through DNN", duration: 3500 },
+            { name: "Sync: Gather Gradients to GPU 0", duration: 2000 },
+            { name: "Sync: Broadcast Updated Weights", duration: 2000 },
+            { name: "Update Model Weights", duration: 1000 },
+            { name: "Repeat Process", duration: 1000 }
+        ];
+
+        // Create connections between neurons
+        function createConnections() {
+            // Remove existing connections first
+            document.querySelectorAll('.connection, .gpu-connection, .gradient-connection').forEach(el => el.remove());
+
+            // Initial model connections
+            const initialContainer = document.getElementById('initialDnnContainer');
+            const layers = initialContainer.querySelectorAll('.dnn-layer');
+            connectLayers(initialContainer, layers, 'connection', 'conn-init');
+            
+            // GPU connections
+            for (let gpu = 0; gpu < 3; gpu++) {
+                // Main DNN connections
+                const gpuContainer = document.getElementById(`gpuDnn${gpu}`).querySelector('.gpu-dnn-container');
+                const gpuLayers = gpuContainer.querySelectorAll('.gpu-layer');
+                connectLayers(gpuContainer, gpuLayers, 'gpu-connection', `conn-g${gpu}`);
+                
+                // Gradient DNN connections
+                const gradContainer = document.getElementById(`gradDnn${gpu}`).querySelector('.gpu-dnn-container');
+                const gradLayers = gradContainer.querySelectorAll('.gpu-layer');
+                connectLayers(gradContainer, gradLayers, 'gradient-connection', `conn-grad${gpu}`);
+            }
+        }
+
+        function connectLayers(container, layers, className, idPrefix) {
+            // Connect layer 0 to layer 1
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 4; j++) {
+                    const conn = document.createElement('div');
+                    conn.className = className;
+                    conn.id = `${idPrefix}-L0-${i}-${j}`;
+                    container.appendChild(conn);
+                    positionConnection(conn, layers[0].children[i], layers[1].children[j]);
+                }
+            }
+            
+            // Connect layer 1 to layer 2
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 2; j++) {
+                    const conn = document.createElement('div');
+                    conn.className = className;
+                    conn.id = `${idPrefix}-L1-${i}-${j}`;
+                    container.appendChild(conn);
+                    positionConnection(conn, layers[1].children[i], layers[2].children[j]);
+                }
+            }
+        }
+
+        function positionConnection(conn, from, to) {
+            const fromRect = from.getBoundingClientRect();
+            const toRect = to.getBoundingClientRect();
+            const containerRect = conn.parentElement.getBoundingClientRect();
+            
+            const fromX = fromRect.left - containerRect.left + fromRect.width / 2;
+            const fromY = fromRect.top - containerRect.top + fromRect.height / 2;
+            const toX = toRect.left - containerRect.left + toRect.width / 2;
+            const toY = toRect.top - containerRect.top + toRect.height / 2;
+            
+            const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
+            const angle = Math.atan2(toY - fromY, toX - fromX) * 180 / Math.PI;
+            
+            conn.style.width = length + 'px';
+            conn.style.left = fromX + 'px';
+            conn.style.top = fromY + 'px';
+            conn.style.transform = `rotate(${angle}deg)`;
+            conn.style.transformOrigin = '0 0';
+        }
+
+        function updateStatus(text) {
+            document.getElementById('status').textContent = text;
+        }
+
+        function cleanVisuals() {
+             // Stop any running intervals/timeouts if we are resetting completely
+             // But here we just want to clear the DOM state
+             
+            // Reset all elements
+            document.querySelectorAll('.batch').forEach(el => {
+                el.classList.remove('visible', 'moving', 'moved');
+                el.style.position = 'relative';
+                el.style.left = '';
+                el.style.top = '';
+                el.style.zIndex = '';
+                el.style.opacity = ''; // Restore opacity logic to CSS default
+                el.style.transform = ''; // Clear transform overrides
+                el.style.transition = ''; // Clear transition overrides
+                el.style.filter = ''; // Clear filter for grayscale
+            });
+            document.getElementById('initialModel').classList.remove('visible');
+            document.querySelectorAll('.gpu-dnn').forEach(el => {
+                el.classList.remove('visible');
+            });
+            document.querySelectorAll('.gpu-batch').forEach(el => {
+                el.classList.remove('visible');
+            });
+            document.querySelectorAll('.gradient-dnn').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.querySelectorAll('.update-indicator').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.querySelectorAll('.moving-gradient').forEach(el => el.remove());
+            document.querySelectorAll('.model-clone').forEach(el => el.remove());
+            document.querySelectorAll('[id^="clone-batch"]').forEach(el => el.remove());
+            
+            // Reset neurons and connections
+            document.querySelectorAll('.neuron, .gpu-neuron').forEach(el => {
+                el.classList.remove('active', 'gradient', 'updated');
+            });
+            document.querySelectorAll('.connection, .gpu-connection').forEach(el => {
+                el.classList.remove('active', 'gradient', 'updated');
+                el.style.filter = '';
+            });
+        }
+
+        function resetAnimation() {
+            currentStep = 0;
+            isPlaying = false;
+            if (animationInterval) {
+                clearInterval(animationInterval);
+                animationInterval = null;
+            }
+            
+            cleanVisuals();
+            
+            updateStatus('Ready');
+            setTimeout(createConnections, 100);
+        }
+
+        function restoreState(stepIndex) {
+            cleanVisuals();
+            createConnections();
+
+            // Helper to force visibility without transition
+            const show = (selector) => {
+                document.querySelectorAll(selector).forEach(el => {
+                    el.style.transition = 'none';
+                    el.classList.add('visible');
+                    void el.offsetWidth; // Trigger reflow
+                    el.style.transition = '';
+                });
+            };
+
+            if (stepIndex >= 1) {
+                 show('.batch');
+            }
+            if (stepIndex >= 2) {
+                show('#initialModel');
+            }
+            if (stepIndex >= 3) {
+                show('.gpu-dnn');
+            }
+            if (stepIndex >= 4) {
+                show('.gpu-batch');
+                // Grey out source batches as they moved (keep them visible)
+                document.querySelectorAll('.batch').forEach(el => {
+                    el.style.transition = 'none';
+                    el.classList.add('moved');
+                    void el.offsetWidth;
+                    el.style.transition = '';
+                });
+            }
+            if (stepIndex >= 9) {
+                document.querySelectorAll('.update-indicator').forEach(el => el.classList.add('active'));
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                // We want to replay the step we just stepped back into.
+                // But first we need to establish the state BEFORE that step.
+                restoreState(currentStep - 1); 
+                
+                // Small delay to let the DOM settle before triggering animation
+                setTimeout(() => {
+                    executeStep(currentStep);
+                }, 50);
+            }
+        }
+
+        function animateForwardPass(gpuIndex) {
+            // Sequence: Input(L0) -> Conn0-1 -> Hidden(L1) -> Conn1-2 -> Output(L2)
+            const duration = 600;
+            
+            // 1. Input Layer (Layer 0)
+            setTimeout(() => {
+                const neurons = [`g${gpuIndex}-n0-0`, `g${gpuIndex}-n0-1`, `g${gpuIndex}-n0-2`];
+                neurons.forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) {
+                        el.classList.add('active');
+                        setTimeout(() => el.classList.remove('active'), duration);
+                    }
+                });
+            }, 0);
+
+            // 2. Connections L0 -> L1
+            setTimeout(() => {
+                document.querySelectorAll(`[id^="conn-g${gpuIndex}-L0-"]`).forEach(conn => {
+                    conn.classList.add('active');
+                    setTimeout(() => conn.classList.remove('active'), duration);
+                });
+            }, duration);
+
+            // 3. Hidden Layer (Layer 1)
+            setTimeout(() => {
+                const neurons = [`g${gpuIndex}-n1-0`, `g${gpuIndex}-n1-1`, `g${gpuIndex}-n1-2`, `g${gpuIndex}-n1-3`];
+                neurons.forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) {
+                        el.classList.add('active');
+                        setTimeout(() => el.classList.remove('active'), duration);
+                    }
+                });
+            }, duration * 2);
+
+            // 4. Connections L1 -> L2
+            setTimeout(() => {
+                document.querySelectorAll(`[id^="conn-g${gpuIndex}-L1-"]`).forEach(conn => {
+                    conn.classList.add('active');
+                    setTimeout(() => conn.classList.remove('active'), duration);
+                });
+            }, duration * 3);
+
+            // 5. Output Layer (Layer 2)
+            setTimeout(() => {
+                const neurons = [`g${gpuIndex}-n2-0`, `g${gpuIndex}-n2-1`];
+                neurons.forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) {
+                        el.classList.add('active');
+                        setTimeout(() => el.classList.remove('active'), duration);
+                    }
+                });
+            }, duration * 4);
+        }
+
+        function animateBackwardPass(gpuIndex) {
+            // Sequence: Output(L2) -> Conn1-2 -> Hidden(L1) -> Conn0-1 -> Input(L0)
+            const duration = 600;
+
+            // 1. Output Layer (Layer 2) - Gradients start here
+            setTimeout(() => {
+                const neurons = [`g${gpuIndex}-n2-0`, `g${gpuIndex}-n2-1`];
+                neurons.forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) {
+                        el.classList.add('gradient');
+                        setTimeout(() => el.classList.remove('gradient'), duration);
+                    }
+                });
+            }, 0);
+
+            // 2. Connections L2 -> L1 (Backwards) - Uses L1 connections
+            setTimeout(() => {
+                document.querySelectorAll(`[id^="conn-g${gpuIndex}-L1-"]`).forEach(conn => {
+                    conn.classList.add('gradient');
+                    setTimeout(() => conn.classList.remove('gradient'), duration);
+                });
+            }, duration);
+
+            // 3. Hidden Layer (Layer 1)
+            setTimeout(() => {
+                const neurons = [`g${gpuIndex}-n1-0`, `g${gpuIndex}-n1-1`, `g${gpuIndex}-n1-2`, `g${gpuIndex}-n1-3`];
+                neurons.forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) {
+                        el.classList.add('gradient');
+                        setTimeout(() => el.classList.remove('gradient'), duration);
+                    }
+                });
+            }, duration * 2);
+
+            // 4. Connections L1 -> L0 (Backwards) - Uses L0 connections
+            setTimeout(() => {
+                document.querySelectorAll(`[id^="conn-g${gpuIndex}-L0-"]`).forEach(conn => {
+                    conn.classList.add('gradient');
+                    setTimeout(() => conn.classList.remove('gradient'), duration);
+                });
+            }, duration * 3);
+
+            // 5. Input Layer (Layer 0)
+            setTimeout(() => {
+                const neurons = [`g${gpuIndex}-n0-0`, `g${gpuIndex}-n0-1`, `g${gpuIndex}-n0-2`];
+                neurons.forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) {
+                        el.classList.add('gradient');
+                        setTimeout(() => el.classList.remove('gradient'), duration);
+                    }
+                });
+            }, duration * 4);
+            
+            // Activate gradient DNN display at the end
+            setTimeout(() => {
+                document.getElementById(`gradDnn${gpuIndex}`).classList.add('active');
+            }, duration * 5);
+        }
+
+        function animateModelDistribution() {
+            const sourceModel = document.getElementById('initialDnnContainer');
+            const areaRect = document.getElementById('animationArea').getBoundingClientRect();
+            const sourceRect = sourceModel.getBoundingClientRect();
+
+            // Create 3 clones
+            for(let i=0; i<3; i++) {
+                const targetGpu = document.getElementById(`gpuDnn${i}`);
+                const targetRect = targetGpu.getBoundingClientRect();
+                
+                const clone = document.createElement('div');
+                clone.className = 'model-clone';
+                clone.textContent = 'DNN Model Copy';
+                
+                // Start at source position relative to animation area
+                clone.style.left = (sourceRect.left - areaRect.left) + 'px';
+                clone.style.top = (sourceRect.top - areaRect.top) + 'px';
+                
+                document.getElementById('animationArea').appendChild(clone);
+                
+                // Trigger reflow
+                void clone.offsetWidth;
+                clone.classList.add('visible');
+
+                // Move to target
+                clone.style.left = (targetRect.left - areaRect.left + (targetRect.width - sourceRect.width)/2) + 'px'; // Center horizontally
+                clone.style.top = (targetRect.top - areaRect.top + (targetRect.height - sourceRect.height)/2) + 'px'; // Center vertically
+                clone.style.transform = 'scale(0.6)'; // Shrink to fit GPU DNN size
+
+                setTimeout(() => {
+                    clone.style.opacity = '0';
+                    setTimeout(() => clone.remove(), 500);
+                    document.getElementById(`gpuDnn${i}`).classList.add('visible');
+                }, 1500);
+            }
+        }
+
+        function animateModelUpdate(gpuIndex) {
+            // Only animate connections sequentially
+            setTimeout(() => {
+                document.querySelectorAll(`[id^="conn-g${gpuIndex}-L0-"]`).forEach(conn => {
+                    conn.classList.add('updated');
+                    setTimeout(() => conn.classList.remove('updated'), 1500);
+                });
+            }, 0);
+            
+            setTimeout(() => {
+                document.querySelectorAll(`[id^="conn-g${gpuIndex}-L1-"]`).forEach(conn => {
+                    conn.classList.add('updated');
+                    setTimeout(() => conn.classList.remove('updated'), 1500);
+                });
+            }, 600);
+        }
+
+        function moveBatchToGPU(batchIndex, gpuIndex) {
+            const batch = document.getElementById(`batch${batchIndex}`);
+            const gpuBatch = document.getElementById(`gpuBatch${batchIndex}`);
+            const areaRect = document.getElementById('animationArea').getBoundingClientRect();
+            
+            // Ensure batch is visible before cloning
+            if (!batch.classList.contains('visible')) {
+                batch.classList.add('visible');
+            }
+            
+            // Reset any transforms that might interfere
+            batch.style.transform = '';
+            batch.style.opacity = '1';
+            
+            // Get source position (from inside training data box)
+            const batchRect = batch.getBoundingClientRect();
+            
+            // Create clone with same styling
+            const clone = batch.cloneNode(true);
+            clone.classList.add('moving');
+            clone.classList.remove('visible'); // Remove visible class to reset transform
+            clone.id = `clone-batch-${batchIndex}`;
+            
+            // Calculate positions relative to animation area
+            const startLeft = batchRect.left - areaRect.left;
+            const startTop = batchRect.top - areaRect.top;
+            
+            // Set clone initial position to match batch
+            clone.style.position = 'absolute';
+            clone.style.left = startLeft + 'px';
+            clone.style.top = startTop + 'px';
+            clone.style.width = batchRect.width + 'px';
+            clone.style.height = batchRect.height + 'px';
+            clone.style.opacity = '1';
+            clone.style.transform = 'none'; // Reset transform for movement
+            clone.style.zIndex = '1000';
+            
+            // Add to animation area (not inside data-source)
+            document.getElementById('animationArea').appendChild(clone);
+            
+            // Trigger reflow to ensure clone is positioned
+            void clone.offsetWidth;
+
+            // Grey out original batch in training data box instead of hiding
+            batch.classList.add('moved');
+
+            // Calculate target position (GPU batch location)
+            const gpuBatchRect = gpuBatch.getBoundingClientRect();
+            const endLeft = gpuBatchRect.left - areaRect.left;
+            const endTop = gpuBatchRect.top - areaRect.top;
+
+            // Animate clone moving from training data to GPU
+            requestAnimationFrame(() => {
+                clone.style.transition = 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1)';
+                clone.style.left = endLeft + 'px';
+                clone.style.top = endTop + 'px';
+                clone.style.width = gpuBatchRect.width + 'px';
+                clone.style.height = gpuBatchRect.height + 'px';
+            });
+            
+            // After animation completes, show GPU batch and remove clone
+            setTimeout(() => {
+                clone.remove();
+                gpuBatch.classList.add('visible');
+            }, 1500);
+        }
+
+        function animateGradientSync(sourceGpu, targetGpu, type) {
+            const source = document.getElementById(`gradDnn${sourceGpu}`);
+            const target = document.getElementById(`gradDnn${targetGpu}`);
+            const areaRect = document.getElementById('animationArea').getBoundingClientRect();
+            
+            const movingGrad = document.createElement('div');
+            movingGrad.className = 'moving-gradient';
+            movingGrad.textContent = type === 'gather' ? 'Gradients' : 'Weights';
+            
+            if (type === 'broadcast') {
+                movingGrad.style.background = 'rgba(0, 255, 0, 0.8)';
+                movingGrad.style.borderColor = '#ccffcc';
+                movingGrad.style.boxShadow = '0 0 15px rgba(0, 255, 0, 0.6)';
+            }
+            
+            const sourceRect = source.getBoundingClientRect();
+            const targetRect = target.getBoundingClientRect();
+            
+            movingGrad.style.left = (sourceRect.left - areaRect.left + sourceRect.width/2 - 30) + 'px';
+            movingGrad.style.top = (sourceRect.top - areaRect.top + sourceRect.height/2 - 20) + 'px';
+            
+            document.getElementById('animationArea').appendChild(movingGrad);
+            void movingGrad.offsetWidth;
+            
+            movingGrad.classList.add('visible');
+            
+            movingGrad.style.left = (targetRect.left - areaRect.left + targetRect.width/2 - 30) + 'px';
+            movingGrad.style.top = (targetRect.top - areaRect.top + targetRect.height/2 - 20) + 'px';
+            
+            setTimeout(() => {
+                movingGrad.remove();
+                if (type === 'gather') {
+                    document.getElementById(`gradDnn${sourceGpu}`).classList.remove('active');
+                }
+            }, 1000);
+        }
+
+        function executeStep(step) {
+            switch(step) {
+                case 0:
+                    updateStatus('Step 1: Initial Setup');
+                    break;
+                    
+                case 1:
+                    updateStatus('Step 2: Split Data into Batches');
+                    document.getElementById('batch0').classList.add('visible');
+                    setTimeout(() => document.getElementById('batch1').classList.add('visible'), 200);
+                    setTimeout(() => document.getElementById('batch2').classList.add('visible'), 400);
+                    break;
+                    
+                case 2:
+                    updateStatus('Step 3: Create Initial DNN Model');
+                    document.getElementById('initialModel').classList.add('visible');
+                    break;
+                    
+                case 3:
+                    updateStatus('Step 4: Copy DNN Model to All GPUs');
+                    animateModelDistribution();
+                    break;
+                    
+                case 4:
+                    updateStatus('Step 5: Distribute Batches to GPUs');
+                    moveBatchToGPU(0, 0);
+                    moveBatchToGPU(1, 1);
+                    moveBatchToGPU(2, 2);
+                    break;
+                    
+                case 5:
+                    updateStatus('Step 6: Forward Pass');
+                    animateForwardPass(0);
+                    animateForwardPass(1);
+                    animateForwardPass(2);
+                    break;
+                    
+                case 6:
+                    updateStatus('Step 7: Backward Pass & Compute Gradients');
+                    animateBackwardPass(0);
+                    animateBackwardPass(1);
+                    animateBackwardPass(2);
+                    break;
+                    
+                case 7:
+                    updateStatus('Step 8: Gather Gradients to GPU 0 (Primary)');
+                    animateGradientSync(1, 0, 'gather'); // GPU 1 -> GPU 0
+                    animateGradientSync(2, 0, 'gather'); // GPU 2 -> GPU 0
+                    break;
+                    
+                case 8:
+                    updateStatus('Step 9: Broadcast Updated Weights to All GPUs');
+                    // GPU 0 computes update (flash effect)
+                    document.getElementById('gradDnn0').classList.remove('active'); // Reset for effect
+                    setTimeout(() => {
+                        document.getElementById('gradDnn0').classList.add('active'); // Flash
+                        // Broadcast
+                        animateGradientSync(0, 1, 'broadcast');
+                        animateGradientSync(0, 2, 'broadcast');
+                    }, 500);
+                    break;
+                    
+                case 9:
+                    updateStatus('Step 10: Update Model Weights');
+                    // Clear gradient DNNs
+                    document.querySelectorAll('.gradient-dnn').forEach(el => el.classList.remove('active'));
+                    
+                    // Update all GPUs simultaneously
+                    animateModelUpdate(0);
+                    animateModelUpdate(1);
+                    animateModelUpdate(2);
+                    
+                    setTimeout(() => {
+                        document.getElementById('update0').classList.add('active');
+                        document.getElementById('update1').classList.add('active');
+                        document.getElementById('update2').classList.add('active');
+                    }, 1500);
+                    break;
+                    
+                case 10:
+                    updateStatus('Step 11: Ready for Next Iteration');
+                    setTimeout(() => {
+                        // Reset GPU batches
+                        document.querySelectorAll('.gpu-batch').forEach(el => el.classList.remove('visible'));
+                        document.querySelectorAll('.update-indicator').forEach(el => el.classList.remove('active'));
+                        
+                        // Show source batches again ("Fetch next batch") - remove greyed out state
+                        document.querySelectorAll('.batch').forEach(el => {
+                            el.classList.remove('moved');
+                            el.style.opacity = '1';
+                        });
+                        
+                        setTimeout(() => executeStep(4), 500);
+                    }, 2000);
+                    break;
+            }
+        }
+
+        function nextStep() {
+            if (currentStep < steps.length) {
+                executeStep(currentStep);
+                currentStep++;
+            } else {
+                resetAnimation();
+            }
+        }
+
+        function playAnimation() {
+            if (isPlaying) {
+                isPlaying = false;
+                if (animationInterval) {
+                    clearInterval(animationInterval);
+                    animationInterval = null;
+                }
+                document.querySelector('.play-btn').textContent = '▶ Play';
+            } else {
+                if (currentStep >= steps.length) {
+                    resetAnimation();
+                }
+                isPlaying = true;
+                document.querySelector('.play-btn').textContent = '⏸ Pause';
+                
+                function playNext() {
+                    if (currentStep < steps.length && isPlaying) {
+                        executeStep(currentStep);
+                        currentStep++;
+                        animationInterval = setTimeout(playNext, steps[Math.min(currentStep - 1, steps.length - 1)].duration);
+                    } else {
+                        isPlaying = false;
+                        document.querySelector('.play-btn').textContent = '▶ Play';
+                    }
+                }
+                
+                playNext();
+            }
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            createConnections();
+            resetAnimation();
+        });
+
+        // Re-calculate connections on resize
+        window.addEventListener('resize', () => {
+            createConnections();
+        });
+    </script>
+</body>
+</html>

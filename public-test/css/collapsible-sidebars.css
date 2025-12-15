@@ -1,0 +1,423 @@
+/* Blog Post Layout Enhancements */
+/* This CSS works WITH the theme's built-in responsive behavior */
+
+/* ============================================
+   Zoomable Visualization Container
+   ============================================ */
+.viz-container,
+.zoomable-iframe-container {
+  position: relative;
+  margin: 20px 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  display: flex;
+  flex-direction: column;
+}
+
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #343a40 0%, #212529 100%);
+  border-bottom: 1px solid #495057;
+  flex-wrap: wrap;
+}
+
+.zoom-controls button {
+  min-width: 36px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: #495057;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  padding: 0 10px;
+}
+
+.zoom-controls button:hover {
+  background: #4a90a4;
+}
+
+.zoom-controls button:active {
+  transform: scale(0.95);
+}
+
+.zoom-controls .zoom-level {
+  min-width: 50px;
+  text-align: center;
+  color: #e9ecef;
+  font-size: 13px;
+  font-weight: 500;
+  background: #212529;
+  padding: 6px 10px;
+  border-radius: 4px;
+}
+
+.zoom-controls .zoom-label {
+  color: #adb5bd;
+  font-size: 11px;
+  margin-left: auto;
+}
+
+.zoom-controls .zoom-fit,
+.zoom-controls .zoom-reset {
+  font-size: 12px;
+}
+
+.iframe-wrapper {
+  overflow: auto !important;
+  max-height: 80vh;
+  background: white;
+  position: relative;
+  box-sizing: border-box;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+.iframe-wrapper iframe {
+  transform-origin: top left;
+  transition: transform 0.15s ease;
+  display: block;
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Dark mode support for visualizations */
+html[data-theme='dark'] .viz-container,
+html[data-theme='dark'] .zoomable-iframe-container {
+  background: #1a1a2e;
+  border-color: #2d2d44;
+}
+
+html[data-theme='dark'] .iframe-wrapper {
+  background: #16213e;
+}
+
+html[data-theme='dark'] .zoom-controls {
+  background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%);
+}
+
+/* ============================================
+   TOC in Left Sidebar Styles
+   ============================================ */
+.toc-in-sidebar {
+  margin-top: 1.5rem;
+  padding: 0 0.5rem;
+}
+
+.toc-in-sidebar .toc-heading {
+  font-size: 1rem;
+  font-weight: 600;
+  color: inherit;
+  margin-bottom: 0.5rem;
+  padding-left: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.toc-in-sidebar .toc-heading::after {
+  content: '▼';
+  font-size: 10px;
+  transition: transform 0.3s ease;
+}
+
+.toc-in-sidebar.collapsed .toc-heading::after {
+  transform: rotate(-90deg);
+}
+
+.toc-in-sidebar hr {
+  margin: 0.5rem 0;
+  opacity: 0.3;
+}
+
+.toc-in-sidebar .toc {
+  max-height: 60vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: all 0.3s ease;
+}
+
+.toc-in-sidebar.collapsed .toc {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.toc-in-sidebar .toc nav {
+  padding: 0;
+}
+
+.toc-in-sidebar .toc ul {
+  list-style: none;
+  padding-left: 0.8rem;
+  margin: 0;
+}
+
+.toc-in-sidebar .toc > nav > ul {
+  padding-left: 0;
+}
+
+.toc-in-sidebar .toc li {
+  margin: 0.25rem 0;
+  line-height: 1.4;
+}
+
+.toc-in-sidebar .toc a {
+  color: inherit;
+  text-decoration: none;
+  font-size: 0.85rem;
+  display: block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.toc-in-sidebar .toc a:hover,
+.toc-in-sidebar .toc a.active {
+  background-color: rgba(74, 144, 164, 0.2);
+  color: #4a90a4;
+}
+
+/* ============================================
+   Blog Post Layout Adjustments
+   ============================================ */
+
+/* Hide the right TOC section (moved to left sidebar) */
+body.kind-page .wrapper .toc-section {
+  display: none !important;
+}
+
+/* Let content section expand without the TOC */
+body.kind-page .wrapper .content-section {
+  flex: 1 1 auto;
+  max-width: calc(100% - 20%);
+  transition: max-width 0.3s ease;
+}
+
+/* When sidebar is collapsed, content takes more space */
+body.kind-page .wrapper .sidebar-section.collapsed ~ .content-section {
+  max-width: 100%;
+}
+
+/* Center page content with reasonable max-width for readability */
+body.kind-page .page-content {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
+/* ============================================
+   Collapsible Sidebar
+   ============================================ */
+
+/* Sidebar transitions */
+body.kind-page .wrapper .sidebar-section {
+  transition: all 0.3s ease;
+}
+
+/* Collapsed state - smoother without opacity changes */
+body.kind-page .wrapper .sidebar-section.collapsed {
+  flex: 0 0 0;
+  max-width: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Hide sidebar holder content when collapsed to prevent any layout shift */
+body.kind-page .wrapper .sidebar-section.collapsed .sidebar-holder {
+  display: none;
+}
+
+/* Toggle button - Confluence-inspired sleek design */
+.sidebar-toggle {
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 48px;
+  border: none;
+  border-radius: 0 4px 4px 0;
+  background: rgba(9, 30, 66, 0.08);
+  color: #172B4D;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 400;
+  opacity: 0;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  box-shadow: 0 0 0 1px rgba(9, 30, 66, 0.08);
+  padding: 0;
+  line-height: 1;
+}
+
+/* Show on hover near left edge */
+body.kind-page:hover .sidebar-toggle,
+.sidebar-toggle:hover {
+  opacity: 1;
+}
+
+.sidebar-toggle:hover {
+  background: rgba(9, 30, 66, 0.13);
+  width: 20px;
+  box-shadow: 0 1px 1px rgba(9, 30, 66, 0.25), 0 0 1px rgba(9, 30, 66, 0.31);
+}
+
+.sidebar-toggle:active {
+  background: rgba(9, 30, 66, 0.20);
+  transform: translateY(-50%) scale(0.98);
+}
+
+/* Styled arrow icon */
+.sidebar-toggle::after {
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  transition: transform 0.2s ease;
+}
+
+/* Chevron pointing right when sidebar is collapsed */
+body.kind-page .wrapper .sidebar-section.collapsed ~ * .sidebar-toggle::after {
+  border-width: 4px 0 4px 6px;
+  border-color: transparent transparent transparent currentColor;
+  margin-left: 1px;
+}
+
+/* Chevron pointing left when sidebar is visible */
+body.kind-page .wrapper .sidebar-section:not(.collapsed) ~ * .sidebar-toggle::after,
+.sidebar-toggle::after {
+  border-width: 4px 6px 4px 0;
+  border-color: transparent currentColor transparent transparent;
+  margin-right: 1px;
+}
+
+/* Dark mode support */
+html[data-theme='dark'] .sidebar-toggle {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme='dark'] .sidebar-toggle:hover {
+  background: rgba(255, 255, 255, 0.13);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.25), 0 0 1px rgba(255, 255, 255, 0.31);
+}
+
+html[data-theme='dark'] .sidebar-toggle:active {
+  background: rgba(255, 255, 255, 0.20);
+}
+
+/* Hide toggle on mobile where sidebar is already hidden by theme */
+@media (max-width: 1024px) {
+  .sidebar-toggle {
+    display: none;
+  }
+}
+
+/* ============================================
+   Mobile Responsive Adjustments
+   Work WITH the theme's built-in breakpoints
+   ============================================ */
+
+/* At 1280px (very-large) - adjust content width */
+@media (max-width: 1280px) {
+  body.kind-page .wrapper .content-section {
+    max-width: calc(100% - 20%);
+  }
+
+  body.kind-page .wrapper .sidebar-section.collapsed ~ .content-section {
+    max-width: 100%;
+  }
+}
+
+/* At 768px (medium) - adjust for tablet */
+@media (max-width: 768px) {
+  body.kind-page .wrapper .content-section {
+    max-width: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  body.kind-page .page-content {
+    max-width: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* Make iframe containers mobile-friendly */
+  .iframe-wrapper {
+    max-height: 60vh !important;
+  }
+
+  .zoom-controls {
+    padding: 6px 8px !important;
+    gap: 4px !important;
+  }
+
+  .zoom-controls button {
+    min-width: 30px !important;
+    height: 28px !important;
+    font-size: 14px !important;
+    padding: 0 6px !important;
+  }
+
+  .zoom-controls .zoom-level {
+    min-width: 45px !important;
+    font-size: 12px !important;
+    padding: 4px 6px !important;
+  }
+
+  .zoom-controls .zoom-label {
+    display: none !important;
+  }
+}
+
+/* At 640px (small) - mobile phones */
+@media (max-width: 640px) {
+  body.kind-page .wrapper .content-section {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  body.kind-page .page-content {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
+
+  /* Stack share buttons */
+  body.kind-page .share-buttons .btn {
+    margin: 0.25rem;
+  }
+
+  /* Ensure full width on small screens */
+  body.kind-page .wrapper {
+    flex-direction: column;
+  }
+
+  body.kind-page .wrapper .content-section {
+    max-width: 100%;
+    width: 100%;
+  }
+}

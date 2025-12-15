@@ -40,6 +40,7 @@ articles:
     journal: "Brain Stimulation"
     year: 2019
     url: "https://www.sciencedirect.com/science/article/pii/S1935861X19303663"
+    doi: "10.1016/j.brs.2019.01.005"
 
 conferences_and_workshops:
   - title: "Speech Dereverberation using Variational Autoencoders"
@@ -47,6 +48,7 @@ conferences_and_workshops:
     booktitle: "IEEE ICASSP, Toronto, Canada"
     year: 2021
     url: "https://ieeexplore.ieee.org/document/9414439"
+    doi: "10.1109/ICASSP39728.2021.9414736"
 
   - title: "Hearing-Impaired Bio-Inspired Cochlear Models for Real-Time Auditory Applications"
     author: "A. Van Den Broucke, D. Baby, S. Verhulst"
@@ -60,6 +62,7 @@ conferences_and_workshops:
     booktitle: "IEEE ICASSP, Brighton, UK"
     year: 2019
     url: "https://ieeexplore.ieee.org/document/8682049"
+    doi: "10.1109/ICASSP.2019.8683799"
 
   - title: "Real-Time Audio Processing on a Raspberry Pi using Deep Neural Networks"
     author: "F. Drakopoulos, D. Baby, S. Verhulst"
@@ -92,12 +95,14 @@ conferences_and_workshops:
     booktitle: "INTERSPEECH, Dresden, Germany"
     year: 2015
     url: "https://www.isca-speech.org/archive/interspeech_2015/papers/i15_2479.pdf"
+    doi: "10.21437/Interspeech.2015-535"
 
   - title: "Noise Robust Exemplar Matching for Speech Enhancement: Applications to Automatic Speech Recognition"
     author: "E. Yilmaz, D. Baby, H. Van hamme"
     booktitle: "INTERSPEECH, Dresden, Germany"
     year: 2015
     url: "https://www.isca-speech.org/archive/interspeech_2015/papers/i15_0688.pdf"
+    doi: "10.21437/Interspeech.2015-241"
 
   - title: "Hybrid input spaces for exemplar-based noise robust speech recognition using coupled dictionaries"
     author: "D. Baby, H. Van hamme"

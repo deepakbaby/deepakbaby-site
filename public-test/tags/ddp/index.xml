@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>DDP on Deepak Baby</title><link>https://deepakbaby.in/tags/ddp/</link><description>Recent content in DDP on Deepak Baby</description><generator>Hugo</generator><language>en</language><lastBuildDate>Wed, 03 Dec 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://deepakbaby.in/tags/ddp/index.xml" rel="self" type="application/rss+xml"/><item><title>Slides: Distributed Training for ML</title><link>https://deepakbaby.in/posts/distributed-training-presentation/</link><pubDate>Wed, 03 Dec 2025 00:00:00 +0000</pubDate><guid>https://deepakbaby.in/posts/distributed-training-presentation/</guid><description>&lt;p>Explore distributed training techniques through this interactive presentation. Navigate through the slides using arrow keys or the navigation controls.&lt;/p>
+&lt;h2 id="topics-covered">Topics Covered&lt;/h2>
+&lt;ul>
+&lt;li>&lt;strong>Back to Basics&lt;/strong>: Understanding neural network fundamentals&lt;/li>
+&lt;li>&lt;strong>Why Distributed Training&lt;/strong>: Memory constraints and scaling challenges&lt;/li>
+&lt;li>&lt;strong>DDP (Data Distributed Parallel)&lt;/strong>: Replicating models across GPUs&lt;/li>
+&lt;li>&lt;strong>Pipeline Parallelism&lt;/strong>: Splitting models across devices&lt;/li>
+&lt;li>&lt;strong>FSDP (Fully Sharded Data Parallel)&lt;/strong>: Advanced sharding techniques&lt;/li>
+&lt;/ul>
+&lt;h2 id="slides">Slides&lt;/h2>
+&lt;p>Use the arrow keys (← →) or click the navigation arrows to move between slides. Some slides include animations that you can step through using the animation controls at the bottom.&lt;/p></description></item><item><title>Distributed Training Techniques: DDP, Pipeline Parallelism, and FSDP</title><link>https://deepakbaby.in/posts/distributed-training/</link><pubDate>Mon, 01 Dec 2025 00:00:00 +0000</pubDate><guid>https://deepakbaby.in/posts/distributed-training/</guid><description>&lt;p>Modern deep learning models have grown exponentially in size and complexity. GPT-4 has over a trillion parameters, and even &amp;ldquo;smaller&amp;rdquo; models like LLaMA-70B require substantial computational resources. Training or fine-tuning such models on a single GPU is often impossible; not just because of time constraints, but because the model itself may not fit in the memory of a single device. This is where &lt;strong>distributed training&lt;/strong> becomes essential.&lt;/p>
+&lt;h2 id="why-do-we-need-distributed-training">Why Do We Need Distributed Training?&lt;/h2>
+&lt;h3 id="the-memory-wall-problem">The Memory Wall Problem&lt;/h3>
+&lt;p>A modern GPU like the NVIDIA A100 has 80GB of memory. Sounds like a lot? Let&amp;rsquo;s do some math:&lt;/p></description></item></channel></rss>
