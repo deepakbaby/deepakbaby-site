@@ -35,20 +35,10 @@
                             {{ $logoImage:= resources.Get .institution.logo}}
                             {{ $darkLogoImage:= resources.Get .institution.darkLogo}}
                             {{ if $logoImage }}
-                            <div class="logo-holder">
-                                {{ if eq $logoImage.MediaType.SubType "svg" }}
-                                <img class="company-logo light-logo" src="{{ $logoImage.RelPermalink }}" alt="{{ .name }}" width="48" height="48" loading="lazy" />
-                                {{ else }}
-                                {{ $logoWebp := $logoImage.Fit "96x96 webp q90" }}
-                                <img class="company-logo light-logo" src="{{ $logoWebp.RelPermalink }}" alt="{{ .name }}" width="48" height="48" loading="lazy" />
-                                {{ end }}
+                            <div class="logo-holder"> 
+                                <img class="company-logo light-logo" src="{{ $logoImage.RelPermalink }}" alt="{{ .name }}" />
                                 {{ if $darkLogoImage }}
-                                {{ if eq $darkLogoImage.MediaType.SubType "svg" }}
-                                <img class="company-logo dark-logo" src="{{ $darkLogoImage.RelPermalink }}" alt="{{ .name }}" width="48" height="48" loading="lazy" />
-                                {{ else }}
-                                {{ $darkLogoWebp := $darkLogoImage.Fit "96x96 webp q90" }}
-                                <img class="company-logo dark-logo" src="{{ $darkLogoWebp.RelPermalink }}" alt="{{ .name }}" width="48" height="48" loading="lazy" />
-                                {{ end }}
+                                <img class="company-logo dark-logo" src="{{ $darkLogoImage.RelPermalink }}" alt="{{ .name }}" />
                                 {{ end }}
                             </div>
                             {{ end }}
