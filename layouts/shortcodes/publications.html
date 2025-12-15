@@ -27,6 +27,7 @@
           <div class="pub-metrics">
             <span class="__dimensions_badge_embed__" data-doi="{{ . }}" data-style="small_circle" data-hide-zero-citations="true"></span>
             <div class="altmetric-embed" data-badge-type="donut" data-badge-popover="right" data-doi="{{ . }}" data-hide-no-mentions="true"></div>
+            <a href="https://plu.mx/plum/a/?doi={{ . | urlquery }}" data-popup="right" data-size="medium" class="plumx-plum-print-popup" data-site="plum" data-hide-when-empty="true">PlumX</a>
           </div>
           {{ end }}
         </div>
@@ -52,6 +53,7 @@
           <div class="pub-metrics">
             <span class="__dimensions_badge_embed__" data-doi="{{ . }}" data-style="small_circle" data-hide-zero-citations="true"></span>
             <div class="altmetric-embed" data-badge-type="donut" data-badge-popover="right" data-doi="{{ . }}" data-hide-no-mentions="true"></div>
+            <a href="https://plu.mx/plum/a/?doi={{ . | urlquery }}" data-popup="right" data-size="medium" class="plumx-plum-print-popup" data-site="plum" data-hide-when-empty="true">PlumX</a>
           </div>
           {{ end }}
         </div>
@@ -85,6 +87,7 @@
           <div class="pub-metrics">
             <span class="__dimensions_badge_embed__" data-doi="{{ . }}" data-style="small_circle" data-hide-zero-citations="true"></span>
             <div class="altmetric-embed" data-badge-type="donut" data-badge-popover="right" data-doi="{{ . }}" data-hide-no-mentions="true"></div>
+            <a href="https://plu.mx/plum/a/?doi={{ . | urlquery }}" data-popup="right" data-size="medium" class="plumx-plum-print-popup" data-site="plum" data-hide-when-empty="true">PlumX</a>
           </div>
           {{ end }}
         </div>
@@ -151,6 +154,9 @@
 
 {{/* Load Altmetric badge script */}}
 <script type="text/javascript" src="https://d1bxh8uas1mnw7.cloudfront.net/assets/embed.js"></script>
+
+{{/* Load PlumX badge script */}}
+<script type="text/javascript" src="https://cdn.plu.mx/widget-popup.js"></script>
 
 <style>
 .publications-list {
@@ -284,11 +290,12 @@
 
 /* Metrics badges container */
 .pub-metrics {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, auto);
   gap: 0.75rem;
   align-items: center;
-  min-width: 80px;
+  justify-items: center;
+  min-width: 150px;
   flex-shrink: 0;
 }
 
@@ -306,6 +313,13 @@
   justify-content: center;
 }
 
+/* PlumX badge styling */
+.pub-metrics .plumx-plum-print-popup {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .publication-item {
@@ -318,7 +332,7 @@
   }
 
   .pub-metrics {
-    flex-direction: row;
+    grid-template-columns: repeat(2, auto);
     justify-content: flex-start;
     width: 100%;
     min-width: auto;
