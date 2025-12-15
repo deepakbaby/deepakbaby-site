@@ -6,7 +6,7 @@ tags: []
 categories: []
 ---
 
-This post is a summary of some of the main hurdles I encountered in implementing a VAE on a custom dataset and the tricks I used to solve them. The keras code snippets are also provided. Understanding VAEs and its basic implementation in Keras can be found in the [previous post](https://deepakbaby.github.io/post/vae-keras/).
+This post is a summary of some of the main hurdles I encountered in implementing a VAE on a custom dataset and the tricks I used to solve them. The keras code snippets are also provided. Understanding VAEs and its basic implementation in Keras can be found in the [previous post]({{< ref "/posts/vae-keras" >}}).
 
 ## Posterior collapse in VAEs
 The Goal of VAE is to train a generative model $\mathbb{P}(\mathbf{X}, z)$ to maximize the marginal likelihood $\mathbb{\mathbf{X}}$ of the dataset. The cost function used in training a VAE is comprised of a reconstruction loss and a KL loss as given below.

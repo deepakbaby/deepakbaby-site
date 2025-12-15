@@ -110,7 +110,7 @@ This is mostly a copy of the example provided in [Keras VAE example](https://ker
 
 **Even though the example below works really well, in practice, we will need to somehow adjust the reconstruction loss and the KL loss. The insights I gained and the tricks I used to overcome the issues will be described in the upcoming post.**
 
-[Implementing Variational Autoencoders: Some insights and tricks](https://deepakbaby.github.io/post/vae-insights/)
+[Implementing Variational Autoencoders: Some insights and tricks]({{< ref "/posts/vae-insights" >}})
 
 ```python
 from keras.layers import Lambda, Input, Dense
