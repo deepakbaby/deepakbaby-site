@@ -1,7 +1,7 @@
 window.addEventListener('DOMContentLoaded', () => {
   // =========== Add anchor to the headers ================
   function addAnchor (element) {
-    element.innerHTML = `<a href="#${element.id}" class="header-anchor">${element.innerHTML}<sup><i class="fas fa-link fa-sm"></i></sup></a>`
+    element.innerHTML = `<a href="#${element.id}" class="header-anchor">${element.innerHTML}</a>`
   }
 
   const postContent = document.getElementById('post-content')

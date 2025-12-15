@@ -36,22 +36,6 @@ a.header-anchor {
   text-decoration: none;
   color: get-light-color('heading-color');
 
-  i,
-  svg {
-    font-size: 10pt;
-    color: get-light-color('text-color');
-    display: none;
-    margin-left: 0.5rem;
-  }
-
-  &:hover {
-
-    i,
-    svg {
-      display: inline-block;
-    }
-  }
-
   code {
     color: get-light-color('inline-code-color');
   }
@@ -84,11 +68,6 @@ html[data-theme='dark'] {
 
   a.header-anchor {
     color: get-dark-color('heading-color');
-
-    i,
-    svg {
-      color: get-dark-color('text-color');
-    }
 
     code {
       color: get-dark-color('inline-code-color');
