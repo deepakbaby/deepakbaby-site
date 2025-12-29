@@ -1,6 +1,11 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./themes/modern-slide/layouts/**/*.html", "./content/**/*.md"],
+  content: [
+    "./layouts/**/*.html",
+    "./content/**/*.{md,html}",
+    "./data/**/*.{yaml,yml,json}",
+    "./assets/scripts/**/*.js"
+  ],
   theme: {
     extend: {
       fontFamily: {

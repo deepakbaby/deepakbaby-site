@@ -194,10 +194,13 @@ namespaced by their corresponding feature.
 {{ end }}
 
 {{
-  return dict 
-    "defines" $defines 
-    "params" $params 
+  return dict
+    "defines" $defines
+    "params" $params
     "minify" true
     "sourceMap" (cond hugo.IsProduction "" "inline")
     "inject" "scripts/process-shim.js"
+    "target" "es2018"
+    "format" "esm"
+    "treeShaking" true
 }}

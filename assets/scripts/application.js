@@ -1,6 +1,6 @@
 import 'popper.js'
 import 'bootstrap'
-import '@fortawesome/fontawesome-free/js/all'
+// Font Awesome CSS loaded via <head> instead of JS for better performance
 import feather from 'feather-icons'
 
 import './core'

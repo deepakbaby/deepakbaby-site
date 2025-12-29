@@ -58,6 +58,24 @@ outputs:
 # Enable global emoji support
 enableEmoji: true
 
+# Build optimizations
+build:
+  writeStats: true
+  useResourceCacheWhen: always
+
+# Asset optimization
+minify:
+  minifyOutput: true
+  tdewolff:
+    html:
+      keepWhitespace: false
+    css:
+      keepCSS2: false
+      precision: 2
+    js:
+      keepVarNames: false
+      precision: 2
+
 # Site parameters
 params:
   # Background image of the landing page - DISABLED
