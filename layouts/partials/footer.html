@@ -35,7 +35,14 @@
                 {{ range sort site.Data.en.sections "section.weight" }}
                 {{ if and .section.enable .section.showOnNavbar }}
                 {{ $sectionID := .section.id }}
-                <a href="/#{{ $sectionID }}">{{ .section.name }}</a>
+                {{ $sectionName := .section.name }}
+                {{ if eq $sectionID "posts" }}
+                <a href="/posts/">{{ $sectionName }}</a>
+                {{ else if eq $sectionID "publications" }}
+                <a href="/publications/">{{ $sectionName }}</a>
+                {{ else }}
+                <a href="/#{{ $sectionID }}">{{ $sectionName }}</a>
+                {{ end }}
                 {{ end }}
                 {{ end }}
             </div>

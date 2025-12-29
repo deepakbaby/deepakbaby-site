@@ -12,9 +12,17 @@
   <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
   <link rel="dns-prefetch" href="https://www.googletagmanager.com">
 
-  <!------ ASYNC FONT LOADING - NON-BLOCKING -------->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"></noscript>
+  <!------ PWA MANIFEST -------->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0f172a">
+
+  <!------ RESOURCE PRELOADING FOR CRITICAL ASSETS -------->
+  <link rel="preload" as="script" href="/js/collapsible-sidebars.js">
+
+  <!------ ASYNC FONT LOADING - NON-BLOCKING (Optimized: reduced to 3 weights) -------->
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"></noscript>
 
   <!------ ADD COMMON HEADERS -------->
   <style>
@@ -72,10 +80,12 @@
   <!------ ADD PAGE SPECIFIC HEADERS ------->
   {{ block "header" . }} {{ end }}
 
-  <!------ ADD CUSTOM CSS FOR COLLAPSIBLE SIDEBARS ------->
-  <link rel="stylesheet" href="/css/collapsible-sidebars.css">
-  <!------ ADD CUSTOM CSS FOR COMMENTS ------->
-  <link rel="stylesheet" href="/css/comments.css">
+  <!------ ADD CUSTOM CSS FOR COLLAPSIBLE SIDEBARS (Async Loading) ------->
+  <link rel="stylesheet" href="/css/collapsible-sidebars.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="/css/collapsible-sidebars.css"></noscript>
+  <!------ ADD CUSTOM CSS FOR COMMENTS (Async Loading) ------->
+  <link rel="stylesheet" href="/css/comments.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="/css/comments.css"></noscript>
 
   <!--================= add analytics if enabled =========================-->
   {{- partial "analytics.html" . -}}
@@ -117,6 +127,21 @@
 
   <!------ IF WANTED, ADD SUPPORT LINKS -------->
   {{- partial "misc/support.html" . -}}
+
+  <!------ SERVICE WORKER REGISTRATION -------->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js')
+          .then(function(registration) {
+            console.log('Service Worker registered with scope:', registration.scope);
+          })
+          .catch(function(error) {
+            console.log('Service Worker registration failed:', error);
+          });
+      });
+    }
+  </script>
 
 </body>
 
