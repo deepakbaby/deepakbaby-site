@@ -37,10 +37,17 @@
                                 {{ $logoImage:= resources.Get .institution.logo}}
                                 {{ $darkLogoImage:= resources.Get .institution.darkLogo}}
                                 {{ if $logoImage }}
-                                <div class="edu-logo-col"> 
-                                    <img class="institution-logo light-logo" src="{{ $logoImage.RelPermalink }}" alt="{{ .institution.name }}" />
+                                {{/* Resize and convert to WebP for better performance. Skip SVG files */}}
+                                {{ if ne $logoImage.MediaType.SubType "svg" }}
+                                  {{ $logoImage = $logoImage.Resize "96x webp q85" }}
+                                {{ end }}
+                                {{ if and $darkLogoImage (ne $darkLogoImage.MediaType.SubType "svg") }}
+                                  {{ $darkLogoImage = $darkLogoImage.Resize "96x webp q85" }}
+                                {{ end }}
+                                <div class="edu-logo-col">
+                                    <img class="institution-logo light-logo" src="{{ $logoImage.RelPermalink }}" alt="{{ .institution.name }}" width="48" height="48" loading="lazy" />
                                     {{ if $darkLogoImage }}
-                                    <img class="institution-logo dark-logo" src="{{ $darkLogoImage.RelPermalink }}" alt="{{ .institution.name }}" />
+                                    <img class="institution-logo dark-logo" src="{{ $darkLogoImage.RelPermalink }}" alt="{{ .institution.name }}" width="48" height="48" loading="lazy" />
                                     {{ end }}
                                 </div>
                                 {{ end }}

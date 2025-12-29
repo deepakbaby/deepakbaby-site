@@ -26,11 +26,11 @@
   {{ $darkLogo = site.Params.logo.dark }}
 {{ end }}
 
-{{/* resize the logos. don't resize svg because it is not supported */}}
+{{/* resize the logos and convert to WebP. don't resize svg/gif because it is not supported */}}
 {{ if $mainLogo }}
   {{ $mainLogo = resources.Get $mainLogo}}
   {{ if and $mainLogo (not (or (eq $mainLogo.MediaType.SubType "svg") (eq $mainLogo.MediaType.SubType "gif"))) }}
-    {{ $mainLogo = $mainLogo.Resize "42x" }}
+    {{ $mainLogo = $mainLogo.Resize "84x webp q85" }}
   {{ end }}
   {{ $mainLogo = $mainLogo.RelPermalink}}
 {{ end }}
@@ -38,7 +38,7 @@
 {{ if $invertedLogo }}
   {{ $invertedLogo = resources.Get $invertedLogo}}
   {{ if and $invertedLogo (not (or (eq $invertedLogo.MediaType.SubType "svg") (eq $invertedLogo.MediaType.SubType "gif"))) }}
-    {{ $invertedLogo = $invertedLogo.Resize "42x" }}
+    {{ $invertedLogo = $invertedLogo.Resize "84x webp q85" }}
   {{ end }}
   {{ $invertedLogo = $invertedLogo.RelPermalink}}
 {{ end }}
@@ -46,7 +46,7 @@
 {{ if $darkLogo }}
   {{ $darkLogo = resources.Get $darkLogo}}
   {{ if and $darkLogo (not (or (eq $darkLogo.MediaType.SubType "svg") (eq $darkLogo.MediaType.SubType "gif"))) }}
-    {{ $darkLogo = $darkLogo.Resize "42x" }}
+    {{ $darkLogo = $darkLogo.Resize "84x webp q85" }}
   {{ end }}
   {{ $darkLogo = $darkLogo.RelPermalink}}
 {{ end }}

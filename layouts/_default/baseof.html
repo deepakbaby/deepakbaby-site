@@ -3,6 +3,13 @@
 
 <head>
   <title>{{ .Page.Title }}</title>
+
+  <!------ PRECONNECT TO THIRD-PARTY ORIGINS FOR BETTER PERFORMANCE -------->
+  <link rel="preconnect" href="https://www.google-analytics.com" crossorigin>
+  <link rel="dns-prefetch" href="https://www.google-analytics.com">
+  <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
+  <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+
   <!------ ADD COMMON HEADERS -------->
   <style>
     /* Global Theme CSS Variables */
@@ -100,7 +107,7 @@
   {{ block "scripts" . }} {{ end }}
 
   <!------ ADD CUSTOM JS FOR COLLAPSIBLE SIDEBARS -------->
-  <script src="/js/collapsible-sidebars.js"></script>
+  <script src="/js/collapsible-sidebars.js" defer></script>
 
   <!------ IF WANTED, ADD SUPPORT LINKS -------->
   {{- partial "misc/support.html" . -}}
