@@ -61,7 +61,7 @@ enableEmoji: true
 # Build optimizations
 build:
   writeStats: true
-  useResourceCacheWhen: always
+  useResourceCacheWhen: fallback
 
 # Asset optimization
 minify:
