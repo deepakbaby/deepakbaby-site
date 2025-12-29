@@ -21,8 +21,8 @@
         <a href="#hero" class="navbar-brand">
             {{ $favicon := resources.Get "images/site/favicon.png" }}
             {{ if $favicon }}
-            {{ $favicon = $favicon.Resize "56x webp q85" }}
-            <img src="{{ $favicon.RelPermalink }}" alt="" class="navbar-favicon" width="28" height="28">
+            {{ $favicon = $favicon.Resize "56x webp q75" }}
+            <img src="{{ $favicon.RelPermalink }}" alt="" class="navbar-favicon" width="28" height="28" loading="lazy">
             {{ end }}
             {{ $author.name | default site.Title }}
         </a>
@@ -79,8 +79,8 @@
             <div class="profile-float">
                 {{ $img := resources.Get $author.image }}
                 {{ if $img }}
-                    {{ $processed := $img.Resize "400x webp q85" }}
-                    <img src="{{ $processed.RelPermalink }}" alt="{{ $author.name }}" class="profile-photo" width="200" height="300">
+                    {{ $processed := $img.Resize "400x webp q75" }}
+                    <img src="{{ $processed.RelPermalink }}" alt="{{ $author.name }}" class="profile-photo" width="200" height="300" loading="eager" fetchpriority="high">
                 {{ else }}
                     <img src="{{ $author.image | relURL }}" alt="{{ $author.name }}" class="profile-photo" width="200" height="300">
                 {{ end }}
@@ -123,9 +123,6 @@
 </section>
 
 <style>
-    /* Import Inter font */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
-
     /* Fixed Theme Toggle - Always top right */
     .theme-toggle-fixed {
         position: fixed;

@@ -12,7 +12,7 @@
   {{/* resize the favicon and convert to webp. don't resize svg because it is not supported */}}
   {{ $favicon = resources.Get $favicon }}
   {{ if and $favicon (ne $favicon.MediaType.SubType "svg") }}
-    {{ $favicon = $favicon.Resize "84x webp q85" }}
+    {{ $favicon = $favicon.Resize "64x webp q75" }}
   {{ end }}
   {{ $favicon = $favicon.RelPermalink}}
 
