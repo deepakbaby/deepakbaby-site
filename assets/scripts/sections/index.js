@@ -1,8 +1,2 @@
-import './navbar'
-import './sidebar'
-
-import './education'
-import './achievements'
-import './projects'
-import './skills'
-import './publications'
+// Sections are now loaded dynamically via application.js
+// This file is kept empty to prevent bundling all sections into main bundle

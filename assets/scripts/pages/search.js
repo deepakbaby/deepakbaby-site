@@ -1,28 +1,6 @@
-import Fuse from 'fuse.js'
-import Mark from 'mark.js'
-
+// Lightweight native search - no Fuse.js needed
 window.addEventListener('DOMContentLoaded', () => {
   const summaryInclude = 60
-
-  const fuseOptions = {
-    shouldSort: true,
-    includeMatches: true,
-    threshold: 0.1,
-    tokenize: true,
-    location: 0,
-    distance: 100,
-    maxPatternLength: 32,
-    minMatchCharLength: 1,
-    keys: [
-      { name: 'title', weight: 0.8 },
-      { name: 'hero', weight: 0.7 },
-      { name: 'summary', weight: 0.6 },
-      { name: 'date', weight: 0.5 },
-      { name: 'contents', weight: 0.5 },
-      { name: 'tags', weight: 0.3 },
-      { name: 'categories', weight: 0.3 }
-    ]
-  }
 
   const searchQuery = param('keyword')
   if (searchQuery) {
@@ -38,13 +16,11 @@ window.addEventListener('DOMContentLoaded', () => {
     const url = window.location.href.split('/search/')[0] + '/index.json'
 
     fetch(url).then(response => response.json()).then(function (data) {
-      const pages = data
-      const fuse = new Fuse(pages, fuseOptions)
-      const results = fuse.search(searchQuery)
+      const results = simpleSearch(data, searchQuery)
 
       document.getElementById('search-box').value = searchQuery
       if (results.length > 0) {
-        populateResults(results)
+        populateResults(results, searchQuery)
       } else {
         const node = document.createElement('p')
         node.textContent = 'No matches found'
@@ -53,37 +29,79 @@ window.addEventListener('DOMContentLoaded', () => {
     })
   }
 
-  function populateResults (results) {
-    results.forEach(function (value, key) {
-      const contents = value.item.contents
-      let snippet = ''
-      const snippetHighlights = []
-      if (fuseOptions.tokenize) {
-        snippetHighlights.push(searchQuery)
-      } else {
-        value.matches.forEach(function (mvalue) {
-          if (mvalue.key === 'tags' || mvalue.key === 'categories') {
-            snippetHighlights.push(mvalue.value)
-          } else if (mvalue.key === 'contents') {
-            const start = mvalue.indices[0][0] - summaryInclude > 0 ? mvalue.indices[0][0] - summaryInclude : 0
-            const end = mvalue.indices[0][1] + summaryInclude < contents.length ? mvalue.indices[0][1] + summaryInclude : contents.length
-            snippet += contents.substring(start, end)
-            snippetHighlights.push(mvalue.value.substring(mvalue.indices[0][0], mvalue.indices[0][1] - mvalue.indices[0][0] + 1))
-          }
-        })
+  // Simple native search without Fuse.js
+  function simpleSearch(pages, query) {
+    const lowerQuery = query.toLowerCase()
+    const results = []
+
+    pages.forEach(page => {
+      let score = 0
+      const matches = []
+
+      // Search in title (highest weight)
+      if (page.title && page.title.toLowerCase().includes(lowerQuery)) {
+        score += 10
+        matches.push({ key: 'title', value: page.title })
       }
 
-      if (snippet.length < 1) {
-        snippet += contents.substring(0, summaryInclude * 2)
+      // Search in summary
+      if (page.summary && page.summary.toLowerCase().includes(lowerQuery)) {
+        score += 5
+        matches.push({ key: 'summary', value: page.summary })
       }
-      // pull template from hugo template definition
+
+      // Search in content
+      if (page.contents && page.contents.toLowerCase().includes(lowerQuery)) {
+        score += 3
+        matches.push({ key: 'contents', value: page.contents })
+      }
+
+      // Search in tags
+      if (page.tags && page.tags.some(tag => tag.toLowerCase().includes(lowerQuery))) {
+        score += 2
+        matches.push({ key: 'tags', value: page.tags.join(', ') })
+      }
+
+      if (score > 0) {
+        results.push({ item: page, score, matches })
+      }
+    })
+
+    // Sort by score
+    return results.sort((a, b) => b.score - a.score)
+  }
+
+  function populateResults (results, searchQuery) {
+    const searchResultsEl = document.getElementById('search-results')
+
+    results.forEach(function (value, key) {
+      const contents = value.item.contents || ''
+      let snippet = ''
+
+      // Find snippet containing search term
+      const lowerContents = contents.toLowerCase()
+      const lowerQuery = searchQuery.toLowerCase()
+      const index = lowerContents.indexOf(lowerQuery)
+
+      if (index !== -1) {
+        const start = Math.max(0, index - summaryInclude)
+        const end = Math.min(contents.length, index + searchQuery.length + summaryInclude)
+        snippet = (start > 0 ? '...' : '') + contents.substring(start, end) + (end < contents.length ? '...' : '')
+      } else {
+        snippet = contents.substring(0, summaryInclude * 2)
+      }
+
+      // Get template
       const templateDefinition = document.getElementById('search-result-template').innerHTML
-      // replace values
+
+      // Format tags
       function adaptTags() {
-        const tags = value.item.tags;
-        let string = '';
-        if (tags) tags.forEach((t) => {string += '<li class="rounded"><a href="/tags/' + t.toLowerCase() + '/" class="btn btn-sm btn-info">' + t + "</a></li>"});
-        return string;
+        const tags = value.item.tags
+        let string = ''
+        if (tags) tags.forEach((t) => {
+          string += '<li class="rounded"><a href="/tags/' + t.toLowerCase() + '/" class="btn btn-sm btn-info">' + t + "</a></li>"
+        })
+        return string
       }
 
       const output = render(templateDefinition, {
@@ -99,13 +117,14 @@ window.addEventListener('DOMContentLoaded', () => {
       })
 
       const dom = new DOMParser().parseFromString(output, 'text/html')
-      document.getElementById('search-results').append(dom.getElementsByClassName('post-card')[0])
+      searchResultsEl.append(dom.getElementsByClassName('post-card')[0])
 
-      snippetHighlights.forEach(function (snipvalue) {
-        const context = document.getElementById('#summary-' + key)
-        const instance = new Mark(context)
-        instance.mark(snipvalue)
-      })
+      // Simple highlight without Mark.js
+      const summaryEl = document.getElementById('summary-' + key)
+      if (summaryEl) {
+        const regex = new RegExp('(' + searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi')
+        summaryEl.innerHTML = summaryEl.innerHTML.replace(regex, '<mark>$1</mark>')
+      }
     })
   }
 
@@ -116,19 +135,15 @@ window.addEventListener('DOMContentLoaded', () => {
   function render (templateString, data) {
     let conditionalMatches, copy
     const conditionalPattern = /\$\{\s*isset ([a-zA-Z]*) \s*\}(.*)\$\{\s*end\s*}/g
-    // since loop below depends on re.lastInxdex, we use a copy to capture any manipulations whilst inside the loop
     copy = templateString
     while ((conditionalMatches = conditionalPattern.exec(templateString)) !== null) {
       if (data[conditionalMatches[1]]) {
-        // valid key, remove conditionals, leave contents.
         copy = copy.replace(conditionalMatches[0], conditionalMatches[2])
       } else {
-        // not valid, remove entire section
         copy = copy.replace(conditionalMatches[0], '')
       }
     }
     templateString = copy
-    // now any conditionals removed we can do simple substitution
     let key, find, re
     for (key in data) {
       find = '\\$\\{\\s*' + key + '\\s*\\}'
