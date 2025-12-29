@@ -25,10 +25,17 @@
                     <!-- Company Header -->
                     <div class="card-header">
                         {{ if $exp.company.logo }}
+                        {{ $logoImage := resources.Get $exp.company.logo }}
+                        {{ if $logoImage }}
+                        {{/* Resize and convert to WebP for better performance. Skip SVG files */}}
+                        {{ if ne $logoImage.MediaType.SubType "svg" }}
+                          {{ $logoImage = $logoImage.Resize "96x webp q85" }}
+                        {{ end }}
                         <div class="company-logo-wrapper">
-                            <img src="{{ $exp.company.logo | relURL }}" alt="{{ $exp.company.name }}"
+                            <img src="{{ $logoImage.RelPermalink }}" alt="{{ $exp.company.name }}"
                                 class="company-logo" width="48" height="48" loading="lazy">
                         </div>
+                        {{ end }}
                         {{ end }}
                         <div class="company-info">
                             <h3 class="company-name">
