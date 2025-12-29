@@ -18,13 +18,13 @@
         <!-- CoverFlow Carousel -->
         <div class="coverflow-wrapper">
             <!-- Navigation -->
-            <button class="coverflow-nav coverflow-prev" id="cfPrev">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button class="coverflow-nav coverflow-prev" id="cfPrev" aria-label="Previous blog post">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
             </button>
-            <button class="coverflow-nav coverflow-next" id="cfNext">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button class="coverflow-nav coverflow-next" id="cfNext" aria-label="Next blog post">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
             </button>
@@ -97,7 +97,7 @@
         <!-- Dots -->
         <div class="coverflow-dots" id="cfDots">
             {{ range $index, $post := first 5 $posts }}
-            <button class="coverflow-dot" data-index="{{ $index }}"></button>
+            <button class="coverflow-dot" data-index="{{ $index }}" aria-label="Go to blog post {{ add $index 1 }} - {{ $post.Title }}"></button>
             {{ end }}
         </div>
     </div>
@@ -322,7 +322,7 @@
     .coverflow-date {
         font-size: 0.75rem;
         font-family: ui-monospace, monospace;
-        color: #3b82f6;
+        color: #60a5fa;
         display: block;
         margin-bottom: 0.5rem;
     }
