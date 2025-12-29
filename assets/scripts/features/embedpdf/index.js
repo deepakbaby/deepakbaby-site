@@ -159,7 +159,11 @@ class PDFViewer {
   }
 }
 
-insertScript('pdfjs', PDFJS_BUNDLE, () => {
-  window.pdfjsLib.GlobalWorkerOptions.workerSrc = WORKER_BUNDLE
-  Array.from(document.getElementsByClassName('pdf-viewer')).forEach(el => new PDFViewer(el))
-})
+// Only load PDF.js if there are PDF viewers on the page
+const pdfViewers = document.getElementsByClassName('pdf-viewer')
+if (pdfViewers.length > 0) {
+  insertScript('pdfjs', PDFJS_BUNDLE, () => {
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = WORKER_BUNDLE
+    Array.from(pdfViewers).forEach(el => new PDFViewer(el))
+  })
+}

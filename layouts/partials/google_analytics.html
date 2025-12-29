@@ -1,22 +1,40 @@
 {{- with . -}}
 {{- if .id }}
-<!-- Google Analytics (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id={{ .id }}"></script>
+<!-- Google Analytics (gtag.js) - Delayed for better performance -->
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-  {{- if .respectDoNotTrack }}
-  // Respect Do Not Track setting
-  if (navigator.doNotTrack === '1') {
-    window['ga-disable-{{ .id }}'] = true;
-    console.log('Google Analytics disabled due to Do Not Track setting');
-  } else {
-    gtag('config', '{{ .id }}');
+
+  // Load Google Analytics after page interactive
+  function loadGA() {
+    {{- if .respectDoNotTrack }}
+    // Respect Do Not Track setting
+    if (navigator.doNotTrack === '1') {
+      window['ga-disable-{{ .id }}'] = true;
+      console.log('Google Analytics disabled due to Do Not Track setting');
+      return;
+    }
+    {{- end }}
+
+    // Create and inject the GA script
+    var script = document.createElement('script');
+    script.src = 'https://www.googletagmanager.com/gtag/js?id={{ .id }}';
+    script.async = true;
+    script.onload = function() {
+      gtag('config', '{{ .id }}');
+    };
+    document.head.appendChild(script);
   }
-  {{- else }}
-  gtag('config', '{{ .id }}');
-  {{- end }}
+
+  // Delay GA loading until page is interactive
+  if (document.readyState === 'complete') {
+    setTimeout(loadGA, 1000);
+  } else {
+    window.addEventListener('load', function() {
+      setTimeout(loadGA, 1000);
+    });
+  }
 </script>
 {{- end -}}
 {{- end -}}
