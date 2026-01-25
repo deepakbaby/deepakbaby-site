@@ -1,5 +1,5 @@
 [build]
-command = "cat package.json && hugo mod npm pack && cat package.json && npm install && hugo --gc --minify"
+command = "npm install && hugo --gc --minify"
 publish = "public"
 
 [context.production.environment]
