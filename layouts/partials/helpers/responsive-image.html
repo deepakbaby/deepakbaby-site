@@ -1,0 +1,70 @@
+{{/*
+  Responsive Image Partial with AVIF/WebP Support
+
+  Usage: {{ partial "helpers/responsive-image.html" (dict "image" $img "alt" "desc" "sizes" "100vw") }}
+
+  Parameters:
+  - image: The Hugo image resource
+  - alt: Alt text for the image (default: "")
+  - sizes: Responsive sizes attribute (default: "(min-width: 1200px) 1200px, 100vw")
+  - class: CSS class to apply to the img element (default: "")
+  - loading: Loading strategy - "lazy" or "eager" (default: "lazy")
+  - fetchpriority: Fetch priority - "high", "low", or "auto" (default: "auto")
+*/}}
+
+{{ $img := .image }}
+{{ $alt := .alt | default "" }}
+{{ $sizes := .sizes | default "(min-width: 1200px) 1200px, 100vw" }}
+{{ $class := .class | default "" }}
+{{ $loading := .loading | default "lazy" }}
+{{ $fetchpriority := .fetchpriority | default "auto" }}
+
+{{ if $img }}
+  {{/* Check if image is processable (not SVG or GIF) */}}
+  {{ $isProcessable := and $img (ne $img.MediaType.SubType "svg") (ne $img.MediaType.SubType "gif") }}
+
+  {{ if $isProcessable }}
+    {{/* Generate WebP variants */}}
+    {{ $sm := $img.Resize "480x webp q80" }}
+    {{ $md := $img.Resize "800x webp q80" }}
+    {{ $lg := $img.Resize "1200x webp q75" }}
+
+    {{/* Generate AVIF variants */}}
+    {{ $smAvif := $img.Resize "480x avif q70" }}
+    {{ $mdAvif := $img.Resize "800x avif q70" }}
+    {{ $lgAvif := $img.Resize "1200x avif q65" }}
+
+    <picture>
+      {{/* AVIF source (best compression, smaller files) */}}
+      <source
+        type="image/avif"
+        srcset="{{ $smAvif.RelPermalink }} 480w, {{ $mdAvif.RelPermalink }} 800w, {{ $lgAvif.RelPermalink }} 1200w"
+        sizes="{{ $sizes }}">
+
+      {{/* WebP source (good compression, wide support) */}}
+      <source
+        type="image/webp"
+        srcset="{{ $sm.RelPermalink }} 480w, {{ $md.RelPermalink }} 800w, {{ $lg.RelPermalink }} 1200w"
+        sizes="{{ $sizes }}">
+
+      {{/* Fallback img element */}}
+      <img
+        src="{{ $md.RelPermalink }}"
+        alt="{{ $alt }}"
+        {{ with $class }}class="{{ . }}"{{ end }}
+        loading="{{ $loading }}"
+        {{ if eq $fetchpriority "high" }}fetchpriority="high"{{ end }}
+        decoding="async"
+        width="{{ $md.Width }}"
+        height="{{ $md.Height }}">
+    </picture>
+  {{ else }}
+    {{/* For SVG/GIF, just render the image directly */}}
+    <img
+      src="{{ $img.RelPermalink }}"
+      alt="{{ $alt }}"
+      {{ with $class }}class="{{ . }}"{{ end }}
+      loading="{{ $loading }}"
+      {{ if eq $fetchpriority "high" }}fetchpriority="high"{{ end }}>
+  {{ end }}
+{{ end }}

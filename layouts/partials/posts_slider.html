@@ -61,17 +61,14 @@
                                     {{ end }}
                                 {{ end }}
 
-                                {{/* Convert to WebP if we have a resource (skip SVG) */}}
+                                {{/* Use responsive image partial if we have a resource */}}
                                 {{ if $heroResource }}
                                     {{ if eq $heroResource.MediaType.SubType "svg" }}
-                                        {{ $heroImage = $heroResource.RelPermalink }}
+                                        <img src="{{ $heroResource.RelPermalink }}" alt="{{ $post.Title }}" loading="lazy">
                                     {{ else }}
-                                        {{ $processed := $heroResource.Resize "800x webp q85" }}
-                                        {{ $heroImage = $processed.RelPermalink }}
+                                        {{ partial "helpers/responsive-image.html" (dict "image" $heroResource "alt" $post.Title "sizes" "(max-width: 600px) 260px, (max-width: 900px) 280px, 320px") }}
                                     {{ end }}
-                                {{ end }}
-
-                                {{ if $heroImage }}
+                                {{ else if $heroImage }}
                                 <img src="{{ $heroImage }}" alt="{{ $post.Title }}" loading="lazy" width="800" height="450">
                                 {{ else }}
                                 <div class="coverflow-placeholder">

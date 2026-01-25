@@ -79,8 +79,7 @@
             <div class="profile-float">
                 {{ $img := resources.Get $author.image }}
                 {{ if $img }}
-                    {{ $processed := $img.Resize "400x webp q75" }}
-                    <img src="{{ $processed.RelPermalink }}" alt="{{ $author.name }}" class="profile-photo" width="200" height="300" loading="eager" fetchpriority="high">
+                    {{ partial "helpers/responsive-image.html" (dict "image" $img "alt" $author.name "class" "profile-photo" "loading" "eager" "fetchpriority" "high" "sizes" "(max-width: 768px) 150px, 200px") }}
                 {{ else }}
                     <img src="{{ $author.image | relURL }}" alt="{{ $author.name }}" class="profile-photo" width="200" height="300">
                 {{ end }}
