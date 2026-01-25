@@ -1,21 +1,8 @@
-// loading bootstrap - selective imports for optimized bundle size
-// Bootstrap core (required)
-@import 'bootstrap/scss/functions';
-@import 'bootstrap/scss/variables';
-@import 'bootstrap/scss/maps';
-@import 'bootstrap/scss/mixins';
+// loading bootstrap
+// TODO: Investigate selective Bootstrap imports for Netlify compatibility
+@import 'node_modules/bootstrap/scss/bootstrap';
 
-// Only needed components
-@import 'bootstrap/scss/root';
-@import 'bootstrap/scss/reboot';
-@import 'bootstrap/scss/grid';
-@import 'bootstrap/scss/containers';
-@import 'bootstrap/scss/utilities';
-@import 'bootstrap/scss/utilities/api';
-@import 'bootstrap/scss/helpers';
-@import 'bootstrap/scss/transitions';
-
-@import 'include-media/dist/_include-media';
+@import 'node_modules/include-media/dist/_include-media';
 
 // Font: Using Inter loaded via Google Fonts in baseof.html (optimized - no npm dependency)
 
