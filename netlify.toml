@@ -1,5 +1,5 @@
 [build]
-command = "hugo mod tidy && hugo mod npm pack && npm install && hugo --gc --minify"
+command = "npm install && ls -la node_modules/bootstrap/scss/ && hugo --gc --minify"
 publish = "public"
 
 [context.production.environment]
