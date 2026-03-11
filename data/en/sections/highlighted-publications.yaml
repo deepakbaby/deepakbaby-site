@@ -3,7 +3,7 @@ section:
   id: publications
   template: sections/highlighted-publications.html
   enable: true
-  weight: 5
+  weight: 50
   showOnNavbar: true
   moreText: "View all publications"
   moreUrl: "/publications/"

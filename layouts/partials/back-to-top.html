@@ -1,0 +1,93 @@
+<!-- Back to Top Button -->
+<button id="back-to-top" class="back-to-top" aria-label="Back to top">
+    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+    </svg>
+</button>
+
+<style>
+    .back-to-top {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: rgba(15, 23, 42, 0.8);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(20px);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+
+    .back-to-top.visible {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    .back-to-top:hover {
+        background: #3b82f6;
+        border-color: #3b82f6;
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.4);
+    }
+
+    [data-theme="light"] .back-to-top {
+        background: rgba(255, 255, 255, 0.8);
+        border-color: rgba(0, 0, 0, 0.08);
+        color: #1e293b;
+    }
+
+    [data-theme="light"] .back-to-top:hover {
+        background: #3b82f6;
+        color: white;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .back-to-top {
+            transition: none;
+            animation: none;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .back-to-top {
+            bottom: 1.5rem;
+            right: 1.5rem;
+            width: 44px;
+            height: 44px;
+        }
+    }
+</style>
+
+<script>
+    (function () {
+        const backToTop = document.getElementById('back-to-top');
+        if (!backToTop) return;
+
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 400) {
+                backToTop.classList.add('visible');
+            } else {
+                backToTop.classList.remove('visible');
+            }
+        });
+
+        backToTop.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    })();
+</script>

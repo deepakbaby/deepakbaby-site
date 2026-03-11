@@ -3,5 +3,5 @@ section:
   name: Newsletter
   id: newsletter
   enable: true
-  weight: 5
+  weight: 40
   showOnNavbar: true
