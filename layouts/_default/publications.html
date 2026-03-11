@@ -19,8 +19,7 @@
       class="btn btn-profile btn-scopus">
       <i class="fas fa-graduation-cap me-1"></i> Scopus
     </a>
-    <a href="https://orcid.org/0000-0001-8935-9068" target="_blank" rel="noopener"
-      class="btn btn-profile btn-orcid">
+    <a href="https://orcid.org/0000-0001-8935-9068" target="_blank" rel="noopener" class="btn btn-profile btn-orcid">
       <i class="fab fa-orcid me-1"></i> ORCID
     </a>
   </div>
@@ -28,6 +27,7 @@
   <div class="container">
     {{ .Content }}
   </div>
+  {{ partial "back-to-top.html" . }}
 </div>
 
 <style>
@@ -185,7 +185,7 @@
     .profile-links {
       gap: 0.5rem;
     }
-    
+
     .btn-profile {
       padding: 0.4rem 0.8rem;
       font-size: 0.85rem;

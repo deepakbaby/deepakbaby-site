@@ -57,14 +57,16 @@
 
                 <div class="post-date-time">
                     <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     <span>{{ .Page.Date | time.Format ":date_full" }}</span>
 
                     {{ if site.Params.features.readingTime }}
                     <span class="meta-separator">•</span>
                     <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <span>{{ .ReadingTime }} min read</span>
                     {{ end }}
@@ -75,7 +77,7 @@
             {{ if .Params.tags }}
             <div class="post-tags-hero">
                 {{ range .Params.tags }}
-                <a href="{{ "/tags/" | relLangURL }}{{ . | urlize }}" class="tag-link">#{{ . }}</a>
+                <a href="{{ " /tags/" | relLangURL }}{{ . | urlize }}" class="tag-link">#{{ . }}</a>
                 {{ end }}
             </div>
             {{ end }}
@@ -98,37 +100,48 @@
                     <h4 class="share-title">Share this post</h4>
                     <div class="share-buttons">
                         {{ if site.Params.features.blog.shareButtons.facebook }}
-                        <a class="share-btn share-facebook" href="https://www.facebook.com/sharer.php?u={{ .Permalink }}" target="_blank" rel="noopener" aria-label="Share on Facebook">
+                        <a class="share-btn share-facebook"
+                            href="https://www.facebook.com/sharer.php?u={{ .Permalink }}" target="_blank" rel="noopener"
+                            aria-label="Share on Facebook">
                             <i class="fab fa-facebook-f"></i>
                         </a>
                         {{ end }}
 
                         {{ if site.Params.features.blog.shareButtons.twitter }}
-                        <a class="share-btn share-twitter" href="https://twitter.com/share?url={{ .Permalink }}&text={{ .Title }}" target="_blank" rel="noopener" aria-label="Share on Twitter">
+                        <a class="share-btn share-twitter"
+                            href="https://twitter.com/share?url={{ .Permalink }}&text={{ .Title }}" target="_blank"
+                            rel="noopener" aria-label="Share on Twitter">
                             <i class="fab fa-twitter"></i>
                         </a>
                         {{ end }}
 
                         {{ if site.Params.features.blog.shareButtons.linkedin }}
-                        <a class="share-btn share-linkedin" href="https://www.linkedin.com/shareArticle?url={{ .Permalink }}&title={{ .Title }}" target="_blank" rel="noopener" aria-label="Share on LinkedIn">
+                        <a class="share-btn share-linkedin"
+                            href="https://www.linkedin.com/shareArticle?url={{ .Permalink }}&title={{ .Title }}"
+                            target="_blank" rel="noopener" aria-label="Share on LinkedIn">
                             <i class="fab fa-linkedin-in"></i>
                         </a>
                         {{ end }}
 
                         {{ if site.Params.features.blog.shareButtons.reddit }}
-                        <a class="share-btn share-reddit" href="https://reddit.com/submit?url={{ .Permalink }}&title={{ .Title }}" target="_blank" rel="noopener" aria-label="Share on Reddit">
+                        <a class="share-btn share-reddit"
+                            href="https://reddit.com/submit?url={{ .Permalink }}&title={{ .Title }}" target="_blank"
+                            rel="noopener" aria-label="Share on Reddit">
                             <i class="fab fa-reddit-alien"></i>
                         </a>
                         {{ end }}
 
                         {{ if site.Params.features.blog.shareButtons.whatsapp }}
-                        <a class="share-btn share-whatsapp" href="https://api.whatsapp.com/send?text={{ .Title }} {{ .Permalink }}" target="_blank" rel="noopener" aria-label="Share on WhatsApp">
+                        <a class="share-btn share-whatsapp"
+                            href="https://api.whatsapp.com/send?text={{ .Title }} {{ .Permalink }}" target="_blank"
+                            rel="noopener" aria-label="Share on WhatsApp">
                             <i class="fab fa-whatsapp"></i>
                         </a>
                         {{ end }}
 
                         {{ if site.Params.features.blog.shareButtons.email }}
-                        <a class="share-btn share-email" href="mailto:?subject={{ .Title }}&body={{ .Permalink }}" aria-label="Share via Email">
+                        <a class="share-btn share-email" href="mailto:?subject={{ .Title }}&body={{ .Permalink }}"
+                            aria-label="Share via Email">
                             <i class="fas fa-envelope"></i>
                         </a>
                         {{ end }}
@@ -140,15 +153,18 @@
                 {{ if site.Params.GitRepo }}
                 <div class="improve-page-section">
                     {{ if ( eq site.Params.GitForge "gitlab" ) }}
-                    <a href="{{ site.Params.GitRepo }}/-/edit/{{ site.Params.GitBranch | default "main" }}/content/{{ .File.Path }}" class="improve-link" target="_blank" rel="noopener">
-                    {{ else if ( eq site.Params.GitForge "gitea" ) }}
-                    <a href="{{ site.Params.GitRepo }}/_edit/{{ site.Params.GitBranch | default "main" }}/content/{{ .File.Path }}" class="improve-link" target="_blank" rel="noopener">
-                    {{ else }}
-                    <a href="{{ site.Params.GitRepo }}/edit/{{ site.Params.GitBranch | default "main" }}/content/{{ .File.Path }}" class="improve-link" target="_blank" rel="noopener">
-                    {{ end }}
-                        <i class="fas fa-code-branch"></i>
-                        <span>Improve this page</span>
-                    </a>
+                    <a href="{{ site.Params.GitRepo }}/-/edit/{{ site.Params.GitBranch | default " main" }}/content/{{
+                        .File.Path }}" class="improve-link" target="_blank" rel="noopener">
+                        {{ else if ( eq site.Params.GitForge "gitea" ) }}
+                        <a href="{{ site.Params.GitRepo }}/_edit/{{ site.Params.GitBranch | default " main"
+                            }}/content/{{ .File.Path }}" class="improve-link" target="_blank" rel="noopener">
+                            {{ else }}
+                            <a href="{{ site.Params.GitRepo }}/edit/{{ site.Params.GitBranch | default " main"
+                                }}/content/{{ .File.Path }}" class="improve-link" target="_blank" rel="noopener">
+                                {{ end }}
+                                <i class="fas fa-code-branch"></i>
+                                <span>Improve this page</span>
+                            </a>
                 </div>
                 {{ end }}
 
@@ -189,7 +205,8 @@
                         Discussion
                     </h2>
                     <div class="comments-content">
-                        {{ partial "comments/disqus.html" (dict (slice "disqus" "shortName")  .Site.Config.Services.Disqus.Shortname) }}
+                        {{ partial "comments/disqus.html" (dict (slice "disqus" "shortName")
+                        .Site.Config.Services.Disqus.Shortname) }}
                     </div>
                 </div>
                 {{ end }}
@@ -197,12 +214,7 @@
         </div>
     </div>
 
-    <!-- Scroll to Top Button -->
-    <button id="scroll-to-top" class="scroll-top-btn" aria-label="Scroll to top">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 15l-6-6-6 6"/>
-        </svg>
-    </button>
+    {{ partial "back-to-top.html" . }}
 </div>
 
 <style>
@@ -259,7 +271,7 @@
         position: absolute;
         inset: 0;
         background: radial-gradient(circle at 30% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-                    radial-gradient(circle at 70% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+            radial-gradient(circle at 70% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
         z-index: 1;
     }
 
@@ -485,12 +497,29 @@
         cursor: text !important;
     }
 
-    .prose-content h1 { font-size: 2.25rem; }
-    .prose-content h2 { font-size: 1.875rem; }
-    .prose-content h3 { font-size: 1.5rem; }
-    .prose-content h4 { font-size: 1.25rem; }
-    .prose-content h5 { font-size: 1.125rem; }
-    .prose-content h6 { font-size: 1rem; }
+    .prose-content h1 {
+        font-size: 2.25rem;
+    }
+
+    .prose-content h2 {
+        font-size: 1.875rem;
+    }
+
+    .prose-content h3 {
+        font-size: 1.5rem;
+    }
+
+    .prose-content h4 {
+        font-size: 1.25rem;
+    }
+
+    .prose-content h5 {
+        font-size: 1.125rem;
+    }
+
+    .prose-content h6 {
+        font-size: 1rem;
+    }
 
     .prose-content p {
         margin-bottom: 1.5rem;
@@ -677,12 +706,41 @@
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 
-    .share-facebook:hover { background: #1877f2; border-color: #1877f2; color: #fff; }
-    .share-twitter:hover { background: #1da1f2; border-color: #1da1f2; color: #fff; }
-    .share-linkedin:hover { background: #0a66c2; border-color: #0a66c2; color: #fff; }
-    .share-reddit:hover { background: #ff4500; border-color: #ff4500; color: #fff; }
-    .share-whatsapp:hover { background: #25d366; border-color: #25d366; color: #fff; }
-    .share-email:hover { background: #6b7280; border-color: #6b7280; color: #fff; }
+    .share-facebook:hover {
+        background: #1877f2;
+        border-color: #1877f2;
+        color: #fff;
+    }
+
+    .share-twitter:hover {
+        background: #1da1f2;
+        border-color: #1da1f2;
+        color: #fff;
+    }
+
+    .share-linkedin:hover {
+        background: #0a66c2;
+        border-color: #0a66c2;
+        color: #fff;
+    }
+
+    .share-reddit:hover {
+        background: #ff4500;
+        border-color: #ff4500;
+        color: #fff;
+    }
+
+    .share-whatsapp:hover {
+        background: #25d366;
+        border-color: #25d366;
+        color: #fff;
+    }
+
+    .share-email:hover {
+        background: #6b7280;
+        border-color: #6b7280;
+        color: #fff;
+    }
 
     /* ============================================
        IMPROVE PAGE & NAVIGATION
@@ -781,60 +839,6 @@
         color: #3b82f6;
     }
 
-    /* ============================================
-       SCROLL TO TOP BUTTON
-    ============================================ */
-    .scroll-top-btn {
-        position: fixed;
-        bottom: 2rem;
-        right: 2rem;
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
-        background: var(--bg-secondary);
-        border: 1px solid var(--border-color);
-        color: var(--text-primary);
-        font-size: 1.25rem;
-        cursor: pointer;
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        z-index: 100;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-    }
-
-    .scroll-top-btn i {
-        font-size: 1.125rem;
-        font-weight: 600;
-    }
-
-    .scroll-top-btn.visible {
-        opacity: 1;
-        visibility: visible;
-    }
-
-    .scroll-top-btn:hover {
-        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-        border-color: transparent;
-        color: #fff;
-        transform: translateY(-4px);
-        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.35);
-    }
-
-    [data-theme="light"] .scroll-top-btn {
-        background: rgba(255, 255, 255, 0.9);
-        border-color: rgba(0, 0, 0, 0.08);
-        color: #1e293b;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    }
-
-    [data-theme="light"] .scroll-top-btn:hover {
-        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-        border-color: transparent;
-        color: #fff;
-    }
 
     /* ============================================
        RESPONSIVE DESIGN
@@ -870,51 +874,39 @@
             font-size: 1rem;
         }
 
-        .prose-content h1 { font-size: 1.875rem; }
-        .prose-content h2 { font-size: 1.5rem; }
-        .prose-content h3 { font-size: 1.25rem; }
-
-        .scroll-top-btn {
-            bottom: 1.5rem;
-            right: 1.5rem;
-            width: 44px;
-            height: 44px;
+        .prose-content h1 {
+            font-size: 1.875rem;
         }
+
+        .prose-content h2 {
+            font-size: 1.5rem;
+        }
+
+        .prose-content h3 {
+            font-size: 1.25rem;
+        }
+
     }
 </style>
 
 <script>
-(function() {
-    'use strict';
+    (function () {
+        'use strict';
 
-    // Scroll to top functionality
-    const scrollBtn = document.getElementById('scroll-to-top');
+        // Scroll to top functionality removed - now in partial
 
-    window.addEventListener('scroll', () => {
-        if (window.pageYOffset > 300) {
-            scrollBtn.classList.add('visible');
-        } else {
-            scrollBtn.classList.remove('visible');
-        }
-    });
-
-    scrollBtn.addEventListener('click', () => {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-    });
-
-})();
+    })();
 </script>
 {{ end }}
 
 {{ define "scripts" }}
 <!-- KaTeX Math Rendering -->
 {{ if site.Params.features.math.enable }}
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
-    onload="renderMathInElement(document.body, {
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"
+    integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8"
+    crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body, {
         delimiters: [
             {left: '$$', right: '$$', display: true},
             {left: '\\[', right: '\\]', display: true},

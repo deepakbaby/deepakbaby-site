@@ -116,12 +116,7 @@
         </div>
     </section>
 
-    <!-- Back to Top Button -->
-    <button id="nl-back-to-top" class="nl-back-to-top" aria-label="Back to top">
-        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-        </svg>
-    </button>
+    {{ partial "back-to-top.html" . }}
 </div>
 
 <style>
@@ -561,56 +556,14 @@
 
         .nl-card,
         .nl-nav-card,
-        .nl-hero-orb,
-        .nl-back-to-top {
+        .nl-back-to-top,
+        .back-to-top {
             transition: none;
             animation: none;
         }
     }
 
-    .nl-back-to-top {
-        position: fixed;
-        bottom: 2rem;
-        right: 2rem;
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        background: rgba(15, 23, 42, 0.8);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        z-index: 100;
-        opacity: 0;
-        visibility: hidden;
-        transform: translateY(20px);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-    }
-
-    .nl-back-to-top.visible {
-        opacity: 1;
-        visibility: visible;
-        transform: translateY(0);
-    }
-
-    .nl-back-to-top:hover {
-        background: #3b82f6;
-        border-color: #3b82f6;
-        transform: translateY(-5px);
-        box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.4);
-    }
-
-    [data-theme="light"] .nl-back-to-top {
-        background: rgba(255, 255, 255, 0.8);
-        border-color: rgba(0, 0, 0, 0.08);
-        color: #1e293b;
-    }
-
-    [data-theme="light"] .nl-back-to-top:hover {
+    [data-theme="light"] .nl-copy-btn:hover {
         background: #3b82f6;
         color: white;
     }
@@ -632,22 +585,6 @@
             });
         });
     });
-
-    // Back to top logic
-    const backToTop = document.getElementById('nl-back-to-top');
-    window.addEventListener('scroll', () => {
-        if (window.pageYOffset > 400) {
-            backToTop.classList.add('visible');
-        } else {
-            backToTop.classList.remove('visible');
-        }
-    });
-
-    backToTop.addEventListener('click', () => {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-    });
+    // Back to top logic removed - now in partial
 </script>
 {{ end }}
