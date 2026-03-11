@@ -1,0 +1,438 @@
+{{ define "navbar" }}
+{{ partial "navigators/modern-navbar.html" . }}
+{{ end }}
+
+{{ define "content" }}
+{{ $weekStart := time .Params.week_start }}
+{{ $weekEnd := time .Params.week_end }}
+<div class="newsletter-single">
+    <!-- Hero -->
+    <section class="nl-hero">
+        <div class="nl-hero-content">
+            <a href="/newsletter/" class="nl-back-link">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                All Issues
+            </a>
+            <div class="nl-hero-date">{{ $weekStart.Format "Jan 02" }} — {{ $weekEnd.Format "Jan 02, 2006" }}</div>
+            <h1 class="nl-hero-title">{{ .Title }}</h1>
+            {{ if .Params.highlights }}
+            <div class="nl-hero-highlights">
+                {{ range .Params.highlights }}
+                <div class="nl-highlight-item">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                    </svg>
+                    <span>{{ . }}</span>
+                </div>
+                {{ end }}
+            </div>
+            {{ end }}
+        </div>
+    </section>
+
+    <!-- News Grid by Category -->
+    <section class="nl-content">
+        <div class="nl-content-container">
+            {{ range .Params.news }}
+            <div class="nl-category-section">
+                <div class="nl-category-header" style="--cat-color: {{ .color }}">
+                    <div class="nl-category-dot"></div>
+                    <h2 class="nl-category-title">{{ .category }}</h2>
+                </div>
+                <div class="nl-cards-grid">
+                    {{ range .items }}
+                    <div class="nl-card">
+                        <h3 class="nl-card-title">
+                            {{ if .url }}<a href="{{ .url }}" target="_blank" rel="noopener">{{ .title }}</a>{{ else }}{{ .title }}{{ end }}
+                        </h3>
+                        <p class="nl-card-summary">{{ .summary }}</p>
+                        {{ if .url }}
+                        <a href="{{ .url }}" class="nl-card-link" target="_blank" rel="noopener">
+                            Read more
+                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                            </svg>
+                        </a>
+                        {{ end }}
+                    </div>
+                    {{ end }}
+                </div>
+            </div>
+            {{ end }}
+
+            {{ if .Content }}
+            <div class="nl-prose">
+                {{ .Content }}
+            </div>
+            {{ end }}
+        </div>
+    </section>
+
+    <!-- Navigation -->
+    <section class="nl-nav-section">
+        <div class="nl-nav-container">
+            {{ with .PrevInSection }}
+            <a href="{{ .RelPermalink }}" class="nl-nav-card nl-nav-prev">
+                <span class="nl-nav-label">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                    Previous Issue
+                </span>
+                <span class="nl-nav-title">{{ .Title }}</span>
+            </a>
+            {{ end }}
+            {{ with .NextInSection }}
+            <a href="{{ .RelPermalink }}" class="nl-nav-card nl-nav-next">
+                <span class="nl-nav-label">
+                    Next Issue
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </span>
+                <span class="nl-nav-title">{{ .Title }}</span>
+            </a>
+            {{ end }}
+        </div>
+    </section>
+</div>
+
+<style>
+    /* ============================================
+       RESET & WRAPPER
+    ============================================ */
+    body.type-newsletter,
+    body.type-newsletter * {
+        box-sizing: border-box;
+    }
+
+    .type-newsletter .container-fluid.wrapper,
+    .type-newsletter .wrapper,
+    .type-newsletter .content-section,
+    .type-newsletter .page-content {
+        max-width: none !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .type-newsletter .wrapper .sidebar-section,
+    .type-newsletter .toc-section {
+        display: none !important;
+    }
+
+    .newsletter-single {
+        width: 100vw;
+        max-width: 100vw;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        min-height: 100vh;
+        padding-top: 5rem;
+    }
+
+    /* ============================================
+       HERO
+    ============================================ */
+    .nl-hero {
+        padding: 3rem 2rem 3.5rem;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.06) 0%, rgba(139, 92, 246, 0.06) 100%);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    [data-theme="light"] .nl-hero {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.04) 0%, rgba(139, 92, 246, 0.04) 100%);
+        border-bottom-color: rgba(0, 0, 0, 0.06);
+    }
+
+    .nl-hero-content {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .nl-back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 500;
+        margin-bottom: 2rem;
+        transition: color 0.2s;
+    }
+
+    .nl-back-link:hover {
+        color: #3b82f6;
+    }
+
+    .nl-hero-date {
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #60a5fa;
+        margin-bottom: 0.75rem;
+    }
+
+    .nl-hero-title {
+        font-size: clamp(1.75rem, 4vw, 2.5rem);
+        font-weight: 400;
+        letter-spacing: -0.02em;
+        margin: 0 0 1.5rem;
+        color: var(--text-primary);
+        line-height: 1.2;
+    }
+
+    .nl-hero-highlights {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .nl-highlight-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    .nl-highlight-item svg {
+        color: #3b82f6;
+        flex-shrink: 0;
+    }
+
+    /* ============================================
+       CONTENT
+    ============================================ */
+    .nl-content {
+        padding: 3rem 2rem 2rem;
+    }
+
+    .nl-content-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    /* Category Section */
+    .nl-category-section {
+        margin-bottom: 3rem;
+    }
+
+    .nl-category-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    [data-theme="light"] .nl-category-header {
+        border-bottom-color: rgba(0, 0, 0, 0.06);
+    }
+
+    .nl-category-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--cat-color);
+        flex-shrink: 0;
+    }
+
+    .nl-category-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+        color: var(--text-primary);
+    }
+
+    /* News Cards */
+    .nl-cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1rem;
+    }
+
+    .nl-card {
+        padding: 1.5rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .nl-card:hover {
+        border-color: rgba(59, 130, 246, 0.25);
+        background: rgba(59, 130, 246, 0.03);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    [data-theme="light"] .nl-card {
+        background: rgba(255, 255, 255, 0.7);
+        border-color: rgba(0, 0, 0, 0.08);
+    }
+
+    [data-theme="light"] .nl-card:hover {
+        background: rgba(255, 255, 255, 0.95);
+        border-color: rgba(59, 130, 246, 0.25);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    }
+
+    .nl-card-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0 0 0.5rem;
+        line-height: 1.4;
+    }
+
+    .nl-card-title a {
+        color: var(--text-primary);
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .nl-card-title a:hover {
+        color: #3b82f6;
+    }
+
+    .nl-card-summary {
+        font-size: 0.875rem;
+        line-height: 1.6;
+        color: var(--text-secondary);
+        margin: 0 0 1rem;
+    }
+
+    .nl-card-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: #3b82f6;
+        text-decoration: none;
+        transition: gap 0.2s;
+    }
+
+    .nl-card-link:hover {
+        gap: 0.6rem;
+    }
+
+    /* Prose (if markdown body content exists) */
+    .nl-prose {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        line-height: 1.8;
+        font-size: 1rem;
+        color: var(--text-secondary);
+    }
+
+    [data-theme="light"] .nl-prose {
+        border-top-color: rgba(0, 0, 0, 0.06);
+    }
+
+    /* ============================================
+       NAVIGATION
+    ============================================ */
+    .nl-nav-section {
+        padding: 0 2rem 5rem;
+    }
+
+    .nl-nav-container {
+        max-width: 900px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+
+    .nl-nav-card {
+        padding: 1.25rem 1.5rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        text-decoration: none;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        transition: all 0.3s;
+    }
+
+    .nl-nav-card:hover {
+        border-color: rgba(59, 130, 246, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.1);
+        color: inherit;
+        text-decoration: none;
+    }
+
+    [data-theme="light"] .nl-nav-card {
+        background: rgba(255, 255, 255, 0.6);
+        border-color: rgba(0, 0, 0, 0.08);
+    }
+
+    .nl-nav-label {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    .nl-nav-next .nl-nav-label {
+        justify-content: flex-end;
+    }
+
+    .nl-nav-next {
+        text-align: right;
+    }
+
+    .nl-nav-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    /* ============================================
+       RESPONSIVE
+    ============================================ */
+    @media (max-width: 767px) {
+        .newsletter-single {
+            padding-top: 4rem;
+        }
+
+        .nl-hero {
+            padding: 2rem 1.5rem 2.5rem;
+        }
+
+        .nl-content {
+            padding: 2rem 1rem;
+        }
+
+        .nl-cards-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .nl-nav-section {
+            padding: 0 1rem 4rem;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .nl-card,
+        .nl-nav-card {
+            transition: none;
+        }
+    }
+</style>
+{{ end }}

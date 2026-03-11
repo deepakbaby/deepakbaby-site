@@ -41,6 +41,8 @@
             {{ else if eq .section.id "posts" }}
             {{/* Special case: Blog/Posts always goes to /posts page */}}
             <a href="/posts" class="navbar-link">{{ .section.name }}</a>
+            {{ else if eq .section.id "newsletter" }}
+            <a href="/newsletter" class="navbar-link">{{ .section.name }}</a>
             {{ else }}
             <a href="{{ $linkURL }}" class="navbar-link">{{ .section.name }}</a>
             {{ end }}
@@ -268,9 +270,9 @@
 
         // Show/hide navbar on scroll
         const heroSection = document.querySelector('.hero-section');
-        // If hero section exists, wait until 0.6 of its height. 
-        // If not (e.g. publications page), show navbar earlier or immediately
-        const triggerHeight = heroSection ? heroSection.offsetHeight * 0.6 : 100;
+        // If hero section exists, wait until 0.6 of its height.
+        // If not (e.g. publications, newsletter pages), show navbar immediately
+        const triggerHeight = heroSection ? heroSection.offsetHeight * 0.6 : 0;
 
         window.addEventListener('scroll', () => {
             const scrollTop = window.pageYOffset;
@@ -285,8 +287,8 @@
             }
         });
 
-        // Initial check in case we reload mid-scroll
-        if (window.pageYOffset > triggerHeight) {
+        // Show navbar immediately on non-hero pages, or if already scrolled
+        if (!heroSection || window.pageYOffset > triggerHeight) {
             scrollNavbar?.classList.add('visible');
             themeToggle?.classList.add('hidden');
         }

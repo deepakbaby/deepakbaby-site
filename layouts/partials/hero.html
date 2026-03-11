@@ -30,7 +30,15 @@
             {{ range sort site.Data.en.sections "section.weight" }}
             {{ if and .section.enable .section.showOnNavbar }}
             {{ $sectionID := .section.id }}
+            {{ if eq $sectionID "posts" }}
+            <a href="/posts" class="navbar-link">{{ .section.name }}</a>
+            {{ else if eq $sectionID "publications" }}
+            <a href="/publications" class="navbar-link">{{ .section.name }}</a>
+            {{ else if eq $sectionID "newsletter" }}
+            <a href="/newsletter" class="navbar-link">{{ .section.name }}</a>
+            {{ else }}
             <a href="#{{ $sectionID }}" class="navbar-link">{{ .section.name }}</a>
+            {{ end }}
             {{ end }}
             {{ end }}
         </div>

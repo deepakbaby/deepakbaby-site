@@ -40,6 +40,8 @@
                 <a href="/posts/">{{ $sectionName }}</a>
                 {{ else if eq $sectionID "publications" }}
                 <a href="/publications/">{{ $sectionName }}</a>
+                {{ else if eq $sectionID "newsletter" }}
+                <a href="/newsletter/">{{ $sectionName }}</a>
                 {{ else }}
                 <a href="/#{{ $sectionID }}">{{ $sectionName }}</a>
                 {{ end }}
