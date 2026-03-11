@@ -67,7 +67,7 @@
     .modern-footer {
         position: relative;
         background: var(--footer-bg, #050506);
-        padding: 4rem 0 2rem;
+        padding: 3rem 0 1.5rem;
         overflow: hidden;
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
@@ -100,13 +100,13 @@
         flex-direction: column;
         align-items: center;
         text-align: center;
-        gap: 2rem;
-        margin-bottom: 3rem;
+        gap: 1.25rem;
+        margin-bottom: 1rem;
     }
 
     /* Brand */
     .footer-brand {
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.15rem;
     }
 
     .brand-name {
@@ -129,12 +129,12 @@
     /* Social Icons */
     .footer-social {
         display: flex;
-        gap: 1rem;
+        gap: 0.75rem;
     }
 
     .social-icon {
-        width: 44px;
-        height: 44px;
+        width: 38px;
+        height: 38px;
         border-radius: 50%;
         background: var(--footer-icon-bg, rgba(255, 255, 255, 0.05));
         border: 1px solid var(--footer-icon-border, rgba(255, 255, 255, 0.08));
@@ -142,7 +142,7 @@
         align-items: center;
         justify-content: center;
         color: var(--footer-icon-color, #9ca3af);
-        font-size: 1.1rem;
+        font-size: 0.95rem;
         text-decoration: none;
         transition: all 0.3s ease;
     }
@@ -160,14 +160,14 @@
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
-        gap: 1.5rem;
+        gap: 1.25rem;
     }
 
     .footer-links a {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         color: var(--footer-link-color, #6b7280);
         text-decoration: none;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         transition: color 0.3s;
     }
 
@@ -177,24 +177,23 @@
 
     /* Footer Bottom */
     .footer-bottom {
-        border-top: 1px solid var(--footer-border, rgba(255, 255, 255, 0.05));
-        padding-top: 2rem;
+        padding-top: 1rem;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.15rem;
     }
 
     .copyright {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        font-size: 0.875rem;
+        font-size: 0.75rem;
         color: var(--footer-copyright, #9ca3af);
         margin: 0;
     }
 
     .credits {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         color: var(--footer-credits, #9ca3af);
         margin: 0;
     }
@@ -206,9 +205,12 @@
     }
 
     @keyframes heartbeat {
-        0%, 100% {
+
+        0%,
+        100% {
             transform: scale(1);
         }
+
         50% {
             transform: scale(1.2);
         }
