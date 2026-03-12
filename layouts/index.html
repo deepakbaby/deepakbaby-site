@@ -37,6 +37,22 @@
 
 <style>
     /* Homepage Global Styles */
+    /* Remove wrapper padding/margin for edge-to-edge layout on mobile */
+    .kind-home .container-fluid.wrapper,
+    .kind-home .wrapper,
+    .kind-home .content-section,
+    .kind-home .page-content {
+        max-width: none !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .kind-home .wrapper .sidebar-section,
+    .kind-home .toc-section {
+        display: none !important;
+    }
+
     .homepage-wrapper {
         background: var(--bg-primary);
         color: var(--text-primary);
@@ -54,7 +70,7 @@
         max-width: 800px;
         margin: 0 auto;
         height: 1px;
-        background: linear-gradient(90deg, transparent, var(--text-secondary, rgba(128,128,128,0.3)), transparent);
+        background: linear-gradient(90deg, transparent, var(--text-secondary, rgba(128, 128, 128, 0.3)), transparent);
         position: relative;
     }
 
@@ -66,7 +82,7 @@
         transform: translate(-50%, -50%);
         width: 8px;
         height: 8px;
-        background: var(--text-secondary, rgba(128,128,128,0.3));
+        background: var(--text-secondary, rgba(128, 128, 128, 0.3));
         border-radius: 50%;
     }
 
