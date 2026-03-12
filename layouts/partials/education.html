@@ -92,9 +92,15 @@
         display: inline-block;
         font-size: clamp(1.5rem, 4vw, 2.5rem);
         font-weight: 400;
-        color: #3b82f6;
+        color: #7B93FF;
         letter-spacing: 0.02em;
         margin-bottom: 0;
+    }
+
+    [data-theme="paper"] .section-label {
+        font-family: 'Lora', serif;
+        font-weight: 600;
+        color: var(--text-primary);
     }
 
     .section-title {
@@ -104,7 +110,7 @@
     }
 
     .gradient-text-purple {
-        background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+        background: linear-gradient(135deg, #7B93FF 0%, #93AAFF 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -142,10 +148,14 @@
         position: absolute;
         inset: 0;
         background: linear-gradient(135deg,
-                rgba(139, 92, 246, 0.1) 0%,
-                rgba(236, 72, 153, 0.1) 100%);
+                rgba(123, 147, 255, 0.1) 0%,
+                rgba(196, 168, 255, 0.1) 100%);
         opacity: 0;
         transition: opacity 0.4s;
+    }
+
+    [data-theme="paper"] .card-glow {
+        display: none;
     }
 
     .education-card:hover .card-glow {
@@ -162,12 +172,22 @@
         transition: all 0.4s ease;
     }
 
+    [data-theme="paper"] .card-content {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+    }
+
     .education-card:hover .card-content {
-        border-color: rgba(139, 92, 246, 0.3);
+        border-color: rgba(123, 147, 255, 0.3);
         transform: translateY(-8px);
         box-shadow:
-            0 20px 50px rgba(139, 92, 246, 0.15),
-            0 0 0 1px rgba(139, 92, 246, 0.1);
+            0 20px 50px rgba(123, 147, 255, 0.15),
+            0 0 0 1px rgba(123, 147, 255, 0.1);
+    }
+
+    [data-theme="paper"] .education-card:hover .card-content {
+        border-color: var(--card-hover-border);
+        box-shadow: 0 8px 30px var(--card-hover-shadow);
     }
 
     /* Institution Logo */
@@ -183,6 +203,11 @@
         margin-bottom: 1.5rem;
         transition: transform 0.3s;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    [data-theme="paper"] .institution-logo-wrapper {
+        border: 1px solid var(--border-color);
+        box-shadow: none;
     }
 
     .education-card:hover .institution-logo-wrapper {
@@ -203,14 +228,20 @@
     .degree-name {
         font-size: 1.25rem;
         font-weight: 700;
-        color: #fff;
+        color: #E6E8EB;
         margin: 0 0 0.5rem 0;
         line-height: 1.3;
     }
 
+    [data-theme="paper"] .degree-name {
+        font-family: 'Lora', serif;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
     .institution-name {
         font-size: 1rem;
-        color: #a78bfa;
+        color: #D4BCFF;
         margin-bottom: 0.5rem;
     }
 
@@ -221,7 +252,7 @@
     }
 
     .institution-name a:hover {
-        color: #c4b5fd;
+        color: #E0D4FF;
     }
 
     .timeframe {
@@ -229,7 +260,7 @@
         align-items: center;
         gap: 0.375rem;
         font-size: 0.875rem;
-        color: #6b7280;
+        color: #636D78;
         font-family: ui-monospace, monospace;
     }
 
@@ -243,28 +274,41 @@
         display: inline-flex;
         align-items: baseline;
         gap: 0.25rem;
-        background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.15));
-        border: 1px solid rgba(34, 197, 94, 0.2);
+        background: linear-gradient(135deg, rgba(94, 212, 160, 0.15), rgba(94, 212, 160, 0.1));
+        border: 1px solid rgba(94, 212, 160, 0.2);
         border-radius: 30px;
         padding: 0.5rem 1rem;
         margin-bottom: 1.5rem;
     }
 
+    [data-theme="paper"] .grade-badge {
+        background: var(--bg-primary);
+        border-color: var(--border-color);
+    }
+
     .grade-value {
         font-size: 1.25rem;
         font-weight: 700;
-        color: #34d399;
+        color: #5ED4A0;
+    }
+
+    [data-theme="paper"] .grade-value {
+        color: var(--text-primary);
     }
 
     .grade-scale {
         font-size: 0.75rem;
-        color: #6b7280;
+        color: #636D78;
     }
 
     /* Custom Sections */
     .custom-sections {
         border-top: 1px solid rgba(255, 255, 255, 0.05);
         padding-top: 1rem;
+    }
+
+    [data-theme="paper"] .custom-sections {
+        border-top-color: var(--border-color);
     }
 
     .custom-section {
@@ -279,7 +323,7 @@
         display: block;
         font-size: 0.75rem;
         font-weight: 500;
-        color: #6b7280;
+        color: #636D78;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         margin-bottom: 0.25rem;
@@ -287,8 +331,12 @@
 
     .custom-content {
         font-size: 0.9rem;
-        color: #d1d5db;
+        color: #D0D4DA;
         line-height: 1.5;
+    }
+
+    [data-theme="paper"] .custom-content {
+        color: var(--text-primary);
     }
 
     /* Reveal Animation */

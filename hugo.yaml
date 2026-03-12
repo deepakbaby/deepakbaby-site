@@ -76,6 +76,9 @@ minify:
 
 # Site parameters
 params:
+  # Select the global theme: "neon" (default), "paper", or "comeau"
+  customTheme: "comeau"
+
   # Background image of the landing page - DISABLED
   # background: /images/site/background.jpg
   # Background image of the landing page for dark theme

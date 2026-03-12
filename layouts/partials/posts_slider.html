@@ -143,7 +143,7 @@
     }
 
     .coverflow-view-all:hover {
-        color: #3b82f6;
+        color: #7B93FF;
     }
 
     /* CoverFlow Wrapper */
@@ -172,8 +172,8 @@
     }
 
     .coverflow-nav:hover {
-        background: #3b82f6;
-        border-color: #3b82f6;
+        background: #7B93FF;
+        border-color: #7B93FF;
         transform: translateY(-50%) scale(1.1);
     }
 
@@ -238,10 +238,10 @@
         transform: translateX(0) translateZ(0) rotateY(0deg) scale(1);
         z-index: 50;
         pointer-events: auto;
-        background: var(--card-solid-bg, #1a1a1f);
+        background: var(--card-solid-bg, #161B22);
         border-color: rgba(255, 255, 255, 0.15);
         box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5),
-            0 0 80px rgba(59, 130, 246, 0.2);
+            0 0 80px rgba(123, 147, 255, 0.2);
     }
 
     /* Left items */
@@ -283,7 +283,7 @@
     .coverflow-cover {
         height: 180px;
         overflow: hidden;
-        background: linear-gradient(135deg, #1f2937, #111827);
+        background: linear-gradient(135deg, #161B22, #0D1117);
     }
 
     .coverflow-cover img {
@@ -303,13 +303,13 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(135deg, #1f2937, #111827);
+        background: linear-gradient(135deg, #161B22, #0D1117);
     }
 
     .coverflow-placeholder svg {
         width: 48px;
         height: 48px;
-        color: #374151;
+        color: #2E3744;
     }
 
     .coverflow-info {
@@ -319,7 +319,7 @@
     .coverflow-date {
         font-size: 0.75rem;
         font-family: ui-monospace, monospace;
-        color: #60a5fa;
+        color: #93AAFF;
         display: block;
         margin-bottom: 0.5rem;
     }
@@ -371,7 +371,7 @@
     .coverflow-dot.cf-dot-active {
         width: 30px;
         border-radius: 5px;
-        background: #3b82f6;
+        background: #7B93FF;
     }
 
     .coverflow-dot:hover:not(.cf-dot-active) {
@@ -400,25 +400,25 @@
         background: #ffffff;
         border-color: rgba(0, 0, 0, 0.1);
         box-shadow: 0 30px 60px rgba(0, 0, 0, 0.12),
-            0 0 80px rgba(59, 130, 246, 0.06);
+            0 0 80px rgba(123, 147, 255, 0.06);
     }
 
     [data-theme="light"] .coverflow-title {
-        color: #1e293b;
+        color: #1B2331;
     }
 
     [data-theme="light"] .coverflow-excerpt {
-        color: #64748b;
+        color: #6E7D8E;
     }
 
     [data-theme="light"] .coverflow-nav {
         background: rgba(255, 255, 255, 0.9);
         border-color: rgba(0, 0, 0, 0.1);
-        color: #1e293b;
+        color: #1B2331;
     }
 
     [data-theme="light"] .coverflow-nav:hover {
-        background: #3b82f6;
+        background: rgba(123, 147, 255, 0.9);
         color: #fff;
     }
 
@@ -427,11 +427,89 @@
     }
 
     [data-theme="light"] .coverflow-placeholder {
-        background: linear-gradient(135deg, #e2e8f0, #f1f5f9);
+        background: linear-gradient(135deg, #E8EBF0, #F1F4F9);
     }
 
     [data-theme="light"] .coverflow-placeholder svg {
-        color: #94a3b8;
+        color: #8591A0;
+    }
+
+    /* Paper Theme */
+    [data-theme="paper"] .coverflow-section {
+        background: var(--bg-primary);
+    }
+
+    [data-theme="paper"] .coverflow-section .unified-section-title {
+        color: #2D2B2A;
+        font-family: 'Lora', serif;
+    }
+
+    [data-theme="paper"] .coverflow-view-all {
+        color: #5C5A58;
+    }
+
+    [data-theme="paper"] .coverflow-view-all:hover {
+        color: #2D2B2A;
+    }
+
+    [data-theme="paper"] .coverflow-item {
+        background: #fff;
+        border-color: rgba(0, 0, 0, 0.08);
+    }
+
+    [data-theme="paper"] .coverflow-item.cf-active {
+        background: #fff;
+        border-color: rgba(0, 0, 0, 0.12);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1),
+            0 0 40px rgba(0, 0, 0, 0.03);
+    }
+
+    [data-theme="paper"] .coverflow-title {
+        color: #2D2B2A;
+    }
+
+    [data-theme="paper"] .coverflow-excerpt {
+        color: #5C5A58;
+    }
+
+    [data-theme="paper"] .coverflow-date {
+        color: #8C8A88;
+    }
+
+    [data-theme="paper"] .coverflow-nav {
+        background: rgba(0, 0, 0, 0.04);
+        border-color: rgba(0, 0, 0, 0.1);
+        color: #5C5A58;
+    }
+
+    [data-theme="paper"] .coverflow-nav:hover {
+        background: rgba(0, 0, 0, 0.08);
+        border-color: rgba(0, 0, 0, 0.15);
+        color: #2D2B2A;
+    }
+
+    [data-theme="paper"] .coverflow-dot {
+        background: rgba(0, 0, 0, 0.12);
+    }
+
+    [data-theme="paper"] .coverflow-dot.cf-dot-active {
+        background: #2D2B2A;
+    }
+
+    [data-theme="paper"] .coverflow-dot:hover:not(.cf-dot-active) {
+        background: rgba(0, 0, 0, 0.25);
+    }
+
+    [data-theme="paper"] .coverflow-cover {
+        background: linear-gradient(135deg, #F2F1EA, #E8E6DF);
+    }
+
+    [data-theme="paper"] .coverflow-placeholder {
+        background: linear-gradient(135deg, #F2F1EA, #E8E6DF);
+    }
+
+    [data-theme="paper"] .coverflow-placeholder svg {
+        color: #8C8A88;
     }
 
     /* Responsive */

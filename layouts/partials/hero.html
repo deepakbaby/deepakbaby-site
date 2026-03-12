@@ -4,6 +4,7 @@
 {{ $siteData := site.Data.en.site }}
 
 <!-- Theme Toggle - Always on top right -->
+{{ if ne site.Params.customTheme "paper" }}
 <button class="theme-toggle-fixed" id="themeToggle" aria-label="Toggle theme">
     <svg class="sun-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -14,6 +15,7 @@
             d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
     </svg>
 </button>
+{{ end }}
 
 <!-- Scroll Navbar - appears when scrolling -->
 <nav class="scroll-navbar" id="scrollNavbar">
@@ -42,6 +44,7 @@
             {{ end }}
             {{ end }}
         </div>
+        {{ if ne site.Params.customTheme "paper" }}
         <button class="theme-toggle-navbar" id="themeToggleNav" aria-label="Toggle theme">
             <svg class="sun-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -52,15 +55,19 @@
                     d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
             </svg>
         </button>
+        {{ end }}
     </div>
 </nav>
 
 <section id="hero" class="hero-section">
     <!-- Animated Background -->
     <div class="hero-bg">
+        {{ if ne site.Params.customTheme "paper" }}
         <div class="gradient-orb orb-1"></div>
         <div class="gradient-orb orb-2"></div>
+        <div class="gradient-orb orb-3"></div>
         <div class="noise-overlay"></div>
+        {{ end }}
     </div>
 
     <!-- Content with Picture on Left, Text Wrapping -->
@@ -172,7 +179,7 @@
         top: 0;
         left: 0;
         right: 0;
-        background: var(--navbar-bg, rgba(15, 23, 42, 0.95));
+        background: var(--navbar-bg, rgba(13, 17, 23, 0.95));
         backdrop-filter: blur(20px);
         border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
         z-index: 999;
@@ -209,7 +216,7 @@
     .navbar-brand:focus,
     .navbar-brand:active {
         transform: translateY(-2px);
-        color: #3b82f6;
+        color: #7B93FF;
         text-decoration: none !important;
     }
 
@@ -291,7 +298,7 @@
 
     /* Light theme - Clean white background, no boxes */
     [data-theme="light"] .hero-section {
-        background: #fafbfc;
+        background: #F6F8FA;
     }
 
     [data-theme="light"] .gradient-orb {
@@ -299,32 +306,36 @@
     }
 
     [data-theme="light"] .orb-1 {
-        background: radial-gradient(circle, #60a5fa 0%, transparent 70%);
+        background: radial-gradient(circle, #93AAFF 0%, transparent 70%);
     }
 
     [data-theme="light"] .orb-2 {
-        background: radial-gradient(circle, #818cf8 0%, transparent 70%);
+        background: radial-gradient(circle, #D4BCFF 0%, transparent 70%);
+    }
+
+    [data-theme="light"] .orb-3 {
+        background: radial-gradient(circle, #FFB3CC 0%, transparent 70%);
     }
 
     [data-theme="light"] .profile-photo {
-        border-color: rgba(59, 130, 246, 0.25);
+        border-color: rgba(123, 147, 255, 0.25);
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
     }
 
     [data-theme="light"] .social-btn {
         background: transparent;
         border-color: rgba(0, 0, 0, 0.1);
-        color: #475569;
+        color: #566170;
     }
 
     [data-theme="light"] .social-btn:hover {
-        background: #3b82f6;
-        border-color: #3b82f6;
+        background: linear-gradient(135deg, #7B93FF, #C4A8FF);
+        border-color: transparent;
         color: #fff;
     }
 
     [data-theme="light"] .scroll-indicator {
-        color: #94a3b8;
+        color: #8591A0;
     }
 
     [data-theme="light"] .mouse {
@@ -335,24 +346,91 @@
         background: rgba(0, 0, 0, 0.2);
     }
 
-    [data-theme="light"] .hero-name {
-        color: #1e293b;
-    }
-
     [data-theme="light"] .hero-summary {
-        color: #475569;
+        color: #566170;
     }
 
     [data-theme="light"] .designation-text {
-        color: #1e293b;
+        color: #1B2331;
     }
 
     [data-theme="light"] .company-text {
-        color: #475569;
+        color: #566170;
     }
 
     [data-theme="light"] .company-text a {
-        color: #3b82f6;
+        color: #93AAFF;
+    }
+
+    [data-theme="paper"] .hero-name {
+        font-family: 'Lora', serif;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        color: var(--text-primary);
+    }
+    
+    [data-theme="paper"] .scroll-navbar .navbar-brand {
+        font-family: 'Lora', serif;
+        font-weight: 600;
+    }
+
+    [data-theme="paper"] .hero-designation {
+        font-family: 'Inter', sans-serif;
+    }
+
+    [data-theme="paper"] .profile-photo {
+        border: 2px solid rgba(0,0,0,0.1);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    [data-theme="paper"] .social-btn {
+        background: transparent;
+        border-color: rgba(0, 0, 0, 0.1);
+        color: var(--text-secondary);
+    }
+
+    [data-theme="paper"] .social-btn:hover {
+        background: rgba(0, 0, 0, 0.05);
+        border-color: rgba(0, 0, 0, 0.2);
+        color: var(--text-primary);
+        box-shadow: none;
+        transform: translateY(-2px);
+    }
+
+    [data-theme="paper"] .designation-text {
+        color: #5C5A58 !important;
+    }
+
+    [data-theme="paper"] .company-text {
+        color: #8C8A88 !important;
+    }
+
+    [data-theme="paper"] .company-text a {
+        color: #4A6FA5 !important;
+    }
+
+    [data-theme="paper"] .company-text a:hover {
+        color: #2D2B2A !important;
+    }
+
+    [data-theme="paper"] .gradient-orb {
+        display: none !important;
+    }
+
+    [data-theme="paper"] .noise-overlay {
+        display: none !important;
+    }
+
+    [data-theme="paper"] .hero-bg {
+        background: none !important;
+    }
+
+    [data-theme="paper"] .hero-summary a {
+        color: #4A6FA5 !important;
+    }
+
+    [data-theme="paper"] .hero-summary a:hover {
+        color: #2D2B2A !important;
     }
 
     /* Hero Section */
@@ -363,7 +441,7 @@
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        background: var(--bg-primary, #0f172a);
+        background: var(--bg-primary, #0D1117);
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
@@ -384,7 +462,7 @@
     .orb-1 {
         width: 600px;
         height: 600px;
-        background: radial-gradient(circle, #3b82f6 0%, transparent 70%);
+        background: radial-gradient(circle, #7B93FF 0%, transparent 70%);
         top: -20%;
         left: -10%;
         animation: float-slow 20s ease-in-out infinite;
@@ -393,10 +471,20 @@
     .orb-2 {
         width: 500px;
         height: 500px;
-        background: radial-gradient(circle, #1d4ed8 0%, transparent 70%);
+        background: radial-gradient(circle, #C4A8FF 0%, transparent 70%);
         bottom: -20%;
         right: -10%;
         animation: float-slow 25s ease-in-out infinite reverse;
+    }
+
+    .orb-3 {
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, #FF6B9D 0%, transparent 70%);
+        top: -15%;
+        right: -5%;
+        animation: float-slow 22s ease-in-out infinite;
+        animation-delay: -8s;
     }
 
     @keyframes float-slow {
@@ -437,12 +525,24 @@
 
     /* Name */
     .hero-name {
-        font-family: 'Inter', sans-serif;
+        font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
         font-size: clamp(2rem, 5vw, 3rem);
-        font-weight: 400;
+        font-weight: 700;
         color: var(--text-primary, #fff);
         margin: 0 0 0.5rem 0;
         letter-spacing: -0.02em;
+        background: linear-gradient(135deg, #E6E8EB, #C4A8FF);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    [data-theme="light"] .hero-name {
+        background: none;
+        -webkit-background-clip: unset;
+        -webkit-text-fill-color: unset;
+        background-clip: unset;
+        color: #1B2331;
     }
 
     /* Designation */
@@ -454,7 +554,7 @@
     }
 
     .designation-text {
-        color: #3b82f6;
+        color: #7B93FF;
     }
 
     .company-text {
@@ -462,13 +562,13 @@
     }
 
     .company-text a {
-        color: #60a5fa;
+        color: #93AAFF;
         text-decoration: none;
         transition: color 0.3s;
     }
 
     .company-text a:hover {
-        color: #93c5fd;
+        color: #B3C3FF;
     }
 
     /* About Content with Float */
@@ -488,7 +588,7 @@
         width: 100%;
         height: auto;
         border-radius: 12px;
-        border: 3px solid rgba(59, 130, 246, 0.3);
+        border: 3px solid rgba(123, 147, 255, 0.25);
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
     }
 
@@ -510,13 +610,13 @@
     }
 
     .hero-summary a {
-        color: #60a5fa;
+        color: #93AAFF;
         text-decoration: none;
         transition: color 0.3s;
     }
 
     .hero-summary a:hover {
-        color: #93c5fd;
+        color: #B3C3FF;
         text-decoration: underline;
     }
 
@@ -543,11 +643,11 @@
     }
 
     .social-btn:hover {
-        background: #3b82f6;
-        border-color: #3b82f6;
+        background: linear-gradient(135deg, #7B93FF, #C4A8FF);
+        border-color: transparent;
         color: #fff;
         transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        box-shadow: 0 8px 20px rgba(123, 147, 255, 0.3);
     }
 
     /* Scroll Indicator */
@@ -671,20 +771,25 @@
         const html = document.documentElement;
 
         // Check for saved theme
-        const savedTheme = localStorage.getItem('theme') ||
-            (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
-        html.setAttribute('data-theme', savedTheme);
+        if (html.getAttribute('data-theme') !== 'paper') {
+            const savedTheme = localStorage.getItem('theme') ||
+                (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+            html.setAttribute('data-theme', savedTheme);
+        }
 
-        // Toggle theme function
+        // Toggle theme function - ONLY if customTheme is not paper
         function toggleTheme() {
+            if (document.documentElement.getAttribute('data-theme') === 'paper') return;
             const current = html.getAttribute('data-theme');
             const next = current === 'dark' ? 'light' : 'dark';
             html.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
         }
 
-        themeToggle?.addEventListener('click', toggleTheme);
-        themeToggleNav?.addEventListener('click', toggleTheme);
+        if (document.documentElement.getAttribute('data-theme') !== 'paper') {
+            themeToggle?.addEventListener('click', toggleTheme);
+            themeToggleNav?.addEventListener('click', toggleTheme);
+        }
 
         // Show/hide navbar on scroll
         let lastScrollTop = 0;

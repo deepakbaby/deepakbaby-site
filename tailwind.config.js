@@ -10,6 +10,8 @@ module.exports = {
     extend: {
       fontFamily: {
         sans: ['Outfit', 'sans-serif'],
+        serif: ['Lora', 'serif'],
+        display: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
       },
       animation: {
         'fade-in-up': 'fadeInUp 0.8s ease-out forwards',

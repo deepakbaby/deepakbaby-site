@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ .Site.Language.Lang }}">
+<html lang="{{ .Site.Language.Lang }}" {{ if eq .Site.Params.customTheme "paper" }}data-theme="paper"{{ end }}>
 
 <head>
   <title>{{ .Page.Title }}</title>
@@ -15,66 +15,276 @@
 
   <!------ PWA MANIFEST -------->
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#0D1117">
 
   <!------ RESOURCE PRELOADING FOR CRITICAL ASSETS -------->
   <link rel="preload" as="script" href="/js/collapsible-sidebars.js">
 
-  <!------ ASYNC FONT LOADING - NON-BLOCKING (Optimized: reduced to 3 weights) -------->
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"></noscript>
+  <!------ ASYNC FONT LOADING - NON-BLOCKING -------->
+  {{ if eq .Site.Params.customTheme "comeau" }}
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"></noscript>
+  {{ else }}
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"></noscript>
+  {{ end }}
 
   <!------ ADD COMMON HEADERS -------->
   <style>
     /* Global Theme CSS Variables */
     :root {
-      --bg-primary: #0f172a;
-      --bg-secondary: #1e293b;
-      --bg-card: rgba(255, 255, 255, 0.03);
-      --text-primary: #fff;
-      --text-secondary: #9ca3af;
-      --text-muted: #6b7280;
+      --bg-primary: #0D1117;
+      --bg-secondary: #161B22;
+      --bg-card: rgba(255, 255, 255, 0.04);
+      --text-primary: #E6E8EB;
+      --text-secondary: #99A1AB;
+      --text-muted: #636D78;
       --border-color: rgba(255, 255, 255, 0.08);
-      --orb-opacity: 0.5;
-      --toggle-bg: rgba(255, 255, 255, 0.1);
-      --toggle-border: rgba(255, 255, 255, 0.2);
-      --social-bg: rgba(255, 255, 255, 0.05);
+      --orb-opacity: 0.4;
+      --toggle-bg: rgba(255, 255, 255, 0.08);
+      --toggle-border: rgba(255, 255, 255, 0.15);
+      --social-bg: rgba(255, 255, 255, 0.04);
       --social-border: rgba(255, 255, 255, 0.1);
       --mouse-border: rgba(255, 255, 255, 0.2);
       --wheel-bg: rgba(255, 255, 255, 0.4);
-      --card-hover-border: rgba(59, 130, 246, 0.3);
-      --card-hover-shadow: rgba(59, 130, 246, 0.15);
+      --card-hover-border: rgba(123, 147, 255, 0.3);
+      --card-hover-shadow: rgba(123, 147, 255, 0.12);
     }
 
     [data-theme="light"] {
-      --bg-primary: #fafbfc;
+      --bg-primary: #F6F8FA;
       --bg-secondary: #ffffff;
       --bg-card: transparent;
-      --text-primary: #1e293b;
-      --text-secondary: #475569;
-      --text-muted: #94a3b8;
-      --border-color: rgba(0, 0, 0, 0.06);
-      --orb-opacity: 0.1;
+      --text-primary: #1B2331;
+      --text-secondary: #566170;
+      --text-muted: #8591A0;
+      --border-color: rgba(0, 0, 0, 0.08);
+      --orb-opacity: 0.15;
       --toggle-bg: rgba(0, 0, 0, 0.04);
       --toggle-border: rgba(0, 0, 0, 0.08);
       --social-bg: transparent;
       --social-border: rgba(0, 0, 0, 0.1);
-      --mouse-border: rgba(0, 0, 0, 0.12);
-      --wheel-bg: rgba(0, 0, 0, 0.2);
-      --card-hover-border: rgba(59, 130, 246, 0.3);
-      --card-hover-shadow: rgba(59, 130, 246, 0.08);
+      --mouse-border: rgba(0, 0, 0, 0.15);
+      --wheel-bg: rgba(0, 0, 0, 0.25);
+      --card-hover-border: rgba(123, 147, 255, 0.3);
+      --card-hover-shadow: rgba(123, 147, 255, 0.08);
       --card-bg: transparent;
-      --card-border: rgba(0, 0, 0, 0.04);
-      --timeline-color: #3b82f6;
+      --card-border: rgba(0, 0, 0, 0.06);
+      --timeline-color: #7B93FF;
       --section-bg: #ffffff;
-      --glow-color: rgba(59, 130, 246, 0.08);
+      --glow-color: rgba(123, 147, 255, 0.08);
+    }
+
+    [data-theme="paper"] {
+      --bg-primary: #F9F9F7;
+      --bg-secondary: #F2F1EA;
+      --bg-card: rgba(0, 0, 0, 0.02);
+      --text-primary: #2D2B2A;
+      --text-secondary: #5C5A58;
+      --text-muted: #8C8A88;
+      --border-color: rgba(0, 0, 0, 0.08);
+      --orb-opacity: 0;
+      --toggle-bg: rgba(0, 0, 0, 0.04);
+      --toggle-border: rgba(0, 0, 0, 0.08);
+      --social-bg: transparent;
+      --social-border: rgba(0, 0, 0, 0.15);
+      --mouse-border: rgba(0, 0, 0, 0.2);
+      --wheel-bg: rgba(0, 0, 0, 0.4);
+      --card-hover-border: rgba(0, 0, 0, 0.15);
+      --card-hover-shadow: rgba(0, 0, 0, 0.05);
+      --card-bg: #ffffff;
+      --timeline-color: rgba(0, 0, 0, 0.15);
+      --section-bg: #F9F9F7;
+      --glow-color: transparent;
     }
 
     body {
       background-color: var(--bg-primary);
       color: var(--text-primary);
     }
+
+    /* Accessibility and Focus States */
+    :focus-visible {
+      outline: 2px solid #7B93FF;
+      outline-offset: 4px;
+      border-radius: 4px;
+      transition: outline-offset 0.2s ease;
+    }
+
+    [data-theme="paper"] :focus-visible {
+      outline: 2px solid #5C5A58;
+    }
+
+    /* ===== PAPER THEME: Global Neon Override ===== */
+    /* Neutralize ALL remaining neon/blue accents site-wide */
+    [data-theme="paper"] a {
+      color: #4A6FA5;
+      transition: color 0.2s;
+    }
+    [data-theme="paper"] a:hover {
+      color: #2D2B2A;
+    }
+
+    /* Hero designation text */
+    [data-theme="paper"] .designation-text {
+      color: #4A6FA5 !important;
+    }
+    [data-theme="paper"] .company-text {
+      color: var(--text-secondary) !important;
+    }
+    [data-theme="paper"] .company-text a {
+      color: #4A6FA5 !important;
+    }
+    [data-theme="paper"] .company-text a:hover {
+      color: #2D2B2A !important;
+    }
+
+    /* Hero summary links */
+    [data-theme="paper"] .hero-summary a {
+      color: #4A6FA5;
+    }
+    [data-theme="paper"] .hero-summary a:hover {
+      color: #2D2B2A;
+    }
+
+    /* Scroll navbar - paper style */
+    [data-theme="paper"] .scroll-navbar {
+      --navbar-bg: rgba(249, 249, 247, 0.97);
+      border-bottom-color: rgba(0, 0, 0, 0.08);
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
+    }
+    [data-theme="paper"] .navbar-brand {
+      color: #2D2B2A !important;
+    }
+    [data-theme="paper"] .navbar-brand:hover {
+      color: #4A6FA5 !important;
+    }
+    [data-theme="paper"] .navbar-link {
+      color: #5C5A58 !important;
+    }
+    [data-theme="paper"] .navbar-link:hover {
+      color: #2D2B2A !important;
+    }
+
+    /* Timeline dots - ink, not neon */
+    [data-theme="paper"] .timeline-dot .dot-inner {
+      background: #2D2B2A !important;
+    }
+    [data-theme="paper"] .timeline-dot .dot-pulse {
+      display: none !important;
+    }
+
+    /* Section separators - warm gray */
+    [data-theme="paper"] .section-separator {
+      background: linear-gradient(90deg, transparent, rgba(0,0,0,0.12), transparent) !important;
+    }
+    [data-theme="paper"] .section-separator::before {
+      background: rgba(0,0,0,0.15) !important;
+    }
+
+    /* Blog coverflow cards */
+    [data-theme="paper"] .coverflow-section {
+      background: var(--bg-primary) !important;
+    }
+    [data-theme="paper"] .coverflow-cover {
+      background: var(--bg-secondary) !important;
+    }
+    [data-theme="paper"] .coverflow-title {
+      color: var(--text-primary) !important;
+    }
+    [data-theme="paper"] .coverflow-excerpt {
+      color: var(--text-secondary) !important;
+    }
+    [data-theme="paper"] .coverflow-date {
+      color: var(--text-muted) !important;
+    }
+    [data-theme="paper"] .coverflow-nav {
+      background: rgba(0,0,0,0.04) !important;
+      border-color: rgba(0,0,0,0.1) !important;
+      color: var(--text-secondary) !important;
+    }
+    [data-theme="paper"] .coverflow-nav:hover {
+      background: rgba(0,0,0,0.08) !important;
+      color: var(--text-primary) !important;
+    }
+    [data-theme="paper"] .coverflow-dot {
+      background: rgba(0,0,0,0.15) !important;
+    }
+    [data-theme="paper"] .coverflow-dot.active {
+      background: #2D2B2A !important;
+    }
+    [data-theme="paper"] .coverflow-view-all {
+      color: #4A6FA5 !important;
+      border-color: rgba(0,0,0,0.1) !important;
+    }
+    [data-theme="paper"] .coverflow-view-all:hover {
+      background: rgba(0,0,0,0.04) !important;
+      color: #2D2B2A !important;
+    }
+
+    /* Unified section titles */
+    [data-theme="paper"] .unified-section-title {
+      color: var(--text-primary) !important;
+      font-family: 'Lora', serif !important;
+    }
+
+    /* Publication cards & tags */
+    [data-theme="paper"] .pub-venue-badge,
+    [data-theme="paper"] .issue-cat-pill {
+      background: rgba(0,0,0,0.04) !important;
+      border-color: rgba(0,0,0,0.1) !important;
+      color: var(--text-secondary) !important;
+    }
+    [data-theme="paper"] .pub-link {
+      color: #4A6FA5 !important;
+      border-color: rgba(0,0,0,0.1) !important;
+    }
+    [data-theme="paper"] .pub-link:hover {
+      background: rgba(0,0,0,0.04) !important;
+      color: #2D2B2A !important;
+    }
+
+    /* Featured publication cards */
+    [data-theme="paper"] .featured-pub-card {
+      background: #fff !important;
+      border-color: rgba(0,0,0,0.08) !important;
+    }
+    [data-theme="paper"] .featured-pub-card:hover {
+      border-color: rgba(0,0,0,0.15) !important;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06) !important;
+    }
+
+    /* Nav dot - no gradient */
+    [data-theme="paper"] .nav-dot.active {
+      background: #2D2B2A !important;
+      box-shadow: none !important;
+    }
+
+    /* Experience company links */
+    [data-theme="paper"] .company-name a {
+      color: var(--text-primary) !important;
+    }
+    [data-theme="paper"] .company-name a:hover {
+      color: #4A6FA5 !important;
+    }
+
+    /* Mouse / scroll indicator */
+    [data-theme="paper"] .mouse {
+      border-color: rgba(0,0,0,0.2) !important;
+    }
+    [data-theme="paper"] .wheel {
+      background: rgba(0,0,0,0.3) !important;
+    }
+    [data-theme="paper"] .scroll-indicator {
+      color: var(--text-muted) !important;
+    }
+
+    /* Fluid Typography utility classes (can be used throughout) */
+    .fluid-text-base { font-size: clamp(1rem, 1vw + 0.75rem, 1.125rem); }
+    .fluid-text-lg { font-size: clamp(1.125rem, 1.5vw + 0.75rem, 1.5rem); }
+    .fluid-text-xl { font-size: clamp(1.5rem, 2.5vw + 0.75rem, 2rem); }
   </style>
   {{- partial "header.html" . -}}
   {{- partial "opengraph.html" . -}}
@@ -90,11 +300,6 @@
 
   <!--================= add analytics if enabled =========================-->
   {{- partial "analytics.html" . -}}
-  {{ with resources.Get "scripts/core/theme-scheme.js" | fingerprint }}
-  <script integrity="{{.Data.Integrity}}">
-    {{ .Content | safeJS }}
-  </script>
-  {{ end }}
 </head>
 
 <body class="type-{{ .Page.Type }} kind-{{ .Page.Kind }}" data-bs-spy="scroll" data-bs-target="#TableOfContents"
