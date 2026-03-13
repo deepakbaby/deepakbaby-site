@@ -150,7 +150,6 @@
         background: linear-gradient(180deg,
                 transparent 0%,
                 var(--timeline-color, #7B93FF) 10%,
-                var(--timeline-color, #C4A8FF) 50%,
                 var(--timeline-color, #7B93FF) 90%,
                 transparent 100%);
     }
@@ -194,9 +193,9 @@
     .dot-inner {
         width: 10px;
         height: 10px;
-        background: linear-gradient(135deg, #7B93FF, #C4A8FF);
+        background: var(--accent, #7B93FF);
         border-radius: 50%;
-        border: 2px solid #0D1117;
+        border: 2px solid var(--bg-primary, #15171A);
         z-index: 2;
         transition: transform 0.3s, box-shadow 0.3s;
     }
@@ -208,7 +207,7 @@
 
     .timeline-item:hover .dot-inner {
         transform: scale(1.2);
-        box-shadow: 0 0 15px var(--glow-color, rgba(123, 147, 255, 0.6));
+        box-shadow: 0 0 8px var(--glow-color, rgba(123, 147, 255, 0.3));
     }
 
     [data-theme="paper"] .timeline-item:hover .dot-inner {
@@ -264,7 +263,7 @@
         background: var(--bg-card, rgba(255, 255, 255, 0.05));
         border-color: var(--card-hover-border, rgba(123, 147, 255, 0.3));
         transform: translateX(4px);
-        box-shadow: 0 8px 30px var(--card-hover-shadow, rgba(123, 147, 255, 0.12));
+        box-shadow: 0 4px 20px var(--card-hover-shadow, rgba(0, 0, 0, 0.2));
     }
 
     /* Card Header */
@@ -396,7 +395,7 @@
         top: 0.5rem;
         width: 5px;
         height: 5px;
-        background: var(--timeline-color, linear-gradient(135deg, #7B93FF, #C4A8FF));
+        background: var(--timeline-color, var(--accent, #7B93FF));
         border-radius: 50%;
     }
 

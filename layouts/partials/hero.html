@@ -60,79 +60,110 @@
 </nav>
 
 <section id="hero" class="hero-section">
-    <!-- Animated Background -->
-    <div class="hero-bg">
-        {{ if ne site.Params.customTheme "paper" }}
-        <div class="gradient-orb orb-1"></div>
-        <div class="gradient-orb orb-2"></div>
-        <div class="gradient-orb orb-3"></div>
-        <div class="noise-overlay"></div>
-        {{ end }}
-    </div>
-
-    <!-- Content with Picture on Left, Text Wrapping -->
-    <div class="hero-content">
-        <!-- Name -->
-        <h1 class="hero-name reveal-item" style="--delay: 0">
-            {{ $author.name | default site.Title }}
-        </h1>
-
-        <!-- Designation -->
-        <div class="hero-designation reveal-item" style="--delay: 1">
-            <span class="designation-text">{{ $about.designation }}</span>
-            {{ if $about.company }}
-            <span class="company-text">
-                at <a href="{{ $about.company.url }}" target="_blank" rel="noopener">{{ $about.company.name }}</a>
-            </span>
+    <div class="hero-layout">
+        <!-- Left: Navigation Pane -->
+        <nav class="hero-nav reveal-item" style="--delay: 4" aria-label="Section navigation" id="heroNav">
+            {{ range sort site.Data.en.sections "section.weight" }}
+            {{ if and .section.enable .section.showOnNavbar }}
+            {{ $sectionID := .section.id }}
+            {{ $sectionName := .section.name }}
+            {{ $icon := "fas fa-link" }}
+            {{ if eq $sectionID "about" }}{{ $icon = "fas fa-user" }}
+            {{ else if eq $sectionID "experiences" }}{{ $icon = "fas fa-briefcase" }}
+            {{ else if eq $sectionID "posts" }}{{ $icon = "fas fa-pen-nib" }}
+            {{ else if eq $sectionID "publications" }}{{ $icon = "fas fa-book" }}
+            {{ else if eq $sectionID "newsletter" }}{{ $icon = "fas fa-paper-plane" }}
+            {{ else if eq $sectionID "skills" }}{{ $icon = "fas fa-code" }}
+            {{ else if eq $sectionID "education" }}{{ $icon = "fas fa-graduation-cap" }}
+            {{ else if eq $sectionID "projects" }}{{ $icon = "fas fa-rocket" }}
             {{ end }}
-        </div>
+            {{ if eq $sectionID "posts" }}
+            <a href="/posts/" class="hero-nav-item">
+                <i class="{{ $icon }}"></i>
+                <span>{{ $sectionName }}</span>
+            </a>
+            {{ else if eq $sectionID "publications" }}
+            <a href="/publications/" class="hero-nav-item">
+                <i class="{{ $icon }}"></i>
+                <span>{{ $sectionName }}</span>
+            </a>
+            {{ else if eq $sectionID "newsletter" }}
+            <a href="/newsletter/" class="hero-nav-item">
+                <i class="{{ $icon }}"></i>
+                <span>{{ $sectionName }}</span>
+            </a>
+            {{ else if ne $sectionID "about" }}
+            <a href="#{{ $sectionID }}" class="hero-nav-item">
+                <i class="{{ $icon }}"></i>
+                <span>{{ $sectionName }}</span>
+            </a>
+            {{ end }}
+            {{ end }}
+            {{ end }}
+        </nav>
 
-        <!-- About section with picture floating left -->
-        <div class="about-content reveal-item" style="--delay: 2">
-            <!-- Rectangular Profile Photo floated left -->
-            {{ if $author.image }}
-            <div class="profile-float">
-                {{ $img := resources.Get $author.image }}
-                {{ if $img }}
-                    {{ partial "helpers/responsive-image.html" (dict "image" $img "alt" $author.name "class" "profile-photo" "loading" "eager" "fetchpriority" "high" "sizes" "(max-width: 768px) 150px, 200px") }}
-                {{ else }}
-                    <img src="{{ $author.image | relURL }}" alt="{{ $author.name }}" class="profile-photo" width="200" height="300">
+        <!-- Right: Main Content -->
+        <div class="hero-content">
+            <!-- Name -->
+            <h1 class="hero-name reveal-item" style="--delay: 0">
+                {{ $author.name | default site.Title }}
+            </h1>
+
+            <!-- Designation -->
+            <div class="hero-designation reveal-item" style="--delay: 1">
+                <span class="designation-text">{{ $about.designation }}</span>
+                {{ if $about.company }}
+                <span class="company-text">
+                    at <a href="{{ $about.company.url }}" target="_blank" rel="noopener">{{ $about.company.name }}</a>
+                </span>
                 {{ end }}
             </div>
-            {{ end }}
 
-            <!-- Summary text wraps around -->
-            {{ if $about.summary }}
-            <div class="hero-summary">
-                {{ $about.summary | markdownify }}
+            <!-- About section with picture floating left -->
+            <div class="about-content reveal-item" style="--delay: 2">
+                {{ if $author.image }}
+                <div class="profile-float">
+                    {{ $img := resources.Get $author.image }}
+                    {{ if $img }}
+                        {{ partial "helpers/responsive-image.html" (dict "image" $img "alt" $author.name "class" "profile-photo" "loading" "eager" "fetchpriority" "high" "sizes" "(max-width: 768px) 150px, 200px") }}
+                    {{ else }}
+                        <img src="{{ $author.image | relURL }}" alt="{{ $author.name }}" class="profile-photo" width="200" height="300">
+                    {{ end }}
+                </div>
+                {{ end }}
+
+                {{ if $about.summary }}
+                <div class="hero-summary">
+                    {{ $about.summary | markdownify }}
+                </div>
+                {{ end }}
             </div>
-            {{ end }}
-        </div>
 
-        <!-- Social Links -->
-        <div class="hero-social reveal-item" style="--delay: 3">
-            {{ range $about.socialLinks }}
-            {{ $url := .url }}
-            {{ if eq .name "Email" }}
-            <a href="mailto:{{ $url }}" class="social-btn" aria-label="{{ .name }}" title="{{ .name }}">
-                <i class="{{ .icon }}"></i>
-            </a>
-            {{ else }}
-            <a href="{{ $url }}" class="social-btn" target="_blank" rel="noopener noreferrer" aria-label="{{ .name }}"
-                title="{{ .name }}">
-                <i class="{{ .icon }}"></i>
-            </a>
-            {{ end }}
-            {{ end }}
+            <!-- Social Links -->
+            <div class="hero-social reveal-item" style="--delay: 3">
+                {{ range $about.socialLinks }}
+                {{ $url := .url }}
+                {{ if eq .name "Email" }}
+                <a href="mailto:{{ $url }}" class="social-btn" aria-label="{{ .name }}" title="{{ .name }}">
+                    <i class="{{ .icon }}"></i>
+                </a>
+                {{ else }}
+                <a href="{{ $url }}" class="social-btn" target="_blank" rel="noopener noreferrer" aria-label="{{ .name }}"
+                    title="{{ .name }}">
+                    <i class="{{ .icon }}"></i>
+                </a>
+                {{ end }}
+                {{ end }}
+            </div>
         </div>
     </div>
 
     <!-- Scroll Indicator -->
     <div class="scroll-indicator">
-        <div class="mouse">
-            <div class="wheel"></div>
-        </div>
-        <span>Scroll to explore</span>
+        <svg width="20" height="30" viewBox="0 0 20 30" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="1" y="1" width="18" height="28" rx="9" />
+            <line x1="10" y1="8" x2="10" y2="14" stroke-linecap="round" class="scroll-line" />
+        </svg>
     </div>
 </section>
 
@@ -145,20 +176,19 @@
         width: 44px;
         height: 44px;
         border-radius: 50%;
-        background: var(--toggle-bg, rgba(255, 255, 255, 0.1));
-        border: 1px solid var(--toggle-border, rgba(255, 255, 255, 0.2));
+        background: var(--toggle-bg, rgba(255, 255, 255, 0.06));
+        border: 1px solid var(--toggle-border, rgba(255, 255, 255, 0.12));
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        transition: all 0.3s;
+        transition: all 0.2s;
         color: var(--text-primary, #fff);
         z-index: 1000;
     }
 
     .theme-toggle-fixed:hover {
-        background: var(--toggle-hover-bg, rgba(255, 255, 255, 0.2));
-        transform: scale(1.05);
+        background: var(--toggle-hover-bg, rgba(255, 255, 255, 0.12));
     }
 
     .theme-toggle-fixed svg {
@@ -179,17 +209,38 @@
         top: 0;
         left: 0;
         right: 0;
-        background: var(--navbar-bg, rgba(13, 17, 23, 0.95));
+        background: var(--navbar-bg, rgba(21, 23, 26, 0.95));
         backdrop-filter: blur(20px);
         border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
         z-index: 999;
         transform: translateY(-100%);
-        transition: transform 0.3s ease;
+        transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .scroll-navbar.visible {
         transform: translateY(0);
     }
+
+    /* Navbar link cascade-in animation */
+    .scroll-navbar .navbar-link {
+        opacity: 0;
+        transform: translateY(-8px);
+        transition: opacity 0.3s ease, transform 0.3s ease, color 0.2s;
+    }
+
+    .scroll-navbar.visible .navbar-link {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .scroll-navbar.visible .navbar-link:nth-child(1) { transition-delay: 0.08s; }
+    .scroll-navbar.visible .navbar-link:nth-child(2) { transition-delay: 0.12s; }
+    .scroll-navbar.visible .navbar-link:nth-child(3) { transition-delay: 0.16s; }
+    .scroll-navbar.visible .navbar-link:nth-child(4) { transition-delay: 0.20s; }
+    .scroll-navbar.visible .navbar-link:nth-child(5) { transition-delay: 0.24s; }
+    .scroll-navbar.visible .navbar-link:nth-child(6) { transition-delay: 0.28s; }
+    .scroll-navbar.visible .navbar-link:nth-child(7) { transition-delay: 0.32s; }
+    .scroll-navbar.visible .navbar-link:nth-child(8) { transition-delay: 0.36s; }
 
     .navbar-container {
         max-width: 1200px;
@@ -209,14 +260,13 @@
         font-weight: 500;
         color: var(--text-primary, #fff);
         text-decoration: none !important;
-        transition: transform 0.3s ease, color 0.3s;
+        transition: color 0.2s;
     }
 
     .navbar-brand:hover,
     .navbar-brand:focus,
     .navbar-brand:active {
-        transform: translateY(-2px);
-        color: #7B93FF;
+        color: var(--accent, #7B93FF);
         text-decoration: none !important;
     }
 
@@ -237,14 +287,13 @@
         font-weight: 400;
         color: var(--text-secondary, rgba(255, 255, 255, 0.7));
         text-decoration: none !important;
-        transition: transform 0.3s ease, color 0.3s;
+        transition: color 0.2s;
         display: inline-block;
     }
 
     .navbar-link:hover,
     .navbar-link:focus,
     .navbar-link:active {
-        transform: translateY(-2px);
         color: var(--text-primary, #fff);
         text-decoration: none !important;
     }
@@ -253,18 +302,18 @@
         width: 36px;
         height: 36px;
         border-radius: 50%;
-        background: var(--toggle-bg, rgba(255, 255, 255, 0.1));
-        border: 1px solid var(--toggle-border, rgba(255, 255, 255, 0.2));
+        background: var(--toggle-bg, rgba(255, 255, 255, 0.06));
+        border: 1px solid var(--toggle-border, rgba(255, 255, 255, 0.12));
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        transition: all 0.3s;
+        transition: all 0.2s;
         color: var(--text-primary, #fff);
     }
 
     .theme-toggle-navbar:hover {
-        background: var(--toggle-hover-bg, rgba(255, 255, 255, 0.2));
+        background: var(--toggle-hover-bg, rgba(255, 255, 255, 0.12));
     }
 
     .theme-toggle-navbar svg {
@@ -296,30 +345,9 @@
         border-bottom-color: transparent;
     }
 
-    /* Light theme - Clean white background, no boxes */
-    [data-theme="light"] .hero-section {
-        background: #F6F8FA;
-    }
-
-    [data-theme="light"] .gradient-orb {
-        opacity: 0.12;
-    }
-
-    [data-theme="light"] .orb-1 {
-        background: radial-gradient(circle, #93AAFF 0%, transparent 70%);
-    }
-
-    [data-theme="light"] .orb-2 {
-        background: radial-gradient(circle, #D4BCFF 0%, transparent 70%);
-    }
-
-    [data-theme="light"] .orb-3 {
-        background: radial-gradient(circle, #FFB3CC 0%, transparent 70%);
-    }
-
     [data-theme="light"] .profile-photo {
-        border-color: rgba(123, 147, 255, 0.25);
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+        border-color: rgba(0, 0, 0, 0.08);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     }
 
     [data-theme="light"] .social-btn {
@@ -329,21 +357,13 @@
     }
 
     [data-theme="light"] .social-btn:hover {
-        background: linear-gradient(135deg, #7B93FF, #C4A8FF);
-        border-color: transparent;
-        color: #fff;
+        color: var(--accent, #5B74E0);
+        border-color: var(--accent, #5B74E0);
+        background: transparent;
     }
 
     [data-theme="light"] .scroll-indicator {
         color: #8591A0;
-    }
-
-    [data-theme="light"] .mouse {
-        border-color: rgba(0, 0, 0, 0.12);
-    }
-
-    [data-theme="light"] .wheel {
-        background: rgba(0, 0, 0, 0.2);
     }
 
     [data-theme="light"] .hero-summary {
@@ -359,7 +379,7 @@
     }
 
     [data-theme="light"] .company-text a {
-        color: #93AAFF;
+        color: var(--accent, #5B74E0);
     }
 
     [data-theme="paper"] .hero-name {
@@ -394,7 +414,6 @@
         border-color: rgba(0, 0, 0, 0.2);
         color: var(--text-primary);
         box-shadow: none;
-        transform: translateY(-2px);
     }
 
     [data-theme="paper"] .designation-text {
@@ -413,18 +432,6 @@
         color: #2D2B2A !important;
     }
 
-    [data-theme="paper"] .gradient-orb {
-        display: none !important;
-    }
-
-    [data-theme="paper"] .noise-overlay {
-        display: none !important;
-    }
-
-    [data-theme="paper"] .hero-bg {
-        background: none !important;
-    }
-
     [data-theme="paper"] .hero-summary a {
         color: #4A6FA5 !important;
     }
@@ -439,109 +446,136 @@
         min-height: 100vh;
         display: flex;
         align-items: center;
-        justify-content: center;
         overflow: hidden;
-        background: var(--bg-primary, #0D1117);
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
-    /* Animated Background */
-    .hero-bg {
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-    }
-
-    .gradient-orb {
-        position: absolute;
-        border-radius: 50%;
-        filter: blur(120px);
-        opacity: var(--orb-opacity, 0.5);
-    }
-
-    .orb-1 {
-        width: 600px;
-        height: 600px;
-        background: radial-gradient(circle, #7B93FF 0%, transparent 70%);
-        top: -20%;
-        left: -10%;
-        animation: float-slow 20s ease-in-out infinite;
-    }
-
-    .orb-2 {
-        width: 500px;
-        height: 500px;
-        background: radial-gradient(circle, #C4A8FF 0%, transparent 70%);
-        bottom: -20%;
-        right: -10%;
-        animation: float-slow 25s ease-in-out infinite reverse;
-    }
-
-    .orb-3 {
-        width: 400px;
-        height: 400px;
-        background: radial-gradient(circle, #FF6B9D 0%, transparent 70%);
-        top: -15%;
-        right: -5%;
-        animation: float-slow 22s ease-in-out infinite;
-        animation-delay: -8s;
-    }
-
-    @keyframes float-slow {
-
-        0%,
-        100% {
-            transform: translate(0, 0) scale(1);
-        }
-
-        25% {
-            transform: translate(50px, 30px) scale(1.1);
-        }
-
-        50% {
-            transform: translate(-30px, 50px) scale(0.95);
-        }
-
-        75% {
-            transform: translate(40px, -20px) scale(1.05);
-        }
-    }
-
-    .noise-overlay {
-        position: absolute;
-        inset: 0;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-        opacity: 0.03;
-    }
-
-    /* Hero Content */
-    .hero-content {
+    /* Hero Layout: nav pinned left, content fills rest */
+    .hero-layout {
         position: relative;
         z-index: 10;
-        padding: 2rem;
-        max-width: 1000px;
+        display: flex;
+        align-items: stretch;
         width: 100%;
+        min-height: 100vh;
     }
 
-    /* Name */
+    /* Hero Navigation Pane - far left, vertically centered */
+    .hero-nav {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.125rem;
+        flex-shrink: 0;
+        width: 180px;
+        padding: 2rem 1.5rem 2rem 2rem;
+        position: relative;
+        transition: opacity 0.2s ease;
+    }
+
+    /* Vertical separator: soft gradient line + subtle glow */
+    .hero-nav::after {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 1px;
+        height: 60%;
+        background: linear-gradient(
+            180deg,
+            transparent,
+            var(--border-color, rgba(255, 255, 255, 0.1)) 30%,
+            var(--accent, rgba(123, 147, 255, 0.15)) 50%,
+            var(--border-color, rgba(255, 255, 255, 0.1)) 70%,
+            transparent
+        );
+    }
+
+    .hero-nav-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.55rem 0;
+        color: var(--text-muted, #6B7280);
+        text-decoration: none !important;
+        font-size: 0.85rem;
+        font-weight: 450;
+        transition: color 0.2s;
+        will-change: transform, opacity;
+    }
+
+    .hero-nav-item i {
+        width: 18px;
+        text-align: center;
+        font-size: 0.8rem;
+        transition: color 0.2s;
+    }
+
+    .hero-nav-item:hover {
+        color: var(--text-primary, #E6E8EB);
+        text-decoration: none !important;
+    }
+
+    .hero-nav-item:hover i {
+        color: var(--accent, #7B93FF);
+    }
+
+    /* Light theme nav */
+    [data-theme="light"] .hero-nav::after {
+        background: linear-gradient(
+            180deg,
+            transparent,
+            rgba(0, 0, 0, 0.08) 30%,
+            rgba(91, 116, 224, 0.12) 50%,
+            rgba(0, 0, 0, 0.08) 70%,
+            transparent
+        );
+    }
+
+    [data-theme="light"] .hero-nav-item:hover i {
+        color: var(--accent, #5B74E0);
+    }
+
+    /* Paper theme nav */
+    [data-theme="paper"] .hero-nav::after {
+        background: linear-gradient(
+            180deg,
+            transparent,
+            rgba(0, 0, 0, 0.08) 30%,
+            rgba(0, 0, 0, 0.1) 50%,
+            rgba(0, 0, 0, 0.08) 70%,
+            transparent
+        );
+    }
+
+    [data-theme="paper"] .hero-nav-item:hover i {
+        color: var(--text-primary);
+    }
+
+    /* Hero Content - centered in remaining space */
+    .hero-content {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2rem 3rem;
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    /* Name - clean, no gradient */
     .hero-name {
         font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
         font-size: clamp(2rem, 5vw, 3rem);
         font-weight: 700;
-        color: var(--text-primary, #fff);
+        color: var(--text-primary, #E6E8EB);
         margin: 0 0 0.5rem 0;
         letter-spacing: -0.02em;
-        background: linear-gradient(135deg, #E6E8EB, #C4A8FF);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
     }
 
     [data-theme="light"] .hero-name {
-        background: none;
-        -webkit-background-clip: unset;
-        -webkit-text-fill-color: unset;
-        background-clip: unset;
         color: #1B2331;
     }
 
@@ -554,27 +588,26 @@
     }
 
     .designation-text {
-        color: #7B93FF;
+        color: var(--accent, #7B93FF);
     }
 
     .company-text {
-        color: var(--text-secondary, #9ca3af);
+        color: var(--text-secondary, #9CA3AF);
     }
 
     .company-text a {
-        color: #93AAFF;
+        color: var(--accent-hover, #93AAFF);
         text-decoration: none;
-        transition: color 0.3s;
+        transition: color 0.2s;
     }
 
     .company-text a:hover {
-        color: #B3C3FF;
+        color: var(--text-primary, #E6E8EB);
     }
 
     /* About Content with Float */
     .about-content {
         overflow: hidden;
-        /* Clear float */
     }
 
     /* Rectangular Profile Photo - Floated Left */
@@ -588,8 +621,8 @@
         width: 100%;
         height: auto;
         border-radius: 12px;
-        border: 3px solid rgba(123, 147, 255, 0.25);
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        border: 2px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     }
 
     /* Summary - Text wraps around photo */
@@ -597,8 +630,8 @@
         font-family: 'Inter', sans-serif;
         font-size: 0.95rem;
         font-weight: 400;
-        line-height: 1.75;
-        color: var(--text-secondary, #9ca3af);
+        line-height: 1.8;
+        color: var(--text-secondary, #9CA3AF);
     }
 
     .hero-summary p {
@@ -610,13 +643,13 @@
     }
 
     .hero-summary a {
-        color: #93AAFF;
+        color: var(--accent-hover, #93AAFF);
         text-decoration: none;
-        transition: color 0.3s;
+        transition: color 0.2s;
     }
 
     .hero-summary a:hover {
-        color: #B3C3FF;
+        color: var(--text-primary, #E6E8EB);
         text-decoration: underline;
     }
 
@@ -629,101 +662,50 @@
     }
 
     .social-btn {
-        width: 44px;
-        height: 44px;
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
-        background: var(--social-bg, rgba(255, 255, 255, 0.05));
+        background: transparent;
         border: 1px solid var(--social-border, rgba(255, 255, 255, 0.1));
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--text-secondary, #9ca3af);
-        font-size: 1.1rem;
-        transition: all 0.3s ease;
+        color: var(--text-muted, #6B7280);
+        font-size: 1.05rem;
+        transition: color 0.2s, border-color 0.2s;
+        text-decoration: none;
     }
 
     .social-btn:hover {
-        background: linear-gradient(135deg, #7B93FF, #C4A8FF);
-        border-color: transparent;
-        color: #fff;
-        transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(123, 147, 255, 0.3);
+        color: var(--accent, #7B93FF);
+        border-color: var(--accent, #7B93FF);
     }
 
-    /* Scroll Indicator */
+    /* Scroll Indicator - minimal */
     .scroll-indicator {
         position: absolute;
         bottom: 2rem;
         left: 50%;
         transform: translateX(-50%);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.5rem;
-        color: var(--text-muted, #6b7280);
-        font-size: 0.75rem;
-        font-family: 'Inter', sans-serif;
-        font-weight: 400;
-        animation: bounce 2s infinite;
+        color: var(--text-muted, #6B7280);
+        opacity: 0.5;
     }
 
-    .mouse {
-        width: 24px;
-        height: 40px;
-        border: 2px solid var(--mouse-border, rgba(255, 255, 255, 0.2));
-        border-radius: 12px;
-        position: relative;
+    .scroll-line {
+        animation: scroll-fade 2s ease-in-out infinite;
     }
 
-    .wheel {
-        width: 4px;
-        height: 8px;
-        background: var(--wheel-bg, rgba(255, 255, 255, 0.4));
-        border-radius: 2px;
-        position: absolute;
-        top: 8px;
-        left: 50%;
-        transform: translateX(-50%);
-        animation: scroll-wheel 1.5s infinite;
-    }
-
-    @keyframes scroll-wheel {
-        0% {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-        }
-
-        100% {
-            opacity: 0;
-            transform: translateX(-50%) translateY(10px);
-        }
-    }
-
-    @keyframes bounce {
-
-        0%,
-        20%,
-        50%,
-        80%,
-        100% {
-            transform: translateX(-50%) translateY(0);
-        }
-
-        40% {
-            transform: translateX(-50%) translateY(-8px);
-        }
-
-        60% {
-            transform: translateX(-50%) translateY(-4px);
-        }
+    @keyframes scroll-fade {
+        0%, 100% { opacity: 1; transform: translateY(0); }
+        50% { opacity: 0.3; transform: translateY(4px); }
     }
 
     /* Reveal Animation */
     .reveal-item {
         opacity: 0;
-        transform: translateY(20px);
-        animation: reveal 0.6s ease-out forwards;
-        animation-delay: calc(var(--delay) * 0.12s);
+        transform: translateY(16px);
+        animation: reveal 0.5s ease-out forwards;
+        animation-delay: calc(var(--delay) * 0.1s);
     }
 
     @keyframes reveal {
@@ -734,6 +716,16 @@
     }
 
     /* Responsive */
+    @media (max-width: 1024px) {
+        .hero-nav {
+            display: none;
+        }
+
+        .hero-content {
+            padding: 2rem;
+        }
+    }
+
     @media (max-width: 768px) {
         .theme-toggle-fixed {
             top: 1rem;
@@ -763,21 +755,18 @@
 </style>
 
 <script>
-    // Theme Toggle and Scroll Navbar
     document.addEventListener('DOMContentLoaded', function () {
         const themeToggle = document.getElementById('themeToggle');
         const themeToggleNav = document.getElementById('themeToggleNav');
         const scrollNavbar = document.getElementById('scrollNavbar');
         const html = document.documentElement;
 
-        // Check for saved theme
         if (html.getAttribute('data-theme') !== 'paper') {
             const savedTheme = localStorage.getItem('theme') ||
                 (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
             html.setAttribute('data-theme', savedTheme);
         }
 
-        // Toggle theme function - ONLY if customTheme is not paper
         function toggleTheme() {
             if (document.documentElement.getAttribute('data-theme') === 'paper') return;
             const current = html.getAttribute('data-theme');
@@ -791,15 +780,24 @@
             themeToggleNav?.addEventListener('click', toggleTheme);
         }
 
-        // Show/hide navbar on scroll
-        let lastScrollTop = 0;
-        const heroHeight = document.querySelector('.hero-section')?.offsetHeight || window.innerHeight;
+        const heroNav = document.getElementById('heroNav');
+        const heroNavItems = heroNav ? heroNav.querySelectorAll('.hero-nav-item') : [];
+        const heroSection = document.querySelector('.hero-section');
+        let heroHeight = heroSection?.offsetHeight || window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            heroHeight = heroSection?.offsetHeight || window.innerHeight;
+        });
+
+        const navbarThreshold = 0.55;
+        const flyStart = 0.15;
+        const flyEnd = 0.55;
 
         window.addEventListener('scroll', () => {
             const scrollTop = window.pageYOffset;
+            const scrollRatio = scrollTop / heroHeight;
 
-            // Show navbar after scrolling past hero
-            if (scrollTop > heroHeight * 0.6) {
+            if (scrollRatio > navbarThreshold) {
                 scrollNavbar?.classList.add('visible');
                 themeToggle?.classList.add('hidden');
             } else {
@@ -807,7 +805,34 @@
                 themeToggle?.classList.remove('hidden');
             }
 
-            lastScrollTop = scrollTop;
+            if (heroNav && heroNavItems.length) {
+                if (scrollRatio <= flyStart) {
+                    heroNav.style.opacity = '1';
+                    heroNavItems.forEach(item => {
+                        item.style.transform = '';
+                        item.style.opacity = '';
+                    });
+                } else if (scrollRatio >= flyEnd) {
+                    heroNav.style.opacity = '0';
+                    heroNav.style.pointerEvents = 'none';
+                } else {
+                    heroNav.style.pointerEvents = '';
+                    const progress = (scrollRatio - flyStart) / (flyEnd - flyStart);
+                    const eased = progress * progress;
+
+                    heroNavItems.forEach((item, i) => {
+                        const stagger = Math.min(1, progress + i * 0.04);
+                        const translateY = -eased * 60;
+                        const scale = 1 - eased * 0.15;
+                        const opacity = 1 - Math.pow(stagger, 0.8);
+
+                        item.style.transform = `translateY(${translateY}px) scale(${scale})`;
+                        item.style.opacity = opacity;
+                    });
+
+                    heroNav.style.opacity = '1';
+                }
+            }
         });
     });
 </script>

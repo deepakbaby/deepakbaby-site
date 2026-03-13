@@ -306,10 +306,10 @@
     }
 
     .filter-pill.active {
-        background: #7B93FF;
-        border-color: #7B93FF;
+        background: var(--accent, #7B93FF);
+        border-color: var(--accent, #7B93FF);
         color: #fff;
-        box-shadow: 0 4px 12px rgba(123, 147, 255, 0.3);
+        box-shadow: none;
     }
 
     /* ============================================
@@ -418,20 +418,20 @@
         }
 
         .bento-card:hover {
-            border-color: rgba(123, 147, 255, 0.3);
-            box-shadow: 0 30px 80px rgba(123, 147, 255, 0.25);
+            border-color: var(--card-hover-border, rgba(123, 147, 255, 0.2));
+            box-shadow: 0 8px 30px var(--card-hover-shadow, rgba(0, 0, 0, 0.2));
             transform: perspective(1000px)
                        rotateX(var(--rotate-x, 0deg))
                        rotateY(var(--rotate-y, 0deg))
-                       translateZ(10px);
+                       translateZ(5px);
         }
     }
 
     @media (hover: hover) and (max-width: 1199px) {
         .bento-card:hover {
-            border-color: rgba(123, 147, 255, 0.3);
-            box-shadow: 0 20px 50px rgba(123, 147, 255, 0.2);
-            transform: translateY(-4px);
+            border-color: var(--card-hover-border, rgba(123, 147, 255, 0.2));
+            box-shadow: 0 4px 20px var(--card-hover-shadow, rgba(0, 0, 0, 0.2));
+            transform: translateY(-2px);
         }
     }
 

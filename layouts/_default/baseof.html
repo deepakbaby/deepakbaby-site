@@ -15,7 +15,7 @@
 
   <!------ PWA MANIFEST -------->
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#0D1117">
+  <meta name="theme-color" content="#15171A">
 
   <!------ RESOURCE PRELOADING FOR CRITICAL ASSETS -------->
   <link rel="preload" as="script" href="/js/collapsible-sidebars.js">
@@ -35,22 +35,22 @@
   <style>
     /* Global Theme CSS Variables */
     :root {
-      --bg-primary: #0D1117;
-      --bg-secondary: #161B22;
-      --bg-card: rgba(255, 255, 255, 0.04);
+      --bg-primary: #15171A;
+      --bg-secondary: #1C1F26;
+      --bg-card: rgba(255, 255, 255, 0.03);
       --text-primary: #E6E8EB;
-      --text-secondary: #99A1AB;
-      --text-muted: #636D78;
+      --text-secondary: #9CA3AF;
+      --text-muted: #6B7280;
+      --accent: #7B93FF;
+      --accent-hover: #93AAFF;
       --border-color: rgba(255, 255, 255, 0.08);
-      --orb-opacity: 0.4;
-      --toggle-bg: rgba(255, 255, 255, 0.08);
-      --toggle-border: rgba(255, 255, 255, 0.15);
-      --social-bg: rgba(255, 255, 255, 0.04);
+      --toggle-bg: rgba(255, 255, 255, 0.06);
+      --toggle-border: rgba(255, 255, 255, 0.12);
+      --social-bg: transparent;
       --social-border: rgba(255, 255, 255, 0.1);
-      --mouse-border: rgba(255, 255, 255, 0.2);
-      --wheel-bg: rgba(255, 255, 255, 0.4);
-      --card-hover-border: rgba(123, 147, 255, 0.3);
-      --card-hover-shadow: rgba(123, 147, 255, 0.12);
+      --card-hover-border: rgba(123, 147, 255, 0.2);
+      --card-hover-shadow: rgba(0, 0, 0, 0.3);
+      --footer-bg: #111315;
     }
 
     [data-theme="light"] {
@@ -60,21 +60,21 @@
       --text-primary: #1B2331;
       --text-secondary: #566170;
       --text-muted: #8591A0;
+      --accent: #5B74E0;
+      --accent-hover: #7B93FF;
       --border-color: rgba(0, 0, 0, 0.08);
-      --orb-opacity: 0.15;
       --toggle-bg: rgba(0, 0, 0, 0.04);
       --toggle-border: rgba(0, 0, 0, 0.08);
       --social-bg: transparent;
       --social-border: rgba(0, 0, 0, 0.1);
-      --mouse-border: rgba(0, 0, 0, 0.15);
-      --wheel-bg: rgba(0, 0, 0, 0.25);
-      --card-hover-border: rgba(123, 147, 255, 0.3);
-      --card-hover-shadow: rgba(123, 147, 255, 0.08);
+      --card-hover-border: rgba(123, 147, 255, 0.2);
+      --card-hover-shadow: rgba(0, 0, 0, 0.08);
       --card-bg: transparent;
       --card-border: rgba(0, 0, 0, 0.06);
       --timeline-color: #7B93FF;
       --section-bg: #ffffff;
-      --glow-color: rgba(123, 147, 255, 0.08);
+      --glow-color: rgba(123, 147, 255, 0.06);
+      --footer-bg: #ECEEF1;
     }
 
     [data-theme="paper"] {
@@ -178,10 +178,7 @@
 
     /* Section separators - warm gray */
     [data-theme="paper"] .section-separator {
-      background: linear-gradient(90deg, transparent, rgba(0,0,0,0.12), transparent) !important;
-    }
-    [data-theme="paper"] .section-separator::before {
-      background: rgba(0,0,0,0.15) !important;
+      background: linear-gradient(90deg, transparent, rgba(0,0,0,0.1), transparent) !important;
     }
 
     /* Blog coverflow cards */
@@ -270,13 +267,7 @@
       color: #4A6FA5 !important;
     }
 
-    /* Mouse / scroll indicator */
-    [data-theme="paper"] .mouse {
-      border-color: rgba(0,0,0,0.2) !important;
-    }
-    [data-theme="paper"] .wheel {
-      background: rgba(0,0,0,0.3) !important;
-    }
+    /* Scroll indicator */
     [data-theme="paper"] .scroll-indicator {
       color: var(--text-muted) !important;
     }

@@ -39,7 +39,7 @@
 <style>
     /* Skills Section Styles */
     .skills-section {
-        background: linear-gradient(180deg, #0D1117 0%, #0B0E13 100%);
+        background: var(--bg-primary, #15171A);
         padding: 6rem 0;
         position: relative;
     }
@@ -63,7 +63,7 @@
         display: inline-block;
         font-size: 0.875rem;
         font-weight: 500;
-        color: #5ED4F5;
+        color: var(--accent, #7B93FF);
         text-transform: uppercase;
         letter-spacing: 0.1em;
         margin-bottom: 0.5rem;
@@ -86,15 +86,9 @@
     }
 
     .gradient-text-cyan {
-        background: linear-gradient(135deg, #5ED4F5 0%, #7B93FF 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-
-    [data-theme="paper"] .gradient-text-cyan {
+        color: var(--text-primary, #E6E8EB);
         background: none;
-        -webkit-text-fill-color: var(--text-primary);
+        -webkit-text-fill-color: unset;
     }
 
     /* Skills Grid */
@@ -133,8 +127,8 @@
     }
 
     .skill-category:hover {
-        border-color: rgba(94, 212, 245, 0.3);
-        box-shadow: 0 10px 40px rgba(94, 212, 245, 0.1);
+        border-color: var(--card-hover-border, rgba(123, 147, 255, 0.2));
+        box-shadow: 0 4px 20px var(--card-hover-shadow, rgba(0, 0, 0, 0.2));
     }
 
     [data-theme="paper"] .skill-category:hover {
@@ -157,7 +151,7 @@
     }
 
     .category-title i {
-        color: #5ED4F5;
+        color: var(--accent, #7B93FF);
     }
 
     /* Skill Tags */
@@ -189,10 +183,9 @@
     }
 
     .skill-tag:hover {
-        background: rgba(94, 212, 245, 0.1);
-        border-color: rgba(94, 212, 245, 0.3);
-        color: #E6E8EB;
-        transform: translateY(-2px);
+        background: rgba(123, 147, 255, 0.08);
+        border-color: var(--card-hover-border, rgba(123, 147, 255, 0.2));
+        color: var(--text-primary, #E6E8EB);
     }
 
     [data-theme="paper"] .skill-tag:hover {
@@ -203,7 +196,7 @@
 
     .skill-tag i {
         font-size: 1rem;
-        color: #5ED4F5;
+        color: var(--accent, #7B93FF);
     }
 
     [data-theme="paper"] .skill-tag i {
@@ -217,7 +210,7 @@
         left: 0;
         height: 2px;
         width: var(--level, 0%);
-        background: linear-gradient(90deg, #5ED4F5, #7B93FF);
+        background: var(--accent, #7B93FF);
         transition: width 1s ease;
     }
 
