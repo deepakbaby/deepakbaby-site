@@ -8,7 +8,7 @@
             <path d="M0,900 L0,640 Q200,600 400,620 Q600,640 800,610 Q1000,580 1200,620 Q1350,640 1440,600 L1440,900 Z" fill="var(--landscape-mid, rgba(123,147,255,0.04))"/>
             <path d="M0,900 L0,710 Q240,680 480,700 Q720,720 960,690 Q1200,660 1440,700 L1440,900 Z" fill="var(--landscape-near, rgba(123,147,255,0.025))"/>
         </svg>
-        <div class="page-noise"></div>
+        <!-- noise overlay removed -->
     </div>
     {{ end }}
 
@@ -19,9 +19,9 @@
 
     <div class="section-separator"></div>
 
-    <!-- Experience Section -->
+    <!-- Bento Grid: Career + Education + Publications -->
     <div class="section-wrapper">
-        {{ partial "experience.html" . }}
+        {{ partial "bento_grid.html" . }}
     </div>
 
     <div class="section-separator"></div>
@@ -31,11 +31,13 @@
         {{ partial "posts_slider.html" . }}
     </div>
 
-    <div class="section-separator"></div>
-
-    <!-- Featured Publications Section -->
-    <div class="section-wrapper">
-        {{ partial "featured_publications.html" . }}
+    <!-- SVG wave bridge: blends carousel into footer -->
+    <div class="footer-wave-bridge" aria-hidden="true">
+        <svg class="blend-wave" viewBox="0 0 1440 400" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path class="blend-wave-far" d="M0,400 L0,60 Q160,10 320,50 Q480,90 640,35 Q800,0 960,40 Q1120,75 1280,25 Q1380,5 1440,30 L1440,400 Z"/>
+            <path class="blend-wave-mid" d="M0,400 L0,140 Q180,90 360,130 Q540,170 720,110 Q900,60 1080,105 Q1260,150 1440,90 L1440,400 Z"/>
+            <path class="blend-wave-near" d="M0,400 L0,240 Q200,200 400,225 Q600,250 800,215 Q1000,180 1200,210 Q1350,235 1440,200 L1440,400 Z"/>
+        </svg>
     </div>
 
     <!-- Floating Navigation (hidden) -->
@@ -68,7 +70,7 @@
     .homepage-wrapper {
         background: var(--bg-primary);
         color: var(--text-primary);
-        overflow-x: hidden;
+        overflow-x: clip;
         scroll-behavior: smooth;
         position: relative;
     }
@@ -111,6 +113,57 @@
 
     .section-wrapper {
         position: relative;
+        z-index: 2;
+    }
+
+    /* Pull footer up into the wave for seamless blend */
+    .kind-home .site-footer {
+        margin-top: -2rem;
+        padding-top: 3rem;
+    }
+
+    /* Footer wave bridge: fades from page bg into footer bg behind content */
+    .footer-wave-bridge {
+        position: relative;
+        z-index: 1;
+        margin-top: -8rem;
+        height: 14rem;
+        pointer-events: none;
+        line-height: 0;
+    }
+
+    .footer-wave-bridge .blend-wave {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+
+    .footer-wave-bridge .blend-wave-far {
+        fill: var(--blend-far, rgba(20, 24, 42, 0.4));
+    }
+
+    .footer-wave-bridge .blend-wave-mid {
+        fill: var(--blend-mid, rgba(22, 26, 44, 0.7));
+    }
+
+    .footer-wave-bridge .blend-wave-near {
+        fill: var(--footer-bg, #171B2E);
+    }
+
+    [data-theme="light"] .footer-wave-bridge .blend-wave-far {
+        --blend-far: rgba(30, 36, 60, 0.25);
+    }
+
+    [data-theme="light"] .footer-wave-bridge .blend-wave-mid {
+        --blend-mid: rgba(32, 38, 62, 0.55);
+    }
+
+    [data-theme="paper"] .footer-wave-bridge .blend-wave-far {
+        --blend-far: rgba(36, 40, 58, 0.2);
+    }
+
+    [data-theme="paper"] .footer-wave-bridge .blend-wave-mid {
+        --blend-mid: rgba(38, 42, 60, 0.5);
     }
 
     /* Section separators */
@@ -186,7 +239,7 @@
 
     /* Ensure body doesn't have horizontal scroll */
     body {
-        overflow-x: hidden;
+        overflow-x: clip;
     }
 </style>
 
@@ -194,7 +247,7 @@
     // Enhanced Scroll Reveal Animations
     document.addEventListener('DOMContentLoaded', function () {
         // Reveal animation on scroll
-        const revealElements = document.querySelectorAll('.reveal-up, .timeline-item, .education-card, .skill-category, .project-card');
+        const revealElements = document.querySelectorAll('.reveal-up, .timeline-item, .education-card, .skill-category, .project-card, .bento-box');
 
         const revealObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {

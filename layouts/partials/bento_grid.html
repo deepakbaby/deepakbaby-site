@@ -1,0 +1,821 @@
+{{/* Bento Grid: Career + Education + Publications + Newsletter */}}
+{{ $experiences := site.Data.en.sections.experiences.experiences }}
+{{ $degrees := site.Data.en.sections.education.degrees }}
+{{ $pubData := index site.Data.en.sections "highlighted-publications" }}
+{{ if not $pubData }}
+{{ $pubData = site.Data.en.sections.publications }}
+{{ end }}
+{{ $newsletters := where site.RegularPages "Type" "newsletter" }}
+{{ $latestNewsletter := false }}
+{{ with first 1 $newsletters }}
+{{ $latestNewsletter = index . 0 }}
+{{ end }}
+
+<section id="bento" class="bento-section">
+    <div class="bento-container">
+        <div class="bento-grid">
+
+            <!-- Left Column -->
+            <div class="bento-left">
+
+                <!-- Career Journey (scrollable) -->
+                <div class="bento-box bento-career reveal-up">
+                    <span class="bento-label">Career Journey</span>
+
+                    <div class="career-list">
+                        {{ range $index, $exp := $experiences }}
+                        <div class="career-row">
+                            {{ if $exp.company.logo }}
+                            {{ $logoImage := resources.Get $exp.company.logo }}
+                            {{ if $logoImage }}
+                            {{ if ne $logoImage.MediaType.SubType "svg" }}
+                                {{ $logoImage = $logoImage.Resize "80x webp q85" }}
+                            {{ end }}
+                            <div class="career-logo">
+                                <img src="{{ $logoImage.RelPermalink }}" alt="{{ $exp.company.name }}" width="40" height="40" loading="lazy">
+                            </div>
+                            {{ end }}
+                            {{ end }}
+                            <div class="career-info">
+                                <div class="career-company">
+                                    {{ if $exp.company.url }}
+                                    <a href="{{ $exp.company.url }}" target="_blank" rel="noopener">{{ $exp.company.name }}</a>
+                                    {{ else }}
+                                    {{ $exp.company.name }}
+                                    {{ end }}
+                                </div>
+                                {{ range $exp.positions }}
+                                <div class="career-role-line">
+                                    <span class="career-role">{{ .designation }}</span>
+                                    <span class="career-dates">
+                                        {{ .start }} — {{ .end | default "Present" }}
+                                        {{ if not .end }}<span class="career-current"></span>{{ end }}
+                                    </span>
+                                </div>
+                                {{ end }}
+                            </div>
+                        </div>
+                        {{ end }}
+                    </div>
+                </div>
+
+                <!-- Latest Newsletter -->
+                {{ if $latestNewsletter }}
+                <a href="{{ $latestNewsletter.Permalink }}" class="bento-box bento-newsletter reveal-up">
+                    <span class="bento-label">Latest Newsletter</span>
+                    <div class="newsletter-preview">
+                        <h3 class="newsletter-title">{{ $latestNewsletter.Title }}</h3>
+                        <span class="newsletter-date">{{ $latestNewsletter.Date.Format "Jan 2, 2006" }}</span>
+                    </div>
+                    {{ with $latestNewsletter.Params.highlights }}
+                    <ul class="newsletter-highlights">
+                        {{ range first 2 . }}
+                        <li>{{ . }}</li>
+                        {{ end }}
+                    </ul>
+                    {{ end }}
+                    <span class="newsletter-read">
+                        Read issue
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </span>
+                </a>
+                {{ end }}
+
+            </div>
+
+            <!-- Right Column -->
+            <div class="bento-right">
+
+                <!-- Education -->
+                <div class="bento-box bento-education reveal-up">
+                    <span class="bento-label">Education</span>
+
+                    <div class="edu-list">
+                        {{ range $degrees }}
+                        <div class="edu-row">
+                            {{ if .institution.logo }}
+                            {{ $eduLogo := resources.Get .institution.logo }}
+                            {{ if $eduLogo }}
+                            {{ if ne $eduLogo.MediaType.SubType "svg" }}
+                                {{ $eduLogo = $eduLogo.Resize "72x webp q85" }}
+                            {{ end }}
+                            <div class="edu-logo">
+                                <img src="{{ $eduLogo.RelPermalink }}" alt="{{ .institution.name }}" width="36" height="36" loading="lazy">
+                            </div>
+                            {{ end }}
+                            {{ end }}
+                            <div class="edu-info">
+                                <div class="edu-top-line">
+                                    <div class="edu-institution">
+                                        {{ if .institution.url }}
+                                        <a href="{{ .institution.url }}" target="_blank" rel="noopener">{{ .institution.name }}</a>
+                                        {{ else }}
+                                        {{ .institution.name }}
+                                        {{ end }}
+                                    </div>
+                                    <span class="edu-timeframe">{{ .timeframe }}</span>
+                                </div>
+                                <div class="edu-degree">{{ .name }}</div>
+                                {{ range first 1 .customSections }}
+                                <div class="edu-detail">{{ .name }}: {{ .content }}</div>
+                                {{ end }}
+                            </div>
+                        </div>
+                        {{ end }}
+                    </div>
+                </div>
+
+                <!-- Featured Publications -->
+                <div class="bento-box bento-pubs reveal-up">
+                    <div class="bento-label-row">
+                        <span class="bento-label">Research</span>
+                        <a href="/publications/" class="bento-view-all">
+                            View All
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                    </div>
+
+                    <div class="pubs-list">
+                        {{ range $pubData.publications }}
+                        <div class="pub-row">
+                            <div class="pub-venue-badge">{{ .publishedIn.name }}</div>
+                            <div class="pub-date-small">{{ .publishedIn.date }}</div>
+                            <h3 class="pub-title-compact">{{ .title }}</h3>
+                            <div class="pub-authors-compact">
+                                {{ range $i, $author := .authors }}{{ if $i }}, {{ end }}{{ $author.name }}{{ end }}
+                            </div>
+                            {{ if .paper.url }}
+                            <a href="{{ .paper.url }}" target="_blank" rel="noopener" class="pub-read-link">
+                                Read Paper
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                                </svg>
+                            </a>
+                            {{ end }}
+                        </div>
+                        {{ end }}
+                    </div>
+
+                    {{ if $pubData.scholarUrl }}
+                    <a href="{{ $pubData.scholarUrl }}" target="_blank" rel="noopener" class="scholar-link">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                        </svg>
+                        Google Scholar
+                    </a>
+                    {{ end }}
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .bento-section {
+        padding: 4rem 2rem 5rem;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+    }
+
+    .bento-container {
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    .bento-grid {
+        display: grid;
+        grid-template-columns: 1.35fr 1fr;
+        gap: 1.5rem;
+        align-items: stretch;
+    }
+
+    .bento-left {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .bento-right {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    /* Box base */
+    .bento-box {
+        background: var(--bg-secondary, #1C1F26);
+        border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+        border-radius: 16px;
+        padding: 1.25rem 1.5rem;
+        position: relative;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .bento-box:hover {
+        border-color: var(--bento-hover-border, rgba(123, 147, 255, 0.15));
+        box-shadow: 0 4px 24px var(--bento-hover-shadow, rgba(0, 0, 0, 0.12));
+    }
+
+    /* Section label */
+    .bento-label {
+        display: inline-block;
+        font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent, #7B93FF);
+        margin-bottom: 1.25rem;
+    }
+
+    .bento-label-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.25rem;
+    }
+
+    .bento-label-row .bento-label {
+        margin-bottom: 0;
+    }
+
+    .bento-view-all {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--text-muted, #6B7280);
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .bento-view-all:hover {
+        color: var(--accent, #7B93FF);
+        text-decoration: none;
+    }
+
+    .bento-view-all svg {
+        transition: transform 0.2s;
+    }
+
+    .bento-view-all:hover svg {
+        transform: translateX(3px);
+    }
+
+    /* ── Career ── */
+    .bento-career {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    .career-list {
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        flex: 1;
+        margin: 0 -0.5rem;
+        padding: 0 0.5rem;
+    }
+
+    .career-list::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .career-list::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .career-list::-webkit-scrollbar-thumb {
+        background: var(--border-color, rgba(255, 255, 255, 0.1));
+        border-radius: 4px;
+    }
+
+    .career-list::-webkit-scrollbar-thumb:hover {
+        background: var(--text-muted, rgba(255, 255, 255, 0.2));
+    }
+
+    .career-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 0.875rem 0;
+        border-bottom: 1px dashed var(--border-color, rgba(255, 255, 255, 0.06));
+        flex-shrink: 0;
+    }
+
+    .career-row:last-child {
+        border-bottom: none;
+    }
+
+    .career-logo {
+        flex-shrink: 0;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
+        transition: transform 0.2s ease;
+    }
+
+    .career-row:hover .career-logo {
+        transform: scale(1.06);
+    }
+
+    .career-logo img {
+        width: 30px;
+        height: 30px;
+        object-fit: contain;
+    }
+
+    .career-info {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .career-company {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-primary, #E6E8EB);
+        line-height: 1.4;
+        letter-spacing: -0.01em;
+    }
+
+    .career-company a {
+        color: inherit;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .career-company a:hover {
+        color: var(--accent, #7B93FF);
+    }
+
+    .career-role-line {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-top: 0.2rem;
+    }
+
+    .career-role-line:first-of-type {
+        margin-top: 0.15rem;
+    }
+
+    .career-role {
+        font-size: 0.825rem;
+        font-weight: 400;
+        color: var(--text-secondary, #9CA3AF);
+    }
+
+    .career-dates {
+        font-size: 0.7rem;
+        color: var(--text-muted, #6B7280);
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        flex-shrink: 0;
+    }
+
+    .career-current {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #34D399;
+        display: inline-block;
+        animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+    }
+
+    /* ── Newsletter ── */
+    .bento-newsletter {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .bento-newsletter:hover {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .newsletter-preview {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+
+    .newsletter-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-primary, #E6E8EB);
+        line-height: 1.4;
+        letter-spacing: -0.01em;
+        margin: 0;
+    }
+
+    .newsletter-date {
+        font-size: 0.7rem;
+        color: var(--text-muted, #6B7280);
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .newsletter-highlights {
+        list-style: none;
+        padding: 0;
+        margin: 0.6rem 0 0;
+    }
+
+    .newsletter-highlights li {
+        font-size: 0.775rem;
+        color: var(--text-secondary, #9CA3AF);
+        line-height: 1.5;
+        padding: 0.15rem 0;
+        padding-left: 1rem;
+        position: relative;
+    }
+
+    .newsletter-highlights li::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0.55rem;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--accent, #7B93FF);
+    }
+
+    .newsletter-read {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--text-muted, #6B7280);
+        margin-top: 0.75rem;
+        transition: color 0.2s;
+    }
+
+    .newsletter-read svg {
+        transition: transform 0.2s;
+    }
+
+    .bento-newsletter:hover .newsletter-read {
+        color: var(--accent, #7B93FF);
+    }
+
+    .bento-newsletter:hover .newsletter-read svg {
+        transform: translateX(3px);
+    }
+
+    /* ── Education ── */
+    .edu-list {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .edu-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 0.75rem 0;
+    }
+
+    .edu-row + .edu-row {
+        margin-top: 0.25rem;
+    }
+
+    .edu-logo {
+        flex-shrink: 0;
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
+        transition: transform 0.2s ease;
+    }
+
+    .edu-row:hover .edu-logo {
+        transform: scale(1.06);
+    }
+
+    .edu-logo img {
+        width: 26px;
+        height: 26px;
+        object-fit: contain;
+    }
+
+    .edu-info {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .edu-top-line {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+
+    .edu-institution {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-primary, #E6E8EB);
+        line-height: 1.4;
+        letter-spacing: -0.01em;
+    }
+
+    .edu-institution a {
+        color: inherit;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .edu-institution a:hover {
+        color: var(--accent, #7B93FF);
+    }
+
+    .edu-degree {
+        font-size: 0.8rem;
+        color: var(--text-secondary, #9CA3AF);
+        margin-top: 0.1rem;
+    }
+
+    .edu-timeframe {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 500;
+        color: var(--text-muted, #6B7280);
+        background: var(--expand-bg, rgba(255, 255, 255, 0.04));
+        padding: 0.15rem 0.5rem;
+        border-radius: 100px;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .edu-detail {
+        font-size: 0.775rem;
+        color: var(--text-muted, #6B7280);
+        font-style: italic;
+        margin-top: 0.3rem;
+        line-height: 1.4;
+    }
+
+    /* ── Publications ── */
+    .pubs-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+
+    .pub-row {
+        padding-bottom: 1.25rem;
+        border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.05));
+    }
+
+    .pub-row:last-child {
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+
+    .pub-venue-badge {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--accent, #7B93FF);
+        background: var(--venue-bg, rgba(123, 147, 255, 0.1));
+        padding: 0.2rem 0.6rem;
+        border-radius: 100px;
+        margin-bottom: 0.4rem;
+    }
+
+    .pub-date-small {
+        display: inline-block;
+        font-size: 0.7rem;
+        color: var(--text-muted, #6B7280);
+        margin-left: 0.5rem;
+    }
+
+    .pub-title-compact {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-primary, #E6E8EB);
+        line-height: 1.5;
+        letter-spacing: -0.01em;
+        margin: 0.25rem 0 0.3rem;
+    }
+
+    .pub-authors-compact {
+        font-size: 0.775rem;
+        color: var(--text-muted, #6B7280);
+        margin-bottom: 0.5rem;
+    }
+
+    .pub-read-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--text-secondary, #9CA3AF);
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .pub-read-link:hover {
+        color: var(--accent, #7B93FF);
+        text-decoration: none;
+    }
+
+    .pub-read-link svg {
+        transition: transform 0.2s;
+    }
+
+    .pub-read-link:hover svg {
+        transform: translateX(3px);
+    }
+
+    .scholar-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.775rem;
+        font-weight: 500;
+        color: var(--text-muted, #6B7280);
+        text-decoration: none;
+        margin-top: 1rem;
+        transition: color 0.2s;
+    }
+
+    .scholar-link:hover {
+        color: var(--accent, #7B93FF);
+        text-decoration: none;
+    }
+
+    /* ── Light theme ── */
+    [data-theme="light"] .bento-box {
+        background: #ffffff;
+        border-color: rgba(0, 0, 0, 0.08);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+        --bento-hover-border: rgba(91, 116, 224, 0.2);
+        --bento-hover-shadow: rgba(0, 0, 0, 0.06);
+    }
+
+    [data-theme="light"] .career-logo,
+    [data-theme="light"] .edu-logo {
+        background: #fff;
+        border-color: rgba(0, 0, 0, 0.08);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    [data-theme="light"] .edu-timeframe {
+        background: rgba(0, 0, 0, 0.04);
+    }
+
+    [data-theme="light"] .pub-venue-badge {
+        background: rgba(91, 116, 224, 0.08);
+        color: var(--accent, #5B74E0);
+    }
+
+    [data-theme="light"] .career-row {
+        border-bottom-color: rgba(0, 0, 0, 0.06);
+    }
+
+    [data-theme="light"] .edu-timeframe {
+        background: rgba(0, 0, 0, 0.04);
+    }
+
+    [data-theme="light"] .career-list::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.1);
+    }
+
+    [data-theme="light"] .career-list::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.2);
+    }
+
+    [data-theme="light"] .newsletter-highlights li::before {
+        background: var(--accent, #5B74E0);
+    }
+
+    /* ── Paper theme ── */
+    [data-theme="paper"] .bento-box {
+        background: #F2F1EA;
+        border-color: rgba(0, 0, 0, 0.08);
+        --bento-hover-border: rgba(0, 0, 0, 0.12);
+        --bento-hover-shadow: rgba(0, 0, 0, 0.04);
+    }
+
+    [data-theme="paper"] .bento-label {
+        color: #5C5A58;
+    }
+
+    [data-theme="paper"] .career-logo,
+    [data-theme="paper"] .edu-logo {
+        background: #fff;
+        border-color: rgba(0, 0, 0, 0.08);
+    }
+
+    [data-theme="paper"] .pub-venue-badge {
+        background: rgba(74, 111, 165, 0.1);
+        color: #4A6FA5;
+    }
+
+    [data-theme="paper"] .pub-read-link:hover,
+    [data-theme="paper"] .bento-view-all:hover,
+    [data-theme="paper"] .scholar-link:hover {
+        color: #4A6FA5;
+    }
+
+    [data-theme="paper"] .career-company a:hover,
+    [data-theme="paper"] .edu-institution a:hover {
+        color: #4A6FA5;
+    }
+
+    [data-theme="paper"] .edu-timeframe {
+        background: rgba(0, 0, 0, 0.04);
+    }
+
+    [data-theme="paper"] .newsletter-highlights li::before {
+        background: #4A6FA5;
+    }
+
+    [data-theme="paper"] .bento-newsletter:hover .newsletter-read {
+        color: #4A6FA5;
+    }
+
+    /* ── Reveal animations ── */
+    .bento-section .reveal-up {
+        opacity: 0;
+        transform: translateY(24px);
+        transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .bento-section .reveal-up.revealed {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+        .bento-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .bento-section {
+            padding: 3rem 1.25rem 4rem;
+        }
+
+        .bento-box {
+            padding: 1.125rem 1.25rem;
+        }
+
+        .bento-career {
+            max-height: none;
+        }
+
+        .career-list {
+            max-height: none;
+            overflow-y: visible;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .bento-section {
+            padding: 2.5rem 1rem 3rem;
+        }
+
+        .bento-box {
+            padding: 1rem 1.125rem;
+            border-radius: 14px;
+        }
+    }
+</style>
+

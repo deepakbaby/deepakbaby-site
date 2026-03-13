@@ -98,14 +98,17 @@
             {{ end }}
         </div>
     </div>
+
+
 </section>
 
 <style>
     .coverflow-section {
-        background: var(--bg-primary, #0a0a0b);
-        padding: 5rem 0;
+        background: transparent;
+        padding: 5rem 0 2rem;
         overflow: hidden;
         font-family: 'Inter', -apple-system, sans-serif;
+        position: relative;
     }
 
     .coverflow-container {
@@ -380,7 +383,7 @@
 
     /* Light Theme */
     [data-theme="light"] .coverflow-section {
-        background: #ffffff;
+        background: transparent;
     }
 
     [data-theme="light"] .coverflow-section .unified-section-title {
@@ -436,7 +439,7 @@
 
     /* Paper Theme */
     [data-theme="paper"] .coverflow-section {
-        background: var(--bg-primary);
+        background: transparent;
     }
 
     [data-theme="paper"] .coverflow-section .unified-section-title {

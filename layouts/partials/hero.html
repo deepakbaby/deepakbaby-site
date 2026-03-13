@@ -473,23 +473,19 @@
         transition: opacity 0.2s ease;
     }
 
-    /* Vertical separator: soft gradient line + subtle glow */
-    .hero-nav::after {
+    .hero-nav::before {
         content: '';
         position: absolute;
-        right: 0;
+        left: -20%;
         top: 50%;
         transform: translateY(-50%);
-        width: 1px;
-        height: 60%;
-        background: linear-gradient(
-            180deg,
-            transparent,
-            var(--border-color, rgba(255, 255, 255, 0.1)) 30%,
-            var(--accent, rgba(123, 147, 255, 0.15)) 50%,
-            var(--border-color, rgba(255, 255, 255, 0.1)) 70%,
-            transparent
-        );
+        width: 180px;
+        height: 200px;
+        border-radius: 44% 56% 60% 40% / 52% 44% 56% 48%;
+        background: rgba(123, 147, 255, 0.10);
+        filter: blur(30px);
+        pointer-events: none;
+        z-index: -1;
     }
 
     .hero-nav-item {
@@ -521,32 +517,18 @@
         color: var(--accent, #7B93FF);
     }
 
-    /* Light theme nav */
-    [data-theme="light"] .hero-nav::after {
-        background: linear-gradient(
-            180deg,
-            transparent,
-            rgba(0, 0, 0, 0.08) 30%,
-            rgba(91, 116, 224, 0.12) 50%,
-            rgba(0, 0, 0, 0.08) 70%,
-            transparent
-        );
+    /* Light theme nav splash */
+    [data-theme="light"] .hero-nav::before {
+        background: rgba(91, 116, 224, 0.10);
     }
 
     [data-theme="light"] .hero-nav-item:hover i {
         color: var(--accent, #5B74E0);
     }
 
-    /* Paper theme nav */
-    [data-theme="paper"] .hero-nav::after {
-        background: linear-gradient(
-            180deg,
-            transparent,
-            rgba(0, 0, 0, 0.08) 30%,
-            rgba(0, 0, 0, 0.1) 50%,
-            rgba(0, 0, 0, 0.08) 70%,
-            transparent
-        );
+    /* Paper theme nav splash */
+    [data-theme="paper"] .hero-nav::before {
+        background: rgba(120, 100, 80, 0.07);
     }
 
     [data-theme="paper"] .hero-nav-item:hover i {
