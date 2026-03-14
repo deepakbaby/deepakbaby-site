@@ -285,7 +285,12 @@
                         {{ $wordCount := 0 }}
                         {{ range .Params.news }}
                         {{ range .items }}
-                        {{ $wordCount = add $wordCount (len (split .summary " ")) }}
+                        {{ if reflect.IsSlice .summary }}
+                            {{ $joined := delimit .summary " " }}
+                            {{ $wordCount = add $wordCount (len (split $joined " ")) }}
+                        {{ else }}
+                            {{ $wordCount = add $wordCount (len (split .summary " ")) }}
+                        {{ end }}
                         {{ end }}
                         {{ end }}
                         {{ $readingTime := div $wordCount 200 }}
@@ -376,7 +381,7 @@
         margin: 0;
         padding: 0;
         overflow-x: hidden;
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        font-family: 'Nunito', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         background: var(--bg-primary);
         color: var(--text-primary);
         min-height: 100vh;
@@ -806,7 +811,7 @@
         color: #93AAFF;
         font-size: 0.85rem;
         font-weight: 600;
-        font-family: 'Inter', sans-serif;
+        font-family: 'Nunito', 'Inter', sans-serif;
         cursor: pointer;
         transition: all 0.25s;
         animation: nlFadeUp 0.8s ease-out 0.25s both;
@@ -871,7 +876,7 @@
         border-radius: 10px;
         color: var(--text-primary);
         font-size: 0.9rem;
-        font-family: 'Inter', sans-serif;
+        font-family: 'Nunito', 'Inter', sans-serif;
         transition: border-color 0.2s, box-shadow 0.2s;
     }
 
@@ -902,7 +907,7 @@
         color: #fff;
         font-size: 0.85rem;
         font-weight: 600;
-        font-family: 'Inter', sans-serif;
+        font-family: 'Nunito', 'Inter', sans-serif;
         cursor: pointer;
         white-space: nowrap;
         transition: background 0.2s, transform 0.2s, box-shadow 0.2s;

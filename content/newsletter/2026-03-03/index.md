@@ -3,7 +3,7 @@ title: "AI Weekly: Claude 4 Drops, EU AI Act Enforced"
 date: 2026-03-07
 week_start: "2026-03-03"
 week_end: "2026-03-07"
-draft: false
+draft: true
 highlights:
   - "Anthropic releases Claude 4 with breakthrough reasoning"
   - "EU AI Act enforcement begins for high-risk systems"

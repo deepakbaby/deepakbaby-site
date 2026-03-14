@@ -169,21 +169,21 @@ An OpenClaw skill is a folder with a `SKILL.md` file: YAML frontmatter plus mark
 ```
 
 ### Three Modes
-<div style="display: flex; gap: 1.5rem; margin: 2.5rem 0; flex-wrap: wrap;">
-  <div style="flex: 1; min-width: 250px; background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 16px; padding: 1.75rem; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
-    <div style="color: #3b82f6; font-size: 0.8rem; font-weight: 800; letter-spacing: 1.5px; margin-bottom: 0.75rem; text-transform: uppercase;">01. Collect</div>
-    <div style="color: #f8fafc; font-size: 1.15rem; font-weight: 700; margin-bottom: 0.75rem;">Casual Sharing</div>
-    <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.6; margin: 0;">Drop links into WhatsApp. The agent automatically parses metadata, extracts dates, and appends them to your collection.</p>
+<div class="blog-card-grid blog-card-grid--3col">
+  <div class="blog-card">
+    <div class="blog-card__label">01. Collect</div>
+    <div class="blog-card__title">Casual Sharing</div>
+    <p class="blog-card__text">Drop links into WhatsApp. The agent automatically parses metadata, extracts dates, and appends them to your collection.</p>
   </div>
-  <div style="flex: 1; min-width: 250px; background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 16px; padding: 1.75rem; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
-    <div style="color: #3b82f6; font-size: 0.8rem; font-weight: 800; letter-spacing: 1.5px; margin-bottom: 0.75rem; text-transform: uppercase;">02. Preview</div>
-    <div style="color: #f8fafc; font-size: 1.15rem; font-weight: 700; margin-bottom: 0.75rem;">Instant Summary</div>
-    <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.6; margin: 0;">Text "Generate newsletter" for an immediate text-based grouping of shared items. No web search delay, just a quick pulse check.</p>
+  <div class="blog-card">
+    <div class="blog-card__label">02. Preview</div>
+    <div class="blog-card__title">Instant Summary</div>
+    <p class="blog-card__text">Text "Generate newsletter" for an immediate text-based grouping of shared items. No web search delay, just a quick pulse check.</p>
   </div>
-  <div style="flex: 1; min-width: 250px; background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 16px; padding: 1.75rem; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
-    <div style="color: #3b82f6; font-size: 0.8rem; font-weight: 800; letter-spacing: 1.5px; margin-bottom: 0.75rem; text-transform: uppercase;">03. Publish</div>
-    <div style="color: #f8fafc; font-size: 1.15rem; font-weight: 700; margin-bottom: 0.75rem;">The Full Pipeline</div>
-    <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.6; margin: 0;">Triggers deep web search, AI-driven deduplication, and HTML/Markdown generation. Ready for a final review and git push.</p>
+  <div class="blog-card">
+    <div class="blog-card__label">03. Publish</div>
+    <div class="blog-card__title">The Full Pipeline</div>
+    <p class="blog-card__text">Triggers deep web search, AI-driven deduplication, and HTML/Markdown generation. Ready for a final review and git push.</p>
   </div>
 </div>
 
@@ -229,41 +229,41 @@ The solution I landed on was the simplest: the agent writes the markdown file to
 ~/push-newsletter.sh 2026-03-14 ~/.openclaw/workspace/skills/ai-newsletter/output/2026-03-14.md
 ```
 ## Things I Learned
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin: 2rem 0;">
-  <div style="background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+<div class="blog-card-grid">
+  <div class="blog-card">
+    <div class="blog-card__header">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1 0-4.88 2.5 2.5 0 0 1 0-4.88 2.5 2.5 0 0 1 0-4.88A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 0-4.88 2.5 2.5 0 0 0 0-4.88 2.5 2.5 0 0 0 0-4.88A2.5 2.5 0 0 0 14.5 2Z"/></svg>
-      <span style="color: #f1f5f9; font-weight: 700; font-size: 1rem;">Instructions, Not Code</span>
+      <span class="blog-card__title">Instructions, Not Code</span>
     </div>
-    <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.5; margin: 0;">Writing a playbook for an agent is different from programming. You need to be explicit, add constraints, and include "Rules" for what not to do.</p>
+    <p class="blog-card__text">Writing a playbook for an agent is different from programming. You need to be explicit, add constraints, and include "Rules" for what not to do.</p>
   </div>
-  <div style="background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+  <div class="blog-card">
+    <div class="blog-card__header">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>
-      <span style="color: #f1f5f9; font-weight: 700; font-size: 1rem;">Sandbox Strategy</span>
+      <span class="blog-card__title">Sandbox Strategy</span>
     </div>
-    <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.5; margin: 0;">The Docker sandbox is critical for security but creates friction with host access like Git credentials. Plan for this isolation from day one.</p>
+    <p class="blog-card__text">The Docker sandbox is critical for security but creates friction with host access like Git credentials. Plan for this isolation from day one.</p>
   </div>
-  <div style="background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+  <div class="blog-card">
+    <div class="blog-card__header">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      <span style="color: #f1f5f9; font-weight: 700; font-size: 1rem;">Agent Timeouts</span>
+      <span class="blog-card__title">Agent Timeouts</span>
     </div>
-    <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.5; margin: 0;">Complex pipelines hit the 5-minute limit. Keep steps focused—dropping extra sources (Reddit/ArXiv) in favor of deep web search fixed it.</p>
+    <p class="blog-card__text">Complex pipelines hit the 5-minute limit. Keep steps focused—dropping extra sources (Reddit/ArXiv) in favor of deep web search fixed it.</p>
   </div>
-  <div style="background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+  <div class="blog-card">
+    <div class="blog-card__header">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><path d="m7 11 2-2-2-2"/><path d="M11 19h10"/><rect x="3" y="5" width="18" height="14" rx="2"/></svg>
-      <span style="color: #f1f5f9; font-weight: 700; font-size: 1rem;">Context Limits</span>
+      <span class="blog-card__title">Context Limits</span>
     </div>
-    <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.5; margin: 0;">WhatsApp chats fill context windows quickly. Compaction helps, but using disk storage (JSONL) for raw data is more reliable than chat memory.</p>
+    <p class="blog-card__text">WhatsApp chats fill context windows quickly. Compaction helps, but using disk storage (JSONL) for raw data is more reliable than chat memory.</p>
   </div>
-  <div style="background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+  <div class="blog-card">
+    <div class="blog-card__header">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2"><path d="M6 3 2 7l4 4"/><path d="m18 21 4-4-4-4"/><path d="M2 7h18a2 2 0 0 1 2 2v10"/></svg>
-      <span style="color: #f1f5f9; font-weight: 700; font-size: 1rem;">Start Simple</span>
+      <span class="blog-card__title">Start Simple</span>
     </div>
-    <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.5; margin: 0;">The most effective version is the simplest: share in, web search gap-fill, and markdown out. Complexity can wait for future iterations.</p>
+    <p class="blog-card__text">The most effective version is the simplest: share in, web search gap-fill, and markdown out. Complexity can wait for future iterations.</p>
   </div>
 </div>
 

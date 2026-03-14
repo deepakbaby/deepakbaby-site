@@ -56,7 +56,11 @@
                             {{ if .url }}<a href="{{ .url }}" target="_blank" rel="noopener">{{ .title }}</a>{{ else
                             }}{{ .title }}{{ end }}
                         </h3>
+                        {{ if reflect.IsSlice .summary }}
+                        <ul class="nl-card-summary">{{ range .summary }}<li>{{ . }}</li>{{ end }}</ul>
+                        {{ else }}
                         <p class="nl-card-summary">{{ .summary }}</p>
+                        {{ end }}
                         <div class="nl-card-footer">
                             {{ if .url }}
                             <a href="{{ .url }}" class="nl-card-link" target="_blank" rel="noopener">
@@ -149,7 +153,7 @@
         margin: 0;
         padding: 0;
         overflow-x: hidden;
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        font-family: 'Nunito', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         background: var(--bg-primary);
         color: var(--text-primary);
         min-height: 100vh;
