@@ -1,5 +1,21 @@
+{{ define "navbar" }}
+{{ partial "navigators/modern-navbar.html" . }}
+{{ end }}
+
 {{ define "content" }}
 <div class="homepage-wrapper">
+    <!-- Global Background -->
+    {{ if ne site.Params.customTheme "paper" }}
+    <div class="page-bg" aria-hidden="true">
+        <svg class="page-landscape" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,900 L0,580 Q180,520 360,550 Q540,580 720,540 Q900,500 1080,530 Q1260,560 1440,510 L1440,900 Z" fill="var(--landscape-far, rgba(123,147,255,0.06))"/>
+            <path d="M0,900 L0,640 Q200,600 400,620 Q600,640 800,610 Q1000,580 1200,620 Q1350,640 1440,600 L1440,900 Z" fill="var(--landscape-mid, rgba(123,147,255,0.04))"/>
+            <path d="M0,900 L0,710 Q240,680 480,700 Q720,720 960,690 Q1200,660 1440,700 L1440,900 Z" fill="var(--landscape-near, rgba(123,147,255,0.025))"/>
+        </svg>
+        <!-- noise overlay removed -->
+    </div>
+    {{ end }}
+
     <!-- Hero Section -->
     <div class="section-wrapper">
         {{ partial "hero.html" . }}
@@ -7,9 +23,9 @@
 
     <div class="section-separator"></div>
 
-    <!-- Experience Section -->
+    <!-- Bento Grid: Career + Education + Publications -->
     <div class="section-wrapper">
-        {{ partial "experience.html" . }}
+        {{ partial "bento_grid.html" . }}
     </div>
 
     <div class="section-separator"></div>
@@ -19,11 +35,13 @@
         {{ partial "posts_slider.html" . }}
     </div>
 
-    <div class="section-separator"></div>
-
-    <!-- Featured Publications Section -->
-    <div class="section-wrapper">
-        {{ partial "featured_publications.html" . }}
+    <!-- SVG wave bridge: blends carousel into footer -->
+    <div class="footer-wave-bridge" aria-hidden="true">
+        <svg class="blend-wave" viewBox="0 0 1440 400" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path class="blend-wave-far" d="M0,400 L0,60 Q160,10 320,50 Q480,90 640,35 Q800,0 960,40 Q1120,75 1280,25 Q1380,5 1440,30 L1440,400 Z"/>
+            <path class="blend-wave-mid" d="M0,400 L0,140 Q180,90 360,130 Q540,170 720,110 Q900,60 1080,105 Q1260,150 1440,90 L1440,400 Z"/>
+            <path class="blend-wave-near" d="M0,400 L0,240 Q200,200 400,225 Q600,250 800,215 Q1000,180 1200,210 Q1350,235 1440,200 L1440,400 Z"/>
+        </svg>
     </div>
 
     <!-- Floating Navigation (hidden) -->
@@ -37,37 +55,129 @@
 
 <style>
     /* Homepage Global Styles */
+    /* Remove wrapper padding/margin for edge-to-edge layout on mobile */
+    .kind-home .container-fluid.wrapper,
+    .kind-home .wrapper,
+    .kind-home .content-section,
+    .kind-home .page-content {
+        max-width: none !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .kind-home .wrapper .sidebar-section,
+    .kind-home .toc-section {
+        display: none !important;
+    }
+
     .homepage-wrapper {
         background: var(--bg-primary);
         color: var(--text-primary);
-        overflow-x: hidden;
+        overflow-x: clip;
         scroll-behavior: smooth;
+        position: relative;
+    }
+
+    /* Global page background - landscape + noise spanning all sections */
+    .page-bg {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .page-landscape {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        --landscape-far: rgba(123, 147, 255, 0.06);
+        --landscape-mid: rgba(123, 147, 255, 0.04);
+        --landscape-near: rgba(123, 147, 255, 0.025);
+    }
+
+    [data-theme="light"] .page-landscape {
+        --landscape-far: rgba(91, 116, 224, 0.08);
+        --landscape-mid: rgba(91, 116, 224, 0.05);
+        --landscape-near: rgba(91, 116, 224, 0.03);
+    }
+
+    [data-theme="paper"] .page-bg {
+        display: none;
+    }
+
+    .page-noise {
+        position: absolute;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        opacity: 0.04;
     }
 
     .section-wrapper {
         position: relative;
+        z-index: 2;
+    }
+
+    /* Pull footer up into the wave for seamless blend */
+    .kind-home .site-footer {
+        margin-top: -2rem;
+        padding-top: 3rem;
+    }
+
+    /* Footer wave bridge: fades from page bg into footer bg behind content */
+    .footer-wave-bridge {
+        position: relative;
+        z-index: 1;
+        margin-top: -8rem;
+        height: 14rem;
+        pointer-events: none;
+        line-height: 0;
+    }
+
+    .footer-wave-bridge .blend-wave {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+
+    .footer-wave-bridge .blend-wave-far {
+        fill: var(--blend-far, rgba(20, 24, 42, 0.4));
+    }
+
+    .footer-wave-bridge .blend-wave-mid {
+        fill: var(--blend-mid, rgba(22, 26, 44, 0.7));
+    }
+
+    .footer-wave-bridge .blend-wave-near {
+        fill: var(--footer-bg, #171B2E);
+    }
+
+    [data-theme="light"] .footer-wave-bridge .blend-wave-far {
+        --blend-far: rgba(30, 36, 60, 0.25);
+    }
+
+    [data-theme="light"] .footer-wave-bridge .blend-wave-mid {
+        --blend-mid: rgba(32, 38, 62, 0.55);
+    }
+
+    [data-theme="paper"] .footer-wave-bridge .blend-wave-far {
+        --blend-far: rgba(36, 40, 58, 0.2);
+    }
+
+    [data-theme="paper"] .footer-wave-bridge .blend-wave-mid {
+        --blend-mid: rgba(38, 42, 60, 0.5);
     }
 
     /* Section separators */
     .section-separator {
         width: 100%;
-        max-width: 800px;
+        max-width: 600px;
         margin: 0 auto;
         height: 1px;
-        background: linear-gradient(90deg, transparent, var(--text-secondary, rgba(128,128,128,0.3)), transparent);
+        background: linear-gradient(90deg, transparent, var(--border-color, rgba(255, 255, 255, 0.08)), transparent);
         position: relative;
-    }
-
-    .section-separator::before {
-        content: '';
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        width: 8px;
-        height: 8px;
-        background: var(--text-secondary, rgba(128,128,128,0.3));
-        border-radius: 50%;
     }
 
     /* Hide floating nav - hero has its own nav now */
@@ -80,12 +190,12 @@
     }
 
     .nav-dot {
-        width: 12px;
-        height: 12px;
+        width: 10px;
+        height: 10px;
         border-radius: 50%;
-        background: rgba(255, 255, 255, 0.2);
-        border: 2px solid transparent;
-        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.15);
+        border: none;
+        transition: all 0.2s ease;
         cursor: pointer;
         position: relative;
     }
@@ -104,7 +214,7 @@
         white-space: nowrap;
         opacity: 0;
         pointer-events: none;
-        transition: opacity 0.3s;
+        transition: opacity 0.2s;
     }
 
     .nav-dot:hover::before {
@@ -112,13 +222,11 @@
     }
 
     .nav-dot:hover {
-        background: rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.3);
     }
 
     .nav-dot.active {
-        background: linear-gradient(135deg, #8b5cf6, #3b82f6);
-        border-color: rgba(255, 255, 255, 0.3);
-        box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
+        background: var(--accent, #7B93FF);
     }
 
     /* Responsive hiding for floating nav */
@@ -135,7 +243,7 @@
 
     /* Ensure body doesn't have horizontal scroll */
     body {
-        overflow-x: hidden;
+        overflow-x: clip;
     }
 </style>
 
@@ -143,7 +251,7 @@
     // Enhanced Scroll Reveal Animations
     document.addEventListener('DOMContentLoaded', function () {
         // Reveal animation on scroll
-        const revealElements = document.querySelectorAll('.reveal-up, .timeline-item, .education-card, .skill-category, .project-card');
+        const revealElements = document.querySelectorAll('.reveal-up, .timeline-item, .education-card, .skill-category, .project-card, .bento-box');
 
         const revealObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
@@ -204,18 +312,6 @@
                 if (targetSection) {
                     targetSection.scrollIntoView({ behavior: 'smooth' });
                 }
-            });
-        });
-
-        // Parallax effect for orbs (hero section)
-        const orbs = document.querySelectorAll('.gradient-orb');
-        window.addEventListener('mousemove', (e) => {
-            const x = e.clientX / window.innerWidth;
-            const y = e.clientY / window.innerHeight;
-
-            orbs.forEach((orb, index) => {
-                const speed = (index + 1) * 20;
-                orb.style.transform = `translate(${x * speed}px, ${y * speed}px)`;
             });
         });
     });

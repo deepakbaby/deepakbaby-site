@@ -149,24 +149,6 @@
                 </div>
                 {{ end }}
 
-                <!-- Edit Page Link -->
-                {{ if site.Params.GitRepo }}
-                <div class="improve-page-section">
-                    {{ if ( eq site.Params.GitForge "gitlab" ) }}
-                    <a href="{{ site.Params.GitRepo }}/-/edit/{{ site.Params.GitBranch | default " main" }}/content/{{
-                        .File.Path }}" class="improve-link" target="_blank" rel="noopener">
-                        {{ else if ( eq site.Params.GitForge "gitea" ) }}
-                        <a href="{{ site.Params.GitRepo }}/_edit/{{ site.Params.GitBranch | default " main"
-                            }}/content/{{ .File.Path }}" class="improve-link" target="_blank" rel="noopener">
-                            {{ else }}
-                            <a href="{{ site.Params.GitRepo }}/edit/{{ site.Params.GitBranch | default " main"
-                                }}/content/{{ .File.Path }}" class="improve-link" target="_blank" rel="noopener">
-                                {{ end }}
-                                <i class="fas fa-code-branch"></i>
-                                <span>Improve this page</span>
-                            </a>
-                </div>
-                {{ end }}
 
                 <!-- Next/Previous Navigation -->
                 <nav class="post-navigation">

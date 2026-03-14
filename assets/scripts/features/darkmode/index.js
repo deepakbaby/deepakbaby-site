@@ -1,6 +1,7 @@
 const PERSISTENCE_KEY = 'darkmode:color-scheme'
 
 window.addEventListener('load', async () => {
+  if (document.documentElement.dataset.theme === 'paper') return;
   const menu = document.getElementById('themeMenu')
   const $icon = document.getElementById('navbar-theme-icon-svg')
   if (menu == null || $icon == null) return

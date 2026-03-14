@@ -7,6 +7,7 @@ const THEME_LIGHT = typeof themeOptions.light === 'undefined' ? true : themeOpti
 const THEME_DEFAULT = typeof themeOptions.default === 'undefined' ? "system" : themeOptions.default;
 
 window.addEventListener('load', async () => {
+  if (document.documentElement.dataset.theme === 'paper') return;
   const menu = document.getElementById('themeMenu')
   const $icon = document.getElementById('navbar-theme-icon-svg')
   if (menu == null || $icon == null) return
