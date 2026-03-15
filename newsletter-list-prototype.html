@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Newsletter List — Redesign Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0c0f1a;
+    --bg-elevated: #131829;
+    --bg-hover: #1a2035;
+    --border: rgba(255,255,255,0.06);
+    --text-primary: #e8eaf0;
+    --text-secondary: #8b92a8;
+    --text-muted: #565e78;
+    --accent: #6c8cff;
+    --accent-glow: rgba(108,140,255,0.15);
+  }
+
+  body {
+    font-family: 'Nunito', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ============================================
+     HEADER — clean, typographic
+  ============================================ */
+  .nl-header {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 4rem 2rem 2.5rem;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nl-header-left {}
+
+  .nl-header-title {
+    font-size: clamp(2.4rem, 5vw, 3.2rem);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin-bottom: 0.4rem;
+  }
+
+  .nl-header-desc {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    max-width: 480px;
+  }
+
+  /* Subscribe — inline in header */
+  .nl-subscribe {
+    flex-shrink: 0;
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .nl-email-input {
+    height: 42px;
+    width: 220px;
+    padding: 0 1rem;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-family: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .nl-email-input::placeholder { color: var(--text-muted); }
+  .nl-email-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  .nl-subscribe-btn {
+    height: 42px;
+    padding: 0 1.25rem;
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s, transform 0.15s;
+  }
+  .nl-subscribe-btn:hover {
+    background: #5a72e0;
+    transform: translateY(-1px);
+  }
+
+  /* ============================================
+     LATEST ISSUE — hero treatment
+  ============================================ */
+  .nl-latest {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2.5rem 2rem 0;
+  }
+
+  .nl-latest-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .nl-latest-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .nl-latest-card {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  .nl-latest-card:hover {
+    border-color: rgba(108,140,255,0.25);
+    box-shadow: 0 12px 40px rgba(108,140,255,0.08);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .nl-latest-main {
+    padding: 2.25rem;
+    background: var(--bg-elevated);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .nl-latest-date {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+  }
+
+  .nl-latest-title {
+    font-size: 1.65rem;
+    font-weight: 800;
+    line-height: 1.25;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+  }
+
+  .nl-latest-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 1.25rem;
+  }
+  .nl-latest-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .nl-latest-categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: auto;
+  }
+
+  .nl-cat-pill {
+    padding: 0.2rem 0.65rem;
+    background: color-mix(in srgb, var(--cat-color) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--cat-color) 25%, transparent);
+    border-radius: 50px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--cat-color);
+  }
+
+  .nl-latest-highlights {
+    padding: 2.25rem;
+    background: var(--bg-elevated);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .nl-latest-highlights-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+  }
+
+  .nl-latest-highlights-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .nl-latest-highlights-list li {
+    font-size: 0.92rem;
+    line-height: 1.55;
+    color: var(--text-secondary);
+    position: relative;
+    padding-left: 1.1rem;
+  }
+  .nl-latest-highlights-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.5em;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.6;
+  }
+  .nl-latest-highlights-list li strong {
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+
+  .nl-latest-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 1.5rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .nl-latest-card:hover .nl-latest-cta { gap: 0.55rem; }
+  .nl-latest-cta svg { width: 14px; height: 14px; transition: transform 0.2s; }
+  .nl-latest-card:hover .nl-latest-cta svg { transform: translateX(2px); }
+
+  /* ============================================
+     ARCHIVE GRID
+  ============================================ */
+  .nl-archive {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2.5rem 2rem 5rem;
+  }
+
+  .nl-archive-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .nl-archive-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .nl-archive-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .nl-archive-card {
+    padding: 1.5rem 1.75rem;
+    background: var(--bg-elevated);
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    transition: background 0.2s;
+  }
+  .nl-archive-card:hover {
+    background: var(--bg-hover);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .nl-archive-date {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    opacity: 0.7;
+  }
+
+  .nl-archive-title {
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--text-primary);
+  }
+  .nl-archive-card:hover .nl-archive-title { color: var(--accent); }
+
+  .nl-archive-meta {
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+  }
+  .nl-archive-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .nl-archive-cats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-top: 0.15rem;
+  }
+
+  .nl-archive-cat-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--cat-color);
+    opacity: 0.6;
+  }
+
+  /* ============================================
+     MONTH GROUP HEADERS (for future growth)
+  ============================================ */
+  .nl-month-header {
+    grid-column: 1 / -1;
+    padding: 0.75rem 1.75rem;
+    background: rgba(108,140,255,0.04);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+  }
+
+  /* ============================================
+     RESPONSIVE
+  ============================================ */
+  @media (max-width: 768px) {
+    .nl-header {
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 2.5rem 1rem 1.5rem;
+    }
+    .nl-subscribe { width: 100%; }
+    .nl-email-input { flex: 1; width: auto; }
+    .nl-latest { padding: 2rem 1rem 0; }
+    .nl-latest-card { grid-template-columns: 1fr; }
+    .nl-archive { padding: 2rem 1rem 4rem; }
+    .nl-archive-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ==========================================
+     HEADER — clean, subscribe inline
+========================================== -->
+<header class="nl-header">
+  <div class="nl-header-left">
+    <h1 class="nl-header-title">AI Newsletter</h1>
+    <p class="nl-header-desc">A curated weekly roundup of the most important developments in artificial intelligence.</p>
+  </div>
+  <form class="nl-subscribe" onsubmit="event.preventDefault()">
+    <input type="email" class="nl-email-input" placeholder="your@email.com" aria-label="Email address">
+    <button type="submit" class="nl-subscribe-btn">Subscribe</button>
+  </form>
+</header>
+
+<!-- ==========================================
+     LATEST ISSUE — hero treatment
+========================================== -->
+<section class="nl-latest">
+  <div class="nl-latest-label">Latest Issue</div>
+  <a href="#" class="nl-latest-card">
+    <div class="nl-latest-main">
+      <div class="nl-latest-date">Mar 08 — Mar 14, 2026</div>
+      <h2 class="nl-latest-title">AI Weekly: LeCun Raises $1B, Anthropic Sues Trump Over Pentagon Blacklist</h2>
+      <div class="nl-latest-meta">
+        <span>
+          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          8 min read
+        </span>
+        <span>
+          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2"/></svg>
+          16 stories
+        </span>
+      </div>
+      <div class="nl-latest-categories">
+        <span class="nl-cat-pill" style="--cat-color: #3b82f6">Models & Releases</span>
+        <span class="nl-cat-pill" style="--cat-color: #8b5cf6">People & Business</span>
+        <span class="nl-cat-pill" style="--cat-color: #f59e0b">Policy & Ethics</span>
+        <span class="nl-cat-pill" style="--cat-color: #10b981">Products & Hardware</span>
+        <span class="nl-cat-pill" style="--cat-color: #ec4899">Research & Papers</span>
+      </div>
+    </div>
+    <div class="nl-latest-highlights">
+      <div class="nl-latest-highlights-title">This Week's Highlights</div>
+      <ul class="nl-latest-highlights-list">
+        <li><strong>Yann LeCun's AMI Labs</strong> raised $1.03 billion to build world-model AI — one of the largest AI seed rounds ever and a direct bet against the transformer paradigm.</li>
+        <li><strong>Anthropic sued</strong> the Trump administration over a Pentagon supply chain blacklist that threatened to cut off Claude from US government contracts.</li>
+        <li><strong>OpenAI's Head of Robotics</strong> resigned this week, citing ethical concerns over the company's direction toward mass surveillance and lethal autonomous weapons.</li>
+      </ul>
+      <div class="nl-latest-cta">
+        Read this issue
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+      </div>
+    </div>
+  </a>
+</section>
+
+<!-- ==========================================
+     ARCHIVE — compact grid
+========================================== -->
+<section class="nl-archive">
+  <div class="nl-archive-label">Previous Issues</div>
+  <div class="nl-archive-grid">
+
+    <!-- Month group -->
+    <div class="nl-month-header">March 2026</div>
+
+    <a href="#" class="nl-archive-card">
+      <div class="nl-archive-date">Mar 01 — Mar 07, 2026</div>
+      <div class="nl-archive-title">AI Weekly: GPT-5 Turbo Benchmarks Leak, EU AI Act Enforcement Begins</div>
+      <div class="nl-archive-meta">
+        <span>
+          <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          6 min
+        </span>
+        <span>
+          <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2"/></svg>
+          12 stories
+        </span>
+      </div>
+      <div class="nl-archive-cats">
+        <span class="nl-archive-cat-dot" style="--cat-color: #3b82f6" title="Models & Releases"></span>
+        <span class="nl-archive-cat-dot" style="--cat-color: #8b5cf6" title="People & Business"></span>
+        <span class="nl-archive-cat-dot" style="--cat-color: #f59e0b" title="Policy & Ethics"></span>
+        <span class="nl-archive-cat-dot" style="--cat-color: #ec4899" title="Research & Papers"></span>
+      </div>
+    </a>
+
+    <!-- Feb group -->
+    <div class="nl-month-header">February 2026</div>
+
+    <a href="#" class="nl-archive-card">
+      <div class="nl-archive-date">Feb 22 — Feb 28, 2026</div>
+      <div class="nl-archive-title">AI Weekly: Mistral Large 3 Drops, Apple Cancels Siri Overhaul</div>
+      <div class="nl-archive-meta">
+        <span>
+          <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          7 min
+        </span>
+        <span>
+          <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2"/></svg>
+          14 stories
+        </span>
+      </div>
+      <div class="nl-archive-cats">
+        <span class="nl-archive-cat-dot" style="--cat-color: #3b82f6" title="Models & Releases"></span>
+        <span class="nl-archive-cat-dot" style="--cat-color: #8b5cf6" title="People & Business"></span>
+        <span class="nl-archive-cat-dot" style="--cat-color: #10b981" title="Products & Hardware"></span>
+      </div>
+    </a>
+
+    <a href="#" class="nl-archive-card">
+      <div class="nl-archive-date">Feb 15 — Feb 21, 2026</div>
+      <div class="nl-archive-title">AI Weekly: DeepSeek R2 Stuns Benchmarks, Google Fires Ethics Board</div>
+      <div class="nl-archive-meta">
+        <span>
+          <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          5 min
+        </span>
+        <span>
+          <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2"/></svg>
+          10 stories
+        </span>
+      </div>
+      <div class="nl-archive-cats">
+        <span class="nl-archive-cat-dot" style="--cat-color: #3b82f6" title="Models & Releases"></span>
+        <span class="nl-archive-cat-dot" style="--cat-color: #f59e0b" title="Policy & Ethics"></span>
+        <span class="nl-archive-cat-dot" style="--cat-color: #ec4899" title="Research & Papers"></span>
+      </div>
+    </a>
+
+    <a href="#" class="nl-archive-card">
+      <div class="nl-archive-date">Feb 08 — Feb 14, 2026</div>
+      <div class="nl-archive-title">AI Weekly: Anthropic Launches Claude 4, Nvidia H200 Ships to Data Centers</div>
+      <div class="nl-archive-meta">
+        <span>
+          <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          9 min
+        </span>
+        <span>
+          <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2"/></svg>
+          18 stories
+        </span>
+      </div>
+      <div class="nl-archive-cats">
+        <span class="nl-archive-cat-dot" style="--cat-color: #3b82f6" title="Models & Releases"></span>
+        <span class="nl-archive-cat-dot" style="--cat-color: #8b5cf6" title="People & Business"></span>
+        <span class="nl-archive-cat-dot" style="--cat-color: #f59e0b" title="Policy & Ethics"></span>
+        <span class="nl-archive-cat-dot" style="--cat-color: #10b981" title="Products & Hardware"></span>
+        <span class="nl-archive-cat-dot" style="--cat-color: #ec4899" title="Research & Papers"></span>
+      </div>
+    </a>
+
+    <a href="#" class="nl-archive-card">
+      <div class="nl-archive-date">Feb 01 — Feb 07, 2026</div>
+      <div class="nl-archive-title">AI Weekly: xAI Open-Sources Grok 3, China's AI Chip Ban Escalates</div>
+      <div class="nl-archive-meta">
+        <span>
+          <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          6 min
+        </span>
+        <span>
+          <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2"/></svg>
+          11 stories
+        </span>
+      </div>
+      <div class="nl-archive-cats">
+        <span class="nl-archive-cat-dot" style="--cat-color: #3b82f6" title="Models & Releases"></span>
+        <span class="nl-archive-cat-dot" style="--cat-color: #f59e0b" title="Policy & Ethics"></span>
+      </div>
+    </a>
+
+    <!-- Jan group -->
+    <div class="nl-month-header">January 2026</div>
+
+    <a href="#" class="nl-archive-card">
+      <div class="nl-archive-date">Jan 25 — Jan 31, 2026</div>
+      <div class="nl-archive-title">AI Weekly: Meta Releases Llama 4, Sam Altman Testifies Before Congress</div>
+      <div class="nl-archive-meta">
+        <span>
+          <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          7 min
+        </span>
+        <span>
+          <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2"/></svg>
+          13 stories
+        </span>
+      </div>
+      <div class="nl-archive-cats">
+        <span class="nl-archive-cat-dot" style="--cat-color: #3b82f6" title="Models & Releases"></span>
+        <span class="nl-archive-cat-dot" style="--cat-color: #8b5cf6" title="People & Business"></span>
+        <span class="nl-archive-cat-dot" style="--cat-color: #f59e0b" title="Policy & Ethics"></span>
+        <span class="nl-archive-cat-dot" style="--cat-color: #ec4899" title="Research & Papers"></span>
+      </div>
+    </a>
+
+    <a href="#" class="nl-archive-card">
+      <div class="nl-archive-date">Jan 18 — Jan 24, 2026</div>
+      <div class="nl-archive-title">AI Weekly: Google DeepMind Cracks Protein Folding v3, UK AI Safety Bill Passes</div>
+      <div class="nl-archive-meta">
+        <span>
+          <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          8 min
+        </span>
+        <span>
+          <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2"/></svg>
+          15 stories
+        </span>
+      </div>
+      <div class="nl-archive-cats">
+        <span class="nl-archive-cat-dot" style="--cat-color: #3b82f6" title="Models & Releases"></span>
+        <span class="nl-archive-cat-dot" style="--cat-color: #10b981" title="Products & Hardware"></span>
+        <span class="nl-archive-cat-dot" style="--cat-color: #ec4899" title="Research & Papers"></span>
+      </div>
+    </a>
+
+  </div>
+</section>
+
+</body>
+</html>

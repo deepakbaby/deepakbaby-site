@@ -5,7 +5,7 @@ draft: false
 hero: hero.png
 tags: ["AI", "OpenClaw", "automation", "newsletter", "AWS", "Hugo"]
 categories: ["Projects"]
-description: "A practical guide to building an automated weekly AI newsletter using OpenClaw on AWS Lightsail, WhatsApp integration, and Hugo."
+description: "A practical guide to building an automated weekly AI newsletter using OpenClaw on AWS Lightsail, with WhatsApp integration, RSS staging, and Hugo."
 ---
 
 I wanted a way to share a curated weekly AI newsletter with colleagues. The idea: throughout the week, I come across interesting AI news (model releases, funding rounds, policy changes, papers) and I wanted to collect them casually and publish a polished newsletter every Monday.
@@ -81,8 +81,8 @@ I didn't want to spend Sunday evenings formatting HTML. I wanted something I cou
 The flow is conversational:
 
 1. <span style="color: #3b82f6; font-weight: 600;">During the week</span>: I spot interesting AI news and drop links into a WhatsApp self-chat
-2. <span style="color: #3b82f6; font-weight: 600;">Midweek</span>: I can ask for a preview of what's collected so far
-3. <span style="color: #3b82f6; font-weight: 600;">Sunday evening</span>: I say "publish" and the agent combines my picks with web search results, generates the newsletter, and I push it to GitHub
+2. <span style="color: #3b82f6; font-weight: 600;">Friday</span>: A cron job scans RSS feeds and Reddit, stages candidate stories, and sends me a summary
+3. <span style="color: #3b82f6; font-weight: 600;">Saturday</span>: I say "publish" and the agent merges my picks with RSS candidates and fresh web search results, generates the newsletter, and pushes it to GitHub
 4. <span style="color: #3b82f6; font-weight: 600;">Monday morning</span>: I review the PR, merge, and Netlify auto-deploys
 
 No YAML files to edit. No scripts to run. Just WhatsApp messages.
@@ -120,10 +120,10 @@ During SSH setup, OpenClaw asks about security. What I chose:
 
 - <span style="color: #3b82f6; font-weight: 600;">File & folder protection</span>: Enabled (default). Config and tokens only readable by my user
 - <span style="color: #3b82f6; font-weight: 600;">Browser remote control</span>: Disabled. No need for browser automation
-- <span style="color: #3b82f6; font-weight: 600;">Exec host policy</span>: Sandbox (default). All commands run inside an isolated Docker container
-- <span style="color: #3b82f6; font-weight: 600;">Shell command approval</span>: Allow, since the sandbox isolates everything anyway
+- <span style="color: #3b82f6; font-weight: 600;">Exec host policy</span>: Host (not sandbox). The agent runs commands directly on the VM, which gives it access to git credentials and the push script. This is a deliberate tradeoff — the VM itself is the isolation boundary
+- <span style="color: #3b82f6; font-weight: 600;">Shell command approval</span>: Allow, since the VM isolates everything from my personal machine
 
-The sandbox is the critical layer here. Even if the agent does something unexpected, it can't touch the host.
+I initially ran with Docker sandbox mode, but switched to host execution after hitting too much friction with git credentials and file access. Since the Lightsail VM is a throwaway instance with nothing personal on it, running directly on the host is the pragmatic choice. The skill itself has strict rules — it never touches git except through the push script, never creates files outside its own folder, and never installs packages without asking.
 
 ## Connecting WhatsApp
 
@@ -162,28 +162,34 @@ An OpenClaw skill is a folder with a `SKILL.md` file: YAML frontmatter plus mark
 ~/.openclaw/workspace/skills/ai-newsletter/
 ├── SKILL.md
 ├── collected_items.jsonl
+├── candidates.jsonl
 ├── output/
 │   └── 2026-03-14.md
 └── templates/
     └── newsletter_template.html
 ```
 
-### Three Modes
-<div class="blog-card-grid blog-card-grid--3col">
+### Four Modes
+<div class="blog-card-grid blog-card-grid--2col">
   <div class="blog-card">
     <div class="blog-card__label">01. Collect</div>
     <div class="blog-card__title">Casual Sharing</div>
-    <p class="blog-card__text">Drop links into WhatsApp. The agent automatically parses metadata, extracts dates, and appends them to your collection.</p>
+    <p class="blog-card__text">Drop links into WhatsApp anytime. The agent parses metadata, determines the publish date (from URL meta tags or web search), and appends to <code>collected_items.jsonl</code>. These manual items always get priority in the final newsletter.</p>
   </div>
   <div class="blog-card">
     <div class="blog-card__label">02. Preview</div>
     <div class="blog-card__title">Instant Summary</div>
-    <p class="blog-card__text">Text "Generate newsletter" for an immediate text-based grouping of shared items. No web search delay, just a quick pulse check.</p>
+    <p class="blog-card__text">Text "generate newsletter" for an immediate text-based grouping of collected items. No web search, no git, no file generation — just a quick pulse check of what's been saved so far.</p>
   </div>
   <div class="blog-card">
-    <div class="blog-card__label">03. Publish</div>
+    <div class="blog-card__label">03. Friday Staging Scan</div>
+    <div class="blog-card__title">Automated RSS Scan</div>
+    <p class="blog-card__text">A cron job triggers on Friday. The agent pulls RSS feeds from TechCrunch, Wired, VentureBeat, arXiv, and top Reddit AI subs. It deduplicates against manual items, saves candidates to <code>candidates.jsonl</code>, and sends a WhatsApp summary of what it found.</p>
+  </div>
+  <div class="blog-card">
+    <div class="blog-card__label">04. Publish</div>
     <div class="blog-card__title">The Full Pipeline</div>
-    <p class="blog-card__text">Triggers deep web search, AI-driven deduplication, and HTML/Markdown generation. Ready for a final review and git push.</p>
+    <p class="blog-card__text">Merges manual items, RSS candidates, a fresh RSS pass, and targeted web searches. Deduplicates, caps at 15 items, generates Hugo markdown with exactly 3 bullet points per story, runs the push script, and sends a PR link via WhatsApp.</p>
   </div>
 </div>
 
@@ -215,19 +221,29 @@ news:
 ---
 ```
 
-I have a custom css template that renders this into styled newsletter pages automatically.
+I have a custom Hugo template that renders this into styled newsletter pages automatically.
 
-### The Git Push Problem
+### The Push Script
 
-The biggest technical annoyance was getting the agent to push to GitHub. The sandbox isolates the agent from the host filesystem, so git credentials on the host aren't accessible inside the container. Push commands fail with "could not read Username."
-
-I tried several approaches: bind-mounting credentials, a webhook-triggered push script, a file watcher with `inotifywait`. Each added complexity for marginal gain.
-
-The solution I landed on was the simplest: the agent writes the markdown file to an output directory, and I run a one-line script via SSH.
+Since the agent runs directly on the host (no sandbox), it can execute a shell script that handles the git workflow. The skill calls `~/push-newsletter.sh` at the end of the publish pipeline:
 
 ```bash
 ~/push-newsletter.sh 2026-03-14 ~/.openclaw/workspace/skills/ai-newsletter/output/2026-03-14.md
 ```
+
+The script copies the markdown into the Hugo content directory, creates a branch, commits, and pushes. The agent then sends me the PR link via WhatsApp. This was originally a manual step when I was running in sandbox mode, but switching to host execution made it fully automatic.
+
+### The RSS Staging Pipeline
+
+The Friday staging scan was the biggest quality improvement. Before adding it, I was relying entirely on manual sharing plus a single web search pass at publish time. Running it on Friday gives the agent most of the week's stories while still leaving Saturday for the final publish pass to catch anything last-minute. The problem: web search results for "AI news this week" are noisy and often miss niche stories from Reddit or arXiv.
+
+Now the agent pulls from 8 RSS feeds on Friday:
+
+- <span style="color: #3b82f6; font-weight: 600;">News</span>: TechCrunch AI, Wired AI, VentureBeat
+- <span style="color: #3b82f6; font-weight: 600;">Research</span>: arXiv cs.LG
+- <span style="color: #3b82f6; font-weight: 600;">Community</span>: r/LocalLLaMA, r/MachineLearning, r/artificial, r/singularity (top posts, extracting the linked article URL, not the Reddit discussion URL)
+
+These candidates get saved to `candidates.jsonl` and merged with manual items at publish time. Manual items always take priority — if I shared something, it's in the newsletter regardless of what RSS found.
 ## Things I Learned
 <div class="blog-card-grid">
   <div class="blog-card">
@@ -240,9 +256,9 @@ The solution I landed on was the simplest: the agent writes the markdown file to
   <div class="blog-card">
     <div class="blog-card__header">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>
-      <span class="blog-card__title">Sandbox Strategy</span>
+      <span class="blog-card__title">Host vs Sandbox</span>
     </div>
-    <p class="blog-card__text">The Docker sandbox is critical for security but creates friction with host access like Git credentials. Plan for this isolation from day one.</p>
+    <p class="blog-card__text">I started with Docker sandbox mode but switched to host execution. The sandbox blocked git credentials, file watchers, and push scripts. For a dedicated cloud VM with nothing personal on it, host mode is the pragmatic choice — just add strict rules to the skill itself.</p>
   </div>
   <div class="blog-card">
     <div class="blog-card__header">
@@ -269,11 +285,12 @@ The solution I landed on was the simplest: the agent writes the markdown file to
 
 ## What's Next
 
-- <span style="color: #3b82f6; font-weight: 600;">Automated scheduling</span>: use OpenClaw's cron to trigger the publish pipeline every Sunday evening
+- ~~<span style="color: #22c55e; font-weight: 600;">RSS feed integration</span>~~: Done. Friday staging scan pulls from 8 feeds automatically
+- ~~<span style="color: #22c55e; font-weight: 600;">Full automation</span>~~: Done. Switching from sandbox to host execution resolved the git push friction
+- <span style="color: #3b82f6; font-weight: 600;">Automated publish scheduling</span>: use OpenClaw's cron to trigger the full publish pipeline every Saturday evening, so I just review the PR on Monday
 - <span style="color: #3b82f6; font-weight: 600;">Separate WhatsApp number</span>: cleaner separation from personal chats
-- <span style="color: #3b82f6; font-weight: 600;">RSS feed integration</span>: auto-ingest from specific newsletters and blogs
-- <span style="color: #3b82f6; font-weight: 600;">Full automation</span>: once the sandbox/git-push friction is resolved upstream
+- <span style="color: #3b82f6; font-weight: 600;">Newsletter-specific RSS</span>: subscribe to curated newsletters (The Batch, Import AI, etc.) and auto-extract stories
 
-For now, the semi-automated flow works well. About 2 minutes during the week dropping items into WhatsApp, 5 minutes on Sunday reviewing and publishing. Good trade for a polished weekly newsletter.
+The flow is now mostly automated. About 2 minutes during the week dropping items into WhatsApp, a Friday staging summary I glance at, and 5 minutes on Saturday reviewing and saying "publish." Good trade for a polished weekly newsletter.
 
 You can see the result at [deepakbaby.in/newsletter](https://deepakbaby.in/newsletter).

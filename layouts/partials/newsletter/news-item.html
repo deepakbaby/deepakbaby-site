@@ -1,0 +1,22 @@
+{{ $item := .item }}
+{{ $catColor := .catColor }}
+<div class="nl-item" style="--cat-color: {{ $catColor }}">
+    <div class="nl-item-title">
+        {{ if $item.url }}<a href="{{ $item.url }}" target="_blank" rel="noopener">{{ $item.title }}</a>{{ else }}{{ $item.title }}{{ end }}
+    </div>
+    <div class="nl-item-summary">
+        {{ if reflect.IsSlice $item.summary }}
+        <ul>{{ range $item.summary }}<li>{{ . }}</li>{{ end }}</ul>
+        {{ else }}<p>{{ $item.summary }}</p>{{ end }}
+    </div>
+    {{ if $item.url }}
+    <div class="nl-item-footer">
+        <a href="{{ $item.url }}" class="nl-item-link" target="_blank" rel="noopener">Read more
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+        </a>
+        <button class="nl-copy-btn" data-url="{{ $item.url }}" title="Copy link">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+        </button>
+    </div>
+    {{ end }}
+</div>

@@ -39,6 +39,15 @@ body.kind-page {
             position: relative;
             top: -4.5rem;
             padding: 15px;
+            line-height: 1.35;
+
+            p {
+              margin-bottom: 0.5rem;
+            }
+
+            li {
+              margin-bottom: 0.15rem;
+            }
 
             .author-profile {
               position: relative;
