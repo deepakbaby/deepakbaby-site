@@ -91,7 +91,7 @@ No YAML files to edit. No scripts to run. Just WhatsApp messages.
 
 I initially sketched out a custom Python pipeline: web search collectors, a Claude-powered curation layer, Jinja2 templates. Maybe 500 lines across a dozen files.
 
-Then I looked at [OpenClaw](https://openclaw.com). It's an open-source, self-hosted AI agent that connects to messaging apps and can run tools, remember context, and execute tasks. The key realization: OpenClaw could replace that entire pipeline with a single "skill", a markdown file that teaches the agent what to do.
+Then I looked at [OpenClaw](https://openclaw.ai). It's an open-source, self-hosted AI agent that connects to messaging apps and can run tools, remember context, and execute tasks. The key realization: OpenClaw could replace that entire pipeline with a single "skill", a markdown file that teaches the agent what to do.
 
 The tradeoff is maturity. OpenClaw is very new, and I hit plenty of rough edges. But for a personal project where I control the environment, the WhatsApp-native interaction model was worth it.
 

@@ -1,5 +1,5 @@
 ---
-title: "AI Weekly: LeCun Raises $1B, Anthropic Sues Trump Over Pentagon Blacklist"
+title: "LeCun Raises $1B, Anthropic Sues Trump Over Pentagon Blacklist"
 date: 2026-03-14
 week_start: "2026-03-08"
 week_end: "2026-03-14"

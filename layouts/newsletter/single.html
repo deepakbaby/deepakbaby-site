@@ -18,15 +18,6 @@
         <h1 class="nl-header-title">{{ .Title }}</h1>
     </header>
 
-    <!-- Highlights -->
-    {{ if .Params.highlights }}
-    <div class="nl-highlights">
-        {{ range .Params.highlights }}
-        <div class="nl-highlight-card">{{ . }}</div>
-        {{ end }}
-    </div>
-    {{ end }}
-
     <!-- Category Tabs -->
     {{ if .Params.news }}
     <div class="nl-tabs-wrapper">
@@ -77,14 +68,7 @@
                         {{ else }}<p>{{ .summary }}</p>{{ end }}
                     </div>
                     {{ if .url }}
-                    <div class="nl-item-footer">
-                        <a href="{{ .url }}" class="nl-item-link" target="_blank" rel="noopener">Read more
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                        </a>
-                        <button class="nl-copy-btn" data-url="{{ .url }}" title="Copy link">
-                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
-                        </button>
-                    </div>
+                    {{ partial "newsletter/item-footer.html" (dict "url" .url) }}
                     {{ end }}
                 </div>
                 {{ end }}
@@ -100,14 +84,7 @@
                             {{ else }}<p>{{ .summary }}</p>{{ end }}
                         </div>
                         {{ if .url }}
-                        <div class="nl-item-footer">
-                            <a href="{{ .url }}" class="nl-item-link" target="_blank" rel="noopener">Read more
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                            </a>
-                            <button class="nl-copy-btn" data-url="{{ .url }}" title="Copy link">
-                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
-                            </button>
-                        </div>
+                        {{ partial "newsletter/item-footer.html" (dict "url" .url) }}
                         {{ end }}
                     </div>
                     {{ end }}
@@ -128,14 +105,7 @@
                         {{ else }}<p>{{ .summary }}</p>{{ end }}
                     </div>
                     {{ if .url }}
-                    <div class="nl-item-footer">
-                        <a href="{{ .url }}" class="nl-item-link" target="_blank" rel="noopener">Read more
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                        </a>
-                        <button class="nl-copy-btn" data-url="{{ .url }}" title="Copy link">
-                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
-                            </button>
-                    </div>
+                    {{ partial "newsletter/item-footer.html" (dict "url" .url) }}
                     {{ end }}
                 </div>
                 {{ end }}
@@ -218,7 +188,7 @@
         max-width: 100vw;
         margin: 0;
         padding: 0;
-        overflow-x: hidden;
+        overflow-x: clip;
         font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
         background: var(--bg-primary);
         color: var(--text-primary);
@@ -241,7 +211,7 @@
         gap: 0.4rem;
         color: var(--text-muted);
         text-decoration: none;
-        font-size: 0.8rem;
+        font-size: 0.875rem;
         font-weight: 500;
         letter-spacing: 0.04em;
         text-transform: uppercase;
@@ -251,7 +221,7 @@
     .nl-back-link:hover { color: var(--nl-accent); }
 
     .nl-header-date {
-        font-size: 0.8rem;
+        font-size: 0.875rem;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.12em;
@@ -260,72 +230,53 @@
     }
 
     .nl-header-title {
-        font-size: clamp(2.2rem, 5vw, 3.5rem);
+        font-size: clamp(1.1rem, 2.5vw, 1.75rem);
         font-weight: 800;
         line-height: 1.15;
         letter-spacing: -0.02em;
         color: var(--text-primary);
         margin: 0 0 1.5rem;
-        max-width: 800px;
     }
-
-    /* ============================================
-       HIGHLIGHTS
-    ============================================ */
-    .nl-highlights {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1px;
-        background: var(--border-color);
-        border: 1px solid var(--border-color);
-        border-radius: 10px;
-        overflow: hidden;
-        max-width: 1200px;
-        margin: 0 auto 2.5rem;
-    }
-
-    .nl-highlight-card {
-        padding: 1.25rem 1.5rem 1.25rem 1.75rem;
-        background: var(--bg-secondary);
-        font-size: 0.88rem;
-        line-height: 1.55;
-        color: var(--text-secondary);
-        position: relative;
-    }
-    .nl-highlight-card::before {
-        content: '';
-        position: absolute;
-        left: 0; top: 0; bottom: 0;
-        width: 3px;
-        background: var(--nl-accent);
-        opacity: 0.5;
-    }
-    .nl-highlight-card:first-child::before { opacity: 0; }
 
     /* ============================================
        TABS
     ============================================ */
     .nl-tabs-wrapper {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 2rem;
+        position: sticky;
+        top: 3.5rem;
+        z-index: 50;
+        background: var(--bg-secondary);
+        border-bottom: 1px solid transparent;
+        border-top: 1px solid transparent;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        padding: 0.5rem 2rem 0;
+    }
+    .nl-tabs-wrapper.stuck {
+        border-bottom-color: var(--border-color);
+        border-top-color: var(--border-color);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     }
 
     .nl-tabs {
         display: flex;
         gap: 0;
+        max-width: 1200px;
+        margin: 0 auto;
         border-bottom: 1px solid var(--border-color);
         overflow-x: auto;
         scrollbar-width: none;
     }
     .nl-tabs::-webkit-scrollbar { display: none; }
+    .nl-tab:last-child {
+        padding-right: 2rem;
+    }
 
     .nl-tab {
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.85rem 1.25rem;
-        font-size: 0.82rem;
+        padding: 0.85rem 0.9rem;
+        font-size: 0.84rem;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.06em;
@@ -355,7 +306,7 @@
     .nl-tab.active .nl-tab-dot { opacity: 1; }
 
     .nl-tab-count {
-        font-size: 0.7rem;
+        font-size: 0.75rem;
         font-weight: 700;
         color: var(--text-muted);
         background: var(--border-color);
@@ -410,9 +361,9 @@
     .nl-lead-main:hover { background: var(--nl-bg-hover); }
 
     .nl-lead-title {
-        font-size: 1.45rem;
+        font-size: 1.5rem;
         font-weight: 800;
-        line-height: 1.3;
+        line-height: 1.35;
         margin-bottom: 0.75rem;
         color: var(--text-primary);
     }
@@ -462,10 +413,10 @@
     .nl-item:hover { background: var(--nl-bg-hover); }
 
     .nl-item-title {
-        font-size: 0.95rem;
+        font-size: 1.125rem;
         font-weight: 700;
         line-height: 1.4;
-        margin-bottom: 0.4rem;
+        margin-bottom: 0.5rem;
         color: var(--text-primary);
     }
     .nl-item-title a {
@@ -476,8 +427,8 @@
     .nl-item-title a:hover { color: var(--nl-accent); }
 
     .nl-item-summary {
-        font-size: 0.84rem;
-        line-height: 1.6;
+        font-size: 1rem;
+        line-height: 1.7;
         color: var(--text-secondary);
         margin-bottom: 0.6rem;
     }
@@ -504,24 +455,43 @@
     .nl-item-footer {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: flex-end;
+        gap: 0.4rem;
         margin-top: 0.75rem;
     }
 
-    .nl-item-link {
+    .nl-source-link {
         display: inline-flex;
         align-items: center;
-        gap: 0.3rem;
-        font-size: 0.76rem;
+        gap: 0.4rem;
+        padding: 0.3rem 0.65rem;
+        font-size: 0.8rem;
         font-weight: 600;
-        color: var(--nl-accent);
+        color: var(--text-muted);
         text-decoration: none;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        transition: gap 0.2s;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        transition: all 0.2s;
     }
-    .nl-item-link:hover { gap: 0.5rem; }
-    .nl-item-link svg { width: 12px; height: 12px; }
+    .nl-source-link:hover {
+        color: var(--nl-accent);
+        border-color: color-mix(in srgb, var(--nl-accent) 40%, transparent);
+        background: color-mix(in srgb, var(--nl-accent) 6%, transparent);
+        text-decoration: none;
+    }
+    .nl-favicon {
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
+        flex-shrink: 0;
+    }
+    .nl-external-icon {
+        opacity: 0.5;
+        flex-shrink: 0;
+    }
+    .nl-source-link:hover .nl-external-icon { opacity: 1; }
 
     .nl-copy-btn {
         background: none;
@@ -593,7 +563,7 @@
         display: flex;
         align-items: center;
         gap: 0.35rem;
-        font-size: 0.8rem;
+        font-size: 0.875rem;
         color: var(--text-muted);
         font-weight: 500;
     }
@@ -601,9 +571,138 @@
     .nl-nav-next { text-align: right; }
 
     .nl-nav-title {
-        font-size: 1rem;
+        font-size: 1.1rem;
         font-weight: 600;
         color: var(--text-primary);
+    }
+
+    /* ============================================
+       DARK MODE — Josh Comeau-inspired contrast
+    ============================================ */
+    [data-theme="dark"] .newsletter-single {
+        --nl-bg-hover: hsl(220 16% 16%);
+    }
+    [data-theme="dark"] .nl-lead-main,
+    [data-theme="dark"] .nl-lead-side-item,
+    [data-theme="dark"] .nl-item,
+    [data-theme="dark"] .nl-nav-card {
+        background: hsl(220 16% 13%);
+    }
+    [data-theme="dark"] .nl-lead-row,
+    [data-theme="dark"] .nl-items-grid {
+        background: hsl(220 12% 20%);
+        border-color: hsl(220 12% 20%);
+    }
+    [data-theme="dark"] .nl-nav-card {
+        border-color: hsl(220 12% 20%);
+    }
+    [data-theme="dark"] .nl-tabs-wrapper {
+        background: hsl(220 16% 11%);
+    }
+    [data-theme="dark"] .nl-tabs-wrapper.stuck {
+        border-bottom-color: hsl(220 12% 20%);
+        border-top-color: hsl(220 12% 20%);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    }
+    [data-theme="dark"] .nl-tabs {
+        border-bottom-color: hsl(220 12% 20%);
+    }
+    [data-theme="dark"] .nl-header-title {
+        color: hsl(210 20% 98%);
+    }
+    [data-theme="dark"] .nl-lead-title,
+    [data-theme="dark"] .nl-lead-title a,
+    [data-theme="dark"] .nl-item-title,
+    [data-theme="dark"] .nl-item-title a {
+        color: hsl(210 15% 93%);
+    }
+    [data-theme="dark"] .nl-item-summary,
+    [data-theme="dark"] .nl-lead-main .nl-item-summary {
+        color: hsl(215 12% 68%);
+    }
+    [data-theme="dark"] .nl-tab {
+        color: hsl(215 10% 60%);
+    }
+    [data-theme="dark"] .nl-tab:hover {
+        color: hsl(215 12% 78%);
+    }
+    [data-theme="dark"] .nl-tab.active {
+        color: hsl(210 20% 98%);
+    }
+    [data-theme="dark"] .nl-tab-count {
+        color: hsl(215 10% 55%);
+        background: hsl(220 14% 18%);
+    }
+    [data-theme="dark"] .nl-tab.active .nl-tab-count {
+        color: hsl(215 12% 68%);
+    }
+    [data-theme="dark"] .nl-source-link {
+        border-color: hsl(220 12% 22%);
+        color: hsl(215 10% 55%);
+    }
+    [data-theme="dark"] .nl-source-link:hover {
+        border-color: color-mix(in srgb, var(--nl-accent) 50%, transparent);
+    }
+    [data-theme="dark"] .nl-copy-btn {
+        color: hsl(215 10% 50%);
+    }
+    [data-theme="dark"] .nl-copy-btn:hover {
+        background: hsl(220 14% 18%);
+    }
+    [data-theme="dark"] .nl-back-link {
+        color: hsl(215 10% 55%);
+    }
+    [data-theme="dark"] .nl-header-date {
+        color: var(--nl-accent);
+    }
+    [data-theme="dark"] .nl-nav-label {
+        color: hsl(215 10% 55%);
+    }
+    [data-theme="dark"] .nl-nav-title {
+        color: hsl(210 15% 93%);
+    }
+    [data-theme="dark"] .nl-nav-card {
+        background: hsl(220 16% 13%);
+    }
+    [data-theme="dark"] .nl-item-summary li::before {
+        background: hsl(215 10% 40%);
+    }
+
+    /* ============================================
+       LIGHT MODE — warm and readable
+    ============================================ */
+    [data-theme="light"] .nl-lead-main,
+    [data-theme="light"] .nl-lead-side-item,
+    [data-theme="light"] .nl-item,
+    [data-theme="light"] .nl-nav-card {
+        background: #fff;
+    }
+    [data-theme="light"] .nl-item-summary,
+    [data-theme="light"] .nl-lead-main .nl-item-summary {
+        color: hsl(215 15% 40%);
+    }
+    [data-theme="light"] .nl-tabs-wrapper {
+        background: hsl(220 20% 97%);
+    }
+    [data-theme="light"] .nl-tabs {
+        border-bottom-color: hsl(220 15% 88%);
+    }
+    [data-theme="light"] .nl-tab {
+        color: hsl(215 15% 45%);
+    }
+    [data-theme="light"] .nl-tab.active {
+        color: hsl(215 25% 20%);
+    }
+    [data-theme="light"] .nl-tabs-wrapper.stuck {
+        border-top-color: hsl(220 15% 88%);
+        border-bottom-color: hsl(220 15% 88%);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    [data-theme="light"] .nl-source-link {
+        color: hsl(215 12% 50%);
+    }
+    [data-theme="light"] .nl-back-link {
+        color: hsl(215 12% 50%);
     }
 
     /* ============================================
@@ -612,8 +711,10 @@
     @media (max-width: 767px) {
         .newsletter-single { padding-top: 4rem; }
         .nl-header { padding: 2rem 1rem 1.5rem; }
-        .nl-highlights { grid-template-columns: 1fr; margin-left: 1rem; margin-right: 1rem; }
-        .nl-tabs-wrapper { padding: 0 1rem; }
+        .nl-tabs-wrapper {
+            padding: 0 1rem;
+            top: 3rem;
+        }
         .nl-panels { padding: 1.5rem 1rem 2rem; }
         .nl-lead-row { grid-template-columns: 1fr; }
         .nl-items-grid { grid-template-columns: 1fr; }
@@ -630,15 +731,38 @@
 </style>
 
 <script>
-    // Tab switching
+    // Tab switching with scroll-to-top
+    var tabsWrapper = document.querySelector('.nl-tabs-wrapper');
     document.querySelectorAll('.nl-tab').forEach(function(tab) {
         tab.addEventListener('click', function() {
             document.querySelectorAll('.nl-tab').forEach(function(t) { t.classList.remove('active'); });
             document.querySelectorAll('.nl-panel').forEach(function(p) { p.classList.remove('active'); });
             tab.classList.add('active');
             document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+            // Always scroll so new tab content starts at the top
+            var panels = document.querySelector('.nl-panels');
+            if (panels) {
+                var stickyTop = parseFloat(getComputedStyle(tabsWrapper).top) || 56;
+                var tabsHeight = tabsWrapper.offsetHeight;
+                window.scrollTo({ top: panels.offsetTop - stickyTop - tabsHeight, behavior: 'instant' });
+            }
         });
     });
+
+    // Sticky shadow detection
+    if (tabsWrapper) {
+        var observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                tabsWrapper.classList.toggle('stuck', !entry.isIntersecting);
+            });
+        }, { threshold: [1], rootMargin: '-57px 0px 0px 0px' });
+        // Observe a sentinel element just above the tabs
+        var sentinel = document.createElement('div');
+        sentinel.style.height = '1px';
+        sentinel.style.marginBottom = '-1px';
+        tabsWrapper.parentNode.insertBefore(sentinel, tabsWrapper);
+        observer.observe(sentinel);
+    }
 
     // Copy to clipboard
     document.querySelectorAll('.nl-copy-btn').forEach(function(btn) {
