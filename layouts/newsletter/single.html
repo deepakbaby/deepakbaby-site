@@ -264,9 +264,10 @@
         gap: 0;
         max-width: 1200px;
         margin: 0 auto;
-        border-bottom: 1px solid var(--border-color);
         overflow-x: auto;
         scrollbar-width: none;
+        position: relative;
+        align-items: flex-end;
     }
     .nl-tabs::-webkit-scrollbar { display: none; }
     .nl-tab:last-child {
@@ -277,24 +278,36 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.85rem 0.9rem;
+        padding: 0.65rem 0.9rem;
         font-size: 0.84rem;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.06em;
         color: var(--text-muted);
-        background: none;
+        background: color-mix(in srgb, var(--bg-secondary) 90%, var(--text-muted) 10%);
         border: none;
-        border-bottom: 2px solid transparent;
+        border-bottom: 1px solid var(--border-color);
+        border-radius: 0;
         cursor: pointer;
         white-space: nowrap;
-        transition: all 0.2s;
+        transition: color 0.2s, background 0.2s;
         font-family: inherit;
+        position: relative;
     }
-    .nl-tab:hover { color: var(--text-secondary); }
+    .nl-tab:hover {
+        color: var(--text-secondary);
+        background: color-mix(in srgb, var(--bg-secondary) 80%, var(--text-muted) 10%);
+    }
     .nl-tab.active {
+        background: var(--bg-primary);
         color: var(--text-primary);
-        border-bottom-color: var(--tab-color);
+        border-radius: 20px 20px 0 0;
+        border-bottom: 1px solid var(--bg-primary);
+        z-index: 2;
+        padding: 0.85rem 1.1rem;
+    }
+    .nl-tab.active .nl-tab-dot {
+        opacity: 1;
     }
 
     .nl-tab-dot {
@@ -305,7 +318,6 @@
         opacity: 0.4;
         transition: opacity 0.2s;
     }
-    .nl-tab.active .nl-tab-dot { opacity: 1; }
 
     .nl-tab-count {
         font-size: 0.75rem;
@@ -365,7 +377,7 @@
     .nl-lead-title {
         font-size: 1.5rem;
         font-weight: 800;
-        line-height: 1.35;
+        line-height: 1.4;
         margin-bottom: 0.75rem;
         color: var(--text-primary);
     }
@@ -430,8 +442,9 @@
 
     .nl-item-summary {
         font-size: 1rem;
-        line-height: 1.7;
-        color: var(--text-secondary);
+        line-height: 1.75;
+        color: var(--text-primary);
+        opacity: 0.85;
         margin-bottom: 0.6rem;
     }
     .nl-item-summary p { margin: 0; }
@@ -443,7 +456,7 @@
     .nl-item-summary li {
         position: relative;
         padding-left: 0.85rem;
-        margin-bottom: 0.25rem;
+        margin-bottom: 0.4rem;
     }
     .nl-item-summary li::before {
         content: '';
@@ -606,9 +619,6 @@
         border-top-color: hsl(220 12% 20%);
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
     }
-    [data-theme="dark"] .nl-tabs {
-        border-bottom-color: hsl(220 12% 20%);
-    }
     [data-theme="dark"] .nl-header-title {
         color: hsl(210 20% 98%);
     }
@@ -620,23 +630,28 @@
     }
     [data-theme="dark"] .nl-item-summary,
     [data-theme="dark"] .nl-lead-main .nl-item-summary {
-        color: hsl(215 12% 68%);
+        color: hsl(215 12% 75%);
     }
     [data-theme="dark"] .nl-tab {
         color: hsl(215 10% 60%);
+        background: hsl(220 16% 14%);
     }
     [data-theme="dark"] .nl-tab:hover {
         color: hsl(215 12% 78%);
+        background: hsl(220 16% 17%);
     }
     [data-theme="dark"] .nl-tab.active {
+        background: hsl(220 16% 10%);
         color: hsl(210 20% 98%);
+        border-bottom-color: hsl(220 16% 10%);
     }
     [data-theme="dark"] .nl-tab-count {
         color: hsl(215 10% 55%);
         background: hsl(220 14% 18%);
     }
     [data-theme="dark"] .nl-tab.active .nl-tab-count {
-        color: hsl(215 12% 68%);
+        background: hsl(220 14% 18%);
+        color: hsl(215 12% 75%);
     }
     [data-theme="dark"] .nl-source-link {
         border-color: hsl(220 12% 22%);
@@ -686,14 +701,17 @@
     [data-theme="light"] .nl-tabs-wrapper {
         background: hsl(220 20% 97%);
     }
-    [data-theme="light"] .nl-tabs {
-        border-bottom-color: hsl(220 15% 88%);
-    }
     [data-theme="light"] .nl-tab {
         color: hsl(215 15% 45%);
+        background: hsl(220 20% 93%);
+    }
+    [data-theme="light"] .nl-tab:hover {
+        background: hsl(220 18% 90%);
     }
     [data-theme="light"] .nl-tab.active {
+        background: var(--bg-primary);
         color: hsl(215 25% 20%);
+        border-bottom-color: var(--bg-primary);
     }
     [data-theme="light"] .nl-tabs-wrapper.stuck {
         border-top-color: hsl(220 15% 88%);
@@ -705,6 +723,9 @@
     }
     [data-theme="light"] .nl-back-link {
         color: hsl(215 12% 50%);
+    }
+    [data-theme="light"] .nl-header-title {
+        color: var(--accent);
     }
 
     /* ============================================

@@ -129,14 +129,4 @@ document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener('scroll', updateNavBar)
     updateNavBar()
   }
-
-  const navMain = document.getElementsByClassName('navbar-collapse')
-  Array.from(navMain).forEach(function (el) {
-    el.addEventListener('click', function (e) {
-      if (e.target.tagName === 'A' && !e.target.classList.contains("dropdown-toggle")) {
-        el.classList.add('collapse')
-        el.classList.remove('show')
-      }
-    })
-  })
 })

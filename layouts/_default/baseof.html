@@ -18,7 +18,9 @@
   <meta name="theme-color" content="#15171A">
 
   <!------ RESOURCE PRELOADING FOR CRITICAL ASSETS -------->
+  {{ if not (or (eq .Type "posts") (eq .Type "newsletter")) }}
   <link rel="preload" as="script" href="/js/collapsible-sidebars.js">
+  {{ end }}
 
   <!------ ASYNC FONT LOADING - NON-BLOCKING -------->
   {{ if eq .Site.Params.customTheme "comeau" }}
@@ -35,46 +37,47 @@
   <style>
     /* Global Theme CSS Variables */
     :root {
-      --bg-primary: #15171A;
-      --bg-secondary: #1C1F26;
+      --bg-primary: #131518;
+      --bg-secondary: #1A1D24;
       --bg-card: rgba(255, 255, 255, 0.03);
       --text-primary: #E6E8EB;
-      --text-secondary: #9CA3AF;
-      --text-muted: #6B7280;
+      --text-secondary: #A0A8B4;
+      --text-muted: #6E7581;
       --accent: #7B93FF;
       --accent-hover: #93AAFF;
-      --border-color: rgba(255, 255, 255, 0.08);
+      --border-color: rgba(255, 255, 255, 0.07);
       --toggle-bg: rgba(255, 255, 255, 0.06);
       --toggle-border: rgba(255, 255, 255, 0.12);
       --social-bg: transparent;
       --social-border: rgba(255, 255, 255, 0.1);
       --card-hover-border: rgba(123, 147, 255, 0.2);
       --card-hover-shadow: rgba(0, 0, 0, 0.3);
-      --footer-bg: #171B2E;
+      --footer-bg: #12141E;
     }
 
     [data-theme="light"] {
-      --bg-primary: #F6F8FA;
+      --bg-primary: #F7F8F9;
       --bg-secondary: #ffffff;
       --bg-card: transparent;
-      --text-primary: #1B2331;
-      --text-secondary: #566170;
-      --text-muted: #8591A0;
-      --accent: #5B74E0;
-      --accent-hover: #7B93FF;
+      --text-primary: #1C2028;
+      --text-secondary: #525B68;
+      --text-muted: #828D9A;
+      --accent: #36648B;
+      --accent-hover: #4A7FA5;
+      --accent-red: #D6020D;
       --border-color: rgba(0, 0, 0, 0.08);
       --toggle-bg: rgba(0, 0, 0, 0.04);
       --toggle-border: rgba(0, 0, 0, 0.08);
       --social-bg: transparent;
       --social-border: rgba(0, 0, 0, 0.1);
-      --card-hover-border: rgba(123, 147, 255, 0.2);
+      --card-hover-border: rgba(54, 100, 139, 0.2);
       --card-hover-shadow: rgba(0, 0, 0, 0.08);
       --card-bg: transparent;
       --card-border: rgba(0, 0, 0, 0.06);
-      --timeline-color: #7B93FF;
+      --timeline-color: #36648B;
       --section-bg: #ffffff;
-      --glow-color: rgba(123, 147, 255, 0.06);
-      --footer-bg: #232946;
+      --glow-color: rgba(54, 100, 139, 0.06);
+      --footer-bg: #1E2338;
     }
 
     [data-theme="paper"] {
@@ -283,8 +286,10 @@
   {{ block "header" . }} {{ end }}
 
   <!------ ADD CUSTOM CSS FOR COLLAPSIBLE SIDEBARS (Async Loading) ------->
+  {{ if not (or (eq .Type "posts") (eq .Type "newsletter")) }}
   <link rel="stylesheet" href="/css/collapsible-sidebars.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="/css/collapsible-sidebars.css"></noscript>
+  {{ end }}
   <!------ ADD CUSTOM CSS FOR COMMENTS (Async Loading) ------->
   <link rel="stylesheet" href="/css/comments.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="/css/comments.css"></noscript>
@@ -320,7 +325,9 @@
   {{ block "scripts" . }} {{ end }}
 
   <!------ ADD CUSTOM JS FOR COLLAPSIBLE SIDEBARS -------->
+  {{ if not (or (eq .Type "posts") (eq .Type "newsletter")) }}
   <script src="/js/collapsible-sidebars.js" defer></script>
+  {{ end }}
 
   <!------ IF WANTED, ADD SUPPORT LINKS -------->
   {{- partial "misc/support.html" . -}}
@@ -329,13 +336,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
-        navigator.serviceWorker.register('/sw.js')
-          .then(function(registration) {
-            console.log('Service Worker registered with scope:', registration.scope);
-          })
-          .catch(function(error) {
-            console.log('Service Worker registration failed:', error);
-          });
+        navigator.serviceWorker.register('/sw.js');
       });
     }
   </script>
