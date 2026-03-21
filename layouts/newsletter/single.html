@@ -16,6 +16,12 @@
         </a>
         <div class="nl-header-date">{{ $weekStart.Format "Jan 02" }} — {{ $weekEnd.Format "Jan 02, 2006" }}</div>
         <h1 class="nl-header-title">{{ .Title }}</h1>
+        <div class="nl-header-meta">
+            <button class="nl-heart-btn" data-issue-id="{{ .RelPermalink }}" aria-label="Star this issue">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="heart-icon"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                <span class="heart-count">0</span>
+            </button>
+        </div>
     </header>
 
     <!-- Category Tabs -->
@@ -237,7 +243,46 @@
         line-height: 1.15;
         letter-spacing: -0.02em;
         color: var(--text-primary);
-        margin: 0 0 1.5rem;
+        margin: 0 0 1rem;
+    }
+
+    .nl-header-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    /* ============================================
+       STAR BUTTON
+    ============================================ */
+    .nl-heart-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        color: var(--text-muted);
+        font-family: inherit;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+    .nl-heart-btn:hover {
+        color: var(--text-primary);
+        border-color: color-mix(in srgb, var(--nl-accent) 40%, transparent);
+        background: color-mix(in srgb, var(--nl-accent) 6%, transparent);
+        transform: translateY(-1px);
+    }
+    .nl-heart-btn.hearted {
+        color: #F43F5E;
+        border-color: #F43F5E;
+        background: color-mix(in srgb, #F43F5E 10%, transparent);
+    }
+    .nl-heart-btn.hearted .heart-icon {
+        fill: currentColor;
     }
 
     /* ============================================
@@ -684,6 +729,20 @@
     [data-theme="dark"] .nl-item-summary li::before {
         background: hsl(215 10% 40%);
     }
+    [data-theme="dark"] .nl-heart-btn { 
+        color: hsl(215 10% 55%);
+        background: hsl(220 16% 13%);
+        border-color: hsl(220 12% 22%);
+    }
+    [data-theme="dark"] .nl-heart-btn:hover { 
+        color: hsl(210 15% 93%);
+        border-color: color-mix(in srgb, var(--nl-accent) 50%, transparent);
+    }
+    [data-theme="dark"] .nl-heart-btn.hearted { 
+        color: #F43F5E;
+        border-color: #F43F5E;
+        background: color-mix(in srgb, #F43F5E 10%, transparent);
+    }
 
     /* ============================================
        LIGHT MODE — warm and readable
@@ -726,6 +785,20 @@
     }
     [data-theme="light"] .nl-header-title {
         color: var(--accent);
+    }
+    [data-theme="light"] .nl-heart-btn { 
+        color: hsl(215 12% 50%);
+        background: #fff;
+        border-color: var(--border-color);
+    }
+    [data-theme="light"] .nl-heart-btn:hover { 
+        color: #1B2331;
+        border-color: color-mix(in srgb, var(--nl-accent) 40%, transparent);
+    }
+    [data-theme="light"] .nl-heart-btn.hearted { 
+        color: #E11D48;
+        border-color: #E11D48;
+        background: color-mix(in srgb, #E11D48 10%, transparent);
     }
 
     /* ============================================
@@ -803,5 +876,42 @@
             });
         });
     });
+
+    // Star functionality using local storage
+    var heartBtns = document.querySelectorAll('.nl-heart-btn');
+    if (heartBtns.length > 0) {
+        var heartedIssues = {};
+        try {
+            heartedIssues = JSON.parse(localStorage.getItem('nl_hearted_issues')) || {};
+        } catch(e) {}
+
+        heartBtns.forEach(function(btn) {
+            var issueId = btn.getAttribute('data-issue-id');
+            var countSpan = btn.querySelector('.heart-count');
+            
+            var isHearted = !!heartedIssues[issueId];
+            if (isHearted) {
+                btn.classList.add('hearted');
+                countSpan.textContent = '1';
+            }
+
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                isHearted = !isHearted;
+                if (isHearted) {
+                    heartedIssues[issueId] = true;
+                    btn.classList.add('hearted');
+                    countSpan.textContent = '1';
+                } else {
+                    delete heartedIssues[issueId];
+                    btn.classList.remove('hearted');
+                    countSpan.textContent = '0';
+                }
+                try {
+                    localStorage.setItem('nl_hearted_issues', JSON.stringify(heartedIssues));
+                } catch(e) {}
+            });
+        });
+    }
 </script>
 {{ end }}
