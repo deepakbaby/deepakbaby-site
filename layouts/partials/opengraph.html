@@ -7,6 +7,19 @@
 
 {{ $image := .Params.image }}
 {{ if not $image }}{{ if .Params.images }}{{ $image = index .Params.images 0 }}{{ end }}{{ end }}
+{{/* For pages with hero images (e.g. blog posts), use the hero as OG image */}}
+{{ if not $image }}
+  {{ $heroImage := .Resources.GetMatch "hero.{jpg,png,svg}" }}
+  {{ if .Params.hero }}
+    {{ $heroImage = .Resources.Get .Params.hero }}
+    {{ if not $heroImage }}{{ $heroImage = resources.Get .Params.hero }}{{ end }}
+  {{ end }}
+  {{ if $heroImage }}{{ $image = $heroImage.RelPermalink }}{{ end }}
+{{ end }}
+{{/* For newsletter posts, inherit OG image from the section */}}
+{{ if not $image }}
+  {{ if .Parent }}{{ if .Parent.Params.images }}{{ $image = index .Parent.Params.images 0 }}{{ end }}{{ end }}
+{{ end }}
 {{ if not $image }}{{ $image = $dataSite.openGraph.image }}{{ end }}
 {{ if not $image }}{{ $image = $dataAuthor.image }}{{ end }}
 
