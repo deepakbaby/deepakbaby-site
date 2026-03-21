@@ -81,9 +81,6 @@ news:
           - "Trials are focused on fraud prevention and compliance — the biggest blockers to agentic payments at scale."
           - "It signals that agentic AI is moving from demo to real financial infrastructure, with Visa setting the early standard."
         url: "https://www.artificialintelligence-news.com/news/visa-prepares-payment-systems-for-ai-agent-initiated-transactions/"
-  - category: "AI & Coding"
-    color: "#06b6d4"
-    items:
       - title: "Cursor's Composer 2 Exposed as Kimi K2.5 — No Attribution"
         summary:
           - "A developer found Cursor's new 'in-house' Composer 2 model ID buried in API calls: `kimi-k2p5-rl-0317-s515-fast` — identical to Moonshot AI's Kimi K2.5 with RL fine-tuning."
@@ -102,7 +99,7 @@ news:
           - "It supports 500+ models, GGUF, vision, audio, auto-dataset creation from PDFs/CSVs, side-by-side model comparison, and in-browser code execution."
           - "The Apache licence is a deliberate differentiator from LMStudio's proprietary approach, targeting developers who want full control."
         url: "https://www.reddit.com/r/LocalLLaMA/comments/1rw9jmf/introducing_unsloth_studio_a_new_opensource_web/"
-  - category: "Research & Papers"
+  - category: "Research & Resources"
     color: "#ec4899"
     items:
       - title: "Attention Residuals: Kimi Team's Drop-In Transformer Upgrade"
@@ -117,4 +114,16 @@ news:
           - "OmniLingual MT builds on SONAR embeddings and addresses the generation bottleneck where crosslingual transfer helps comprehension but not fluent output."
           - "The work has major implications for low-resource and endangered languages that current commercial MT systems entirely ignore."
         url: "https://ai.meta.com/research/publications/omnilingual-mt-machine-translation-for-1600-languages/"
+      - title: "Andrew Ng's Context Hub: Curated API Docs for Coding Agents"
+        summary:
+          - "Context Hub (chub) is a CLI tool giving coding agents versioned, curated API docs so they stop hallucinating library interfaces."
+          - "Agents can annotate gaps locally and vote docs up or down, feeding improvements back to maintainers over time."
+          - "Launched with 7k+ stars; works with Claude Code, Codex, and any agent harness via a simple prompt or SKILL.md."
+        url: "https://github.com/andrewyng/context-hub"
+      - title: "Everything Claude Code: 90k-Star Agent Optimization System"
+        summary:
+          - "An Anthropic hackathon winner with 90k+ GitHub stars, covering skills, memory, security scanning, and MCP configs for Claude Code and other agent harnesses."
+          - "Built from 10+ months of intensive daily production use across Claude Code, Codex, and Cowork — not a tutorial but a battle-tested system."
+          - "Available in 5 languages with an npm package, GitHub App, and growing contributor community."
+        url: "https://github.com/affaan-m/everything-claude-code"
 ---
