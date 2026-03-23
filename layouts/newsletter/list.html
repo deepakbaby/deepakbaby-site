@@ -53,10 +53,6 @@
                         <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2"/></svg>
                         {{ $itemCount }} stories
                     </span>
-                    <button class="nl-heart-btn" data-issue-id="{{ $latest.RelPermalink }}" aria-label="Star this issue">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="heart-icon"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
-                        <span class="heart-count">0</span>
-                    </button>
                 </div>
                 {{ if $latest.Params.news }}
                 <div class="nl-latest-categories">
@@ -127,10 +123,6 @@
                         <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2"/></svg>
                         {{ $ic }} stories
                     </span>
-                    <button class="nl-heart-btn" data-issue-id="{{ .RelPermalink }}" aria-label="Star this issue">
-                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="heart-icon"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
-                        <span class="heart-count">0</span>
-                    </button>
                 </div>
                 {{ if .Params.news }}
                 <div class="nl-archive-cats">
@@ -522,36 +514,6 @@
     .nl-empty p { margin: 0; }
 
     /* ============================================
-       STAR BUTTON
-    ============================================ */
-    .nl-heart-btn {
-        display: flex;
-        align-items: center;
-        gap: 0.3rem;
-        background: transparent;
-        border: none;
-        color: var(--text-muted);
-        font-family: inherit;
-        font-size: 0.85rem;
-        cursor: pointer;
-        padding: 0;
-        transition: color 0.2s, transform 0.1s;
-    }
-    .nl-latest-meta .nl-heart-btn {
-        font-size: 0.9rem;
-    }
-    .nl-heart-btn:hover {
-        color: var(--text-primary);
-        transform: scale(1.05);
-    }
-    .nl-heart-btn.hearted {
-        color: #F43F5E;
-    }
-    .nl-heart-btn.hearted .heart-icon {
-        fill: currentColor;
-    }
-
-    /* ============================================
        DARK MODE — Josh Comeau-inspired contrast
     ============================================ */
     [data-theme="dark"] .newsletter-page {
@@ -620,10 +582,6 @@
     [data-theme="dark"] .nl-archive-cat-dot {
         opacity: 0.85;
     }
-    [data-theme="dark"] .nl-heart-btn { color: hsl(215 10% 55%); }
-    [data-theme="dark"] .nl-heart-btn:hover { color: hsl(210 15% 93%); }
-    [data-theme="dark"] .nl-heart-btn.hearted { color: #F43F5E; }
-
     /* ============================================
        LIGHT MODE — warm and readable
     ============================================ */
@@ -644,10 +602,6 @@
     [data-theme="light"] .nl-archive-meta {
         color: hsl(215 12% 50%);
     }
-    [data-theme="light"] .nl-heart-btn { color: hsl(215 12% 50%); }
-    [data-theme="light"] .nl-heart-btn:hover { color: #1B2331; }
-    [data-theme="light"] .nl-heart-btn.hearted { color: #E11D48; }
-
     /* ============================================
        RESPONSIVE
     ============================================ */
@@ -671,57 +625,4 @@
     }
 </style>
 
-<script>
-    (function () {
-        // Heart functionality with live counter via Netlify Function
-        var heartBtns = document.querySelectorAll('.nl-heart-btn');
-        if (heartBtns.length > 0) {
-            var heartedIssues = {};
-            try {
-                heartedIssues = JSON.parse(localStorage.getItem('nl_hearted_issues')) || {};
-            } catch(e) {}
-
-            heartBtns.forEach(function(btn) {
-                var issueId = btn.getAttribute('data-issue-id');
-                var countSpan = btn.querySelector('.heart-count');
-
-                // Restore local hearted state
-                if (heartedIssues[issueId]) {
-                    btn.classList.add('hearted');
-                }
-
-                // Fetch live count
-                fetch('/.netlify/functions/hearts?id=' + encodeURIComponent(issueId))
-                    .then(function(r) { return r.json(); })
-                    .then(function(data) { countSpan.textContent = data.count; })
-                    .catch(function() {});
-
-                btn.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    var isHearted = !!heartedIssues[issueId];
-                    var action = isHearted ? 'unlike' : 'like';
-                    isHearted = !isHearted;
-
-                    if (isHearted) {
-                        heartedIssues[issueId] = true;
-                        btn.classList.add('hearted');
-                    } else {
-                        delete heartedIssues[issueId];
-                        btn.classList.remove('hearted');
-                    }
-                    try { localStorage.setItem('nl_hearted_issues', JSON.stringify(heartedIssues)); } catch(e) {}
-
-                    fetch('/.netlify/functions/hearts?id=' + encodeURIComponent(issueId), {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: action })
-                    })
-                    .then(function(r) { return r.json(); })
-                    .then(function(data) { countSpan.textContent = data.count; })
-                    .catch(function() {});
-                });
-            });
-        }
-    })();
-</script>
 {{ end }}

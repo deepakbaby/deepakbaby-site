@@ -18,59 +18,6 @@ function initNewsletterCopyButtons() {
   })
 }
 
-function initNewsletterHearts() {
-  const heartBtns = document.querySelectorAll('.nl-heart-btn')
-  if (!heartBtns.length) return
-
-  let heartedIssues = {}
-  try {
-    heartedIssues = JSON.parse(localStorage.getItem('nl_hearted_issues')) || {}
-  } catch (e) {}
-
-  heartBtns.forEach((btn) => {
-    const issueId = btn.getAttribute('data-issue-id')
-    const countSpan = btn.querySelector('.heart-count')
-    if (!issueId || !countSpan) return
-
-    if (heartedIssues[issueId]) {
-      btn.classList.add('hearted')
-    }
-
-    fetch('/.netlify/functions/hearts?id=' + encodeURIComponent(issueId))
-      .then((r) => r.json())
-      .then((data) => { countSpan.textContent = data.count })
-      .catch(() => {})
-
-    btn.addEventListener('click', (e) => {
-      e.preventDefault()
-      let isHearted = Boolean(heartedIssues[issueId])
-      const action = isHearted ? 'unlike' : 'like'
-      isHearted = !isHearted
-
-      if (isHearted) {
-        heartedIssues[issueId] = true
-        btn.classList.add('hearted')
-      } else {
-        delete heartedIssues[issueId]
-        btn.classList.remove('hearted')
-      }
-
-      try {
-        localStorage.setItem('nl_hearted_issues', JSON.stringify(heartedIssues))
-      } catch (e) {}
-
-      fetch('/.netlify/functions/hearts?id=' + encodeURIComponent(issueId), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action })
-      })
-        .then((r) => r.json())
-        .then((data) => { countSpan.textContent = data.count })
-        .catch(() => {})
-    })
-  })
-}
-
 function initNewsletterJumpRail() {
   const railInner = document.querySelector('.nl-jump-rail-inner')
   const links = Array.from(document.querySelectorAll('.nl-jump-link'))
@@ -149,6 +96,5 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!document.body.classList.contains('type-newsletter')) return
 
   initNewsletterCopyButtons()
-  initNewsletterHearts()
   initNewsletterJumpRail()
 })

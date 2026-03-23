@@ -13,7 +13,7 @@
     </header>
 
     {{ if gt $count 0 }}
-    <div class="nl-story-grid{{ if ge $count 4 }} nl-story-grid-bento{{ end }}">
+    <div class="nl-story-grid{{ if eq $count 2 }} nl-story-grid-two{{ end }}">
         {{ with index $items 0 }}
         {{ partial "newsletter/story-card.html" (dict "item" . "featured" true) }}
         {{ end }}
