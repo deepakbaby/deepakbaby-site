@@ -13,16 +13,15 @@
     </header>
 
     {{ if gt $count 0 }}
+    <div class="nl-story-grid{{ if ge $count 4 }} nl-story-grid-bento{{ end }}">
         {{ with index $items 0 }}
         {{ partial "newsletter/story-card.html" (dict "item" . "featured" true) }}
         {{ end }}
-
         {{ if gt $count 1 }}
-        <div class="nl-items-grid">
             {{ range after 1 $items }}
             {{ partial "newsletter/story-card.html" (dict "item" . "featured" false) }}
             {{ end }}
-        </div>
         {{ end }}
+    </div>
     {{ end }}
 </section>
