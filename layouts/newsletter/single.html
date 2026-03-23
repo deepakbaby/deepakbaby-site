@@ -24,7 +24,7 @@
         </div>
     </header>
 
-    <!-- Category Tabs -->
+    <!-- Category Tabs (desktop) -->
     {{ if .Params.news }}
     <div class="nl-tabs-wrapper">
         <div class="nl-tabs">
@@ -36,7 +36,7 @@
         </div>
     </div>
 
-    <!-- Tab Panels -->
+    <!-- Tab Panels (desktop) -->
     <div class="nl-panels">
         {{ range $idx, $cat := .Params.news }}
         {{ $items := $cat.items }}
@@ -125,6 +125,100 @@
             {{ end }}
             {{ end }}
 
+        </div>
+        {{ end }}
+    </div>
+
+    <!-- Accordion (mobile) — flat structure so sticky works across all headers -->
+    <div class="nl-accordion">
+        {{ range $idx, $cat := .Params.news }}
+        {{ $items := $cat.items }}
+        {{ $count := len $items }}
+        {{ $catColor := $cat.color }}
+        <button class="nl-accordion-header" data-acc="{{ $idx }}" style="--tab-color: {{ $cat.color }}" aria-expanded="false">
+            <span class="nl-tab-dot"></span>
+            <span class="nl-accordion-title">{{ $cat.category }}</span>
+            <span class="nl-tab-count">{{ len $cat.items }}</span>
+            <svg class="nl-accordion-chevron" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div class="nl-accordion-body" data-acc="{{ $idx }}">
+        <div class="nl-accordion-body-inner">
+
+            {{ if eq $count 1 }}
+            <div class="nl-items-grid" style="--cat-color: {{ $catColor }}">
+                {{ range $items }}
+                {{ partial "newsletter/news-item.html" (dict "item" . "catColor" $catColor "lead" true) }}
+                {{ end }}
+            </div>
+            {{ else if eq $count 2 }}
+            <div class="nl-items-grid" style="--cat-color: {{ $catColor }}">
+                {{ range $items }}
+                {{ partial "newsletter/news-item.html" (dict "item" . "catColor" $catColor "lead" false) }}
+                {{ end }}
+            </div>
+            {{ else if eq $count 3 }}
+            <div class="nl-lead-row" style="--cat-color: {{ $catColor }}">
+                {{ range first 1 $items }}
+                <div class="nl-lead-main">
+                    <div class="nl-lead-title">
+                        {{ if .url }}<a href="{{ .url }}" target="_blank" rel="noopener">{{ .title }}</a>{{ else }}{{ .title }}{{ end }}
+                    </div>
+                    <div class="nl-item-summary">
+                        {{ if reflect.IsSlice .summary }}
+                        <ul>{{ range .summary }}<li>{{ . }}</li>{{ end }}</ul>
+                        {{ else }}<p>{{ .summary }}</p>{{ end }}
+                    </div>
+                    {{ if .url }}
+                    {{ partial "newsletter/item-footer.html" (dict "url" .url) }}
+                    {{ end }}
+                </div>
+                {{ end }}
+                <div class="nl-lead-side">
+                    {{ range after 1 $items }}
+                    <div class="nl-lead-side-item">
+                        <div class="nl-item-title">
+                            {{ if .url }}<a href="{{ .url }}" target="_blank" rel="noopener">{{ .title }}</a>{{ else }}{{ .title }}{{ end }}
+                        </div>
+                        <div class="nl-item-summary">
+                            {{ if reflect.IsSlice .summary }}
+                            <ul>{{ range .summary }}<li>{{ . }}</li>{{ end }}</ul>
+                            {{ else }}<p>{{ .summary }}</p>{{ end }}
+                        </div>
+                        {{ if .url }}
+                        {{ partial "newsletter/item-footer.html" (dict "url" .url) }}
+                        {{ end }}
+                    </div>
+                    {{ end }}
+                </div>
+            </div>
+            {{ else }}
+            <div class="nl-lead-row" style="--cat-color: {{ $catColor }}">
+                {{ range first 2 $items }}
+                <div class="nl-lead-main">
+                    <div class="nl-lead-title">
+                        {{ if .url }}<a href="{{ .url }}" target="_blank" rel="noopener">{{ .title }}</a>{{ else }}{{ .title }}{{ end }}
+                    </div>
+                    <div class="nl-item-summary">
+                        {{ if reflect.IsSlice .summary }}
+                        <ul>{{ range .summary }}<li>{{ . }}</li>{{ end }}</ul>
+                        {{ else }}<p>{{ .summary }}</p>{{ end }}
+                    </div>
+                    {{ if .url }}
+                    {{ partial "newsletter/item-footer.html" (dict "url" .url) }}
+                    {{ end }}
+                </div>
+                {{ end }}
+            </div>
+            {{ if gt $count 2 }}
+            <div class="nl-items-grid" style="--cat-color: {{ $catColor }}">
+                {{ range after 2 $items }}
+                {{ partial "newsletter/news-item.html" (dict "item" . "catColor" $catColor "lead" false) }}
+                {{ end }}
+            </div>
+            {{ end }}
+            {{ end }}
+
+        </div>
         </div>
         {{ end }}
     </div>
@@ -802,16 +896,102 @@
     }
 
     /* ============================================
+       ACCORDION (mobile only) — flat structure
+    ============================================ */
+    .nl-accordion {
+        display: none;
+        overflow-anchor: none;
+    }
+
+    .nl-accordion-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        width: 100%;
+        padding: 0.9rem 1rem;
+        background: var(--bg-secondary);
+        border: none;
+        border-bottom: 1px solid var(--border-color);
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 0.84rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        transition: color 0.2s, background 0.2s;
+        position: relative;
+    }
+    .nl-accordion-header:hover {
+        color: var(--text-secondary);
+        background: var(--nl-bg-hover);
+    }
+    .nl-accordion-header.active {
+        color: var(--text-primary);
+        z-index: 41;
+        border-bottom-color: color-mix(in srgb, var(--tab-color) 30%, var(--border-color));
+    }
+
+    .nl-accordion-title { flex: 1; text-align: left; }
+
+    .nl-accordion-chevron {
+        transition: transform 0.25s ease;
+        flex-shrink: 0;
+        opacity: 0.5;
+    }
+    .nl-accordion-header.active .nl-accordion-chevron {
+        transform: rotate(180deg);
+        opacity: 1;
+    }
+
+    .nl-accordion-body {
+        max-height: 0;
+        transition: max-height 0.35s ease;
+        overflow: hidden;
+        overflow-anchor: none;
+    }
+    .nl-accordion-body-inner {
+        padding: 0 1rem;
+        overflow: hidden;
+    }
+    .nl-accordion-body.active .nl-accordion-body-inner {
+        padding: 1rem;
+    }
+
+    [data-theme="dark"] .nl-accordion-header {
+        background: hsl(220 16% 13%);
+        color: hsl(215 10% 60%);
+        border-bottom-color: hsl(220 12% 20%);
+    }
+    [data-theme="dark"] .nl-accordion-header:hover {
+        color: hsl(215 12% 78%);
+        background: hsl(220 16% 17%);
+    }
+    [data-theme="dark"] .nl-accordion-header.active {
+        color: hsl(210 20% 98%);
+    }
+
+    [data-theme="light"] .nl-accordion-header {
+        background: #fff;
+        color: hsl(215 15% 45%);
+        border-bottom-color: hsl(220 15% 90%);
+    }
+    [data-theme="light"] .nl-accordion-header:hover {
+        background: hsl(220 20% 97%);
+    }
+    [data-theme="light"] .nl-accordion-header.active {
+        color: hsl(215 25% 20%);
+    }
+
+    /* ============================================
        RESPONSIVE
     ============================================ */
     @media (max-width: 767px) {
         .newsletter-single { padding-top: 4rem; }
         .nl-header { padding: 2rem 1rem 1.5rem; }
-        .nl-tabs-wrapper {
-            padding: 0 1rem;
-            top: 3.5rem;
-        }
-        .nl-panels { padding: 1.5rem 1rem 2rem; }
+        .nl-tabs-wrapper { display: none; }
+        .nl-panels { display: none; }
+        .nl-accordion { display: block; padding: 0 0 1rem; }
         .nl-lead-row { grid-template-columns: 1fr; }
         .nl-items-grid { grid-template-columns: 1fr; }
         .nl-nav-section { padding: 0 1rem 4rem; }
@@ -877,7 +1057,190 @@
         });
     });
 
-    // Star functionality using local storage
+    // Accordion — mobile single-open accordion with two-header sticky stack
+    var accHeaders = Array.from(document.querySelectorAll('.nl-accordion-header'));
+    var accBodies = Array.from(document.querySelectorAll('.nl-accordion-body'));
+    var navbarH = 56;
+    var currentOpen = -1;
+
+    function getHeaderHeight(idx) {
+        if (idx >= 0 && accHeaders[idx]) {
+            return accHeaders[idx].offsetHeight || 41;
+        }
+        return accHeaders.length > 0 ? (accHeaders[0].offsetHeight || 41) : 41;
+    }
+
+    function collapseBody(body) {
+        body.classList.remove('active');
+        body.style.maxHeight = '0px';
+    }
+
+    function expandBody(body) {
+        body.classList.add('active');
+        body.style.maxHeight = body.scrollHeight + 'px';
+    }
+
+    function applyStickyHeaders(openIdx) {
+        var hasPrevious = openIdx > 0;
+        var previousIdx = openIdx - 1;
+
+        accHeaders.forEach(function(h, i) {
+            h.style.position = '';
+            h.style.top = '';
+            h.style.zIndex = '';
+
+            if (openIdx < 0) return;
+
+            if (hasPrevious && i === previousIdx) {
+                h.style.position = 'sticky';
+                h.style.top = navbarH + 'px';
+                h.style.zIndex = '40';
+                return;
+            }
+
+            if (i === openIdx) {
+                h.style.position = 'sticky';
+                h.style.top = (navbarH + (hasPrevious ? getHeaderHeight(previousIdx) : 0)) + 'px';
+                h.style.zIndex = '41';
+            }
+        });
+    }
+
+    function openAccordion(idx) {
+        currentOpen = idx;
+
+        accHeaders.forEach(function(h, i) {
+            var isActive = i === idx;
+            h.classList.toggle('active', isActive);
+            h.setAttribute('aria-expanded', String(isActive));
+            if (isActive) {
+                expandBody(accBodies[i]);
+            } else {
+                collapseBody(accBodies[i]);
+            }
+        });
+
+        applyStickyHeaders(idx);
+    }
+
+    function getBodyTopOffset(idx) {
+        var prevH = idx > 0 ? getHeaderHeight(idx - 1) : 0;
+        var currentH = getHeaderHeight(idx);
+        return navbarH + prevH + currentH;
+    }
+
+    function alignOpenBodyToTop(idx, behavior) {
+        if (idx < 0 || !accBodies[idx]) return;
+        var body = accBodies[idx];
+        var offset = getBodyTopOffset(idx);
+        var scrollTarget = body.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top: Math.max(0, scrollTarget), behavior: behavior || 'auto' });
+    }
+
+    function getOpenBodyTargetTop(idx) {
+        if (idx < 0 || !accBodies[idx]) return window.scrollY;
+        var body = accBodies[idx];
+        var offset = getBodyTopOffset(idx);
+        return Math.max(0, body.getBoundingClientRect().top + window.scrollY - offset);
+    }
+
+    var scrollAnimFrame = null;
+    function smoothScrollToTop(targetY, durationMs) {
+        var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reducedMotion) {
+            window.scrollTo({ top: targetY, behavior: 'auto' });
+            return;
+        }
+
+        if (scrollAnimFrame) {
+            cancelAnimationFrame(scrollAnimFrame);
+            scrollAnimFrame = null;
+        }
+
+        var startY = window.scrollY;
+        var delta = targetY - startY;
+        if (Math.abs(delta) < 1) {
+            window.scrollTo({ top: targetY, behavior: 'auto' });
+            return;
+        }
+
+        var start = performance.now();
+        var easeInOut = function(t) {
+            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        };
+
+        var tick = function(now) {
+            var elapsed = now - start;
+            var t = Math.min(1, elapsed / durationMs);
+            var eased = easeInOut(t);
+            window.scrollTo({ top: startY + delta * eased, behavior: 'auto' });
+            if (t < 1) {
+                scrollAnimFrame = requestAnimationFrame(tick);
+            } else {
+                scrollAnimFrame = null;
+            }
+        };
+
+        scrollAnimFrame = requestAnimationFrame(tick);
+    }
+
+    // All collapsed on load
+    accHeaders.forEach(function(h, i) {
+        h.classList.remove('active');
+        h.setAttribute('aria-expanded', 'false');
+        collapseBody(accBodies[i]);
+    });
+    applyStickyHeaders(-1);
+
+    accHeaders.forEach(function(header, idx) {
+        header.addEventListener('click', function() {
+            if (currentOpen === idx) {
+                return;
+            }
+
+            openAccordion(idx);
+            requestAnimationFrame(function() {
+                var target = getOpenBodyTargetTop(idx);
+                var upwardOnlyTarget = Math.min(window.scrollY, target);
+                smoothScrollToTop(upwardOnlyTarget, 700);
+            });
+
+            // Re-align after expansion completes so content always starts from top.
+            var openedBody = accBodies[idx];
+            var settled = false;
+            var settleTimer = null;
+            var settleAlignment = function() {
+                if (settled) return;
+                settled = true;
+                if (settleTimer) {
+                    clearTimeout(settleTimer);
+                    settleTimer = null;
+                }
+                var snapTarget = getOpenBodyTargetTop(idx);
+                // Keep correction upward-only to avoid any downward jerk.
+                if (snapTarget < window.scrollY - 1) {
+                    window.scrollTo({ top: snapTarget, behavior: 'auto' });
+                }
+                openedBody.removeEventListener('transitionend', onTransitionEnd);
+            };
+            var onTransitionEnd = function(e) {
+                if (e.propertyName !== 'max-height') return;
+                settleAlignment();
+            };
+            openedBody.addEventListener('transitionend', onTransitionEnd);
+            settleTimer = setTimeout(settleAlignment, 450);
+        });
+    });
+
+    // Keep expanded height and sticky offsets correct on resize/orientation changes
+    window.addEventListener('resize', function() {
+        if (currentOpen >= 0) {
+            expandBody(accBodies[currentOpen]);
+            applyStickyHeaders(currentOpen);
+        }
+    });
+
+    // Heart functionality with live counter via Netlify Function
     var heartBtns = document.querySelectorAll('.nl-heart-btn');
     if (heartBtns.length > 0) {
         var heartedIssues = {};
@@ -888,28 +1251,39 @@
         heartBtns.forEach(function(btn) {
             var issueId = btn.getAttribute('data-issue-id');
             var countSpan = btn.querySelector('.heart-count');
-            
-            var isHearted = !!heartedIssues[issueId];
-            if (isHearted) {
+
+            if (heartedIssues[issueId]) {
                 btn.classList.add('hearted');
-                countSpan.textContent = '1';
             }
+
+            fetch('/.netlify/functions/hearts?id=' + encodeURIComponent(issueId))
+                .then(function(r) { return r.json(); })
+                .then(function(data) { countSpan.textContent = data.count; })
+                .catch(function() {});
 
             btn.addEventListener('click', function (e) {
                 e.preventDefault();
+                var isHearted = !!heartedIssues[issueId];
+                var action = isHearted ? 'unlike' : 'like';
                 isHearted = !isHearted;
+
                 if (isHearted) {
                     heartedIssues[issueId] = true;
                     btn.classList.add('hearted');
-                    countSpan.textContent = '1';
                 } else {
                     delete heartedIssues[issueId];
                     btn.classList.remove('hearted');
-                    countSpan.textContent = '0';
                 }
-                try {
-                    localStorage.setItem('nl_hearted_issues', JSON.stringify(heartedIssues));
-                } catch(e) {}
+                try { localStorage.setItem('nl_hearted_issues', JSON.stringify(heartedIssues)); } catch(e) {}
+
+                fetch('/.netlify/functions/hearts?id=' + encodeURIComponent(issueId), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: action })
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) { countSpan.textContent = data.count; })
+                .catch(function() {});
             });
         });
     }

@@ -773,7 +773,7 @@
             });
         });
 
-        // Star functionality using local storage
+        // Heart functionality with live counter via Netlify Function
         var heartBtns = document.querySelectorAll('.nl-heart-btn');
         if (heartBtns.length > 0) {
             var heartedIssues = {};
@@ -784,28 +784,41 @@
             heartBtns.forEach(function(btn) {
                 var issueId = btn.getAttribute('data-issue-id');
                 var countSpan = btn.querySelector('.heart-count');
-                
-                var isHearted = !!heartedIssues[issueId];
-                if (isHearted) {
+
+                // Restore local hearted state
+                if (heartedIssues[issueId]) {
                     btn.classList.add('hearted');
-                    countSpan.textContent = '1';
                 }
+
+                // Fetch live count
+                fetch('/.netlify/functions/hearts?id=' + encodeURIComponent(issueId))
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) { countSpan.textContent = data.count; })
+                    .catch(function() {});
 
                 btn.addEventListener('click', function (e) {
                     e.preventDefault();
+                    var isHearted = !!heartedIssues[issueId];
+                    var action = isHearted ? 'unlike' : 'like';
                     isHearted = !isHearted;
+
                     if (isHearted) {
                         heartedIssues[issueId] = true;
                         btn.classList.add('hearted');
-                        countSpan.textContent = '1';
                     } else {
                         delete heartedIssues[issueId];
                         btn.classList.remove('hearted');
-                        countSpan.textContent = '0';
                     }
-                    try {
-                        localStorage.setItem('nl_hearted_issues', JSON.stringify(heartedIssues));
-                    } catch(e) {}
+                    try { localStorage.setItem('nl_hearted_issues', JSON.stringify(heartedIssues)); } catch(e) {}
+
+                    fetch('/.netlify/functions/hearts?id=' + encodeURIComponent(issueId), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: action })
+                    })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) { countSpan.textContent = data.count; })
+                    .catch(function() {});
                 });
             });
         }
