@@ -10,20 +10,6 @@
             <h1 class="nl-header-title">AI Newsletter</h1>
             <p class="nl-header-desc">A curated weekly roundup of the most important developments in artificial intelligence.</p>
         </div>
-        <form name="newsletter-subscribe" method="POST" data-netlify="true" netlify-honeypot="bot-field"
-            class="nl-subscribe" id="nlSubscribeForm">
-            <input type="hidden" name="form-name" value="newsletter-subscribe" />
-            <p style="display:none"><input name="bot-field" /></p>
-            <input type="email" name="email" class="nl-email-input" placeholder="your@email.com" required
-                aria-label="Email address" id="nlEmailInput" />
-            <button type="submit" class="nl-subscribe-btn">Subscribe</button>
-        </form>
-        <div class="nl-subscribe-success" id="nlSubscribeSuccess" style="display:none">
-            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-            <span>You're subscribed!</span>
-        </div>
     </header>
 
     {{ $pages := where .Pages "Kind" "page" }}
@@ -243,58 +229,6 @@
         margin: 0;
     }
 
-    .nl-subscribe {
-        flex-shrink: 0;
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .nl-email-input {
-        height: 42px;
-        width: 220px;
-        padding: 0 1rem;
-        background: var(--bg-secondary);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        color: var(--text-primary);
-        font-size: 0.95rem;
-        font-family: inherit;
-        transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .nl-email-input::placeholder { color: var(--text-muted); }
-    .nl-email-input:focus {
-        outline: none;
-        border-color: var(--nl-accent);
-        box-shadow: 0 0 0 3px var(--nl-accent-glow);
-    }
-
-    .nl-subscribe-btn {
-        height: 42px;
-        padding: 0 1.25rem;
-        background: var(--nl-accent);
-        border: none;
-        border-radius: 8px;
-        color: #fff;
-        font-size: 0.82rem;
-        font-weight: 700;
-        font-family: inherit;
-        cursor: pointer;
-        white-space: nowrap;
-        transition: background 0.2s, transform 0.15s;
-    }
-    .nl-subscribe-btn:hover {
-        filter: brightness(0.9);
-        transform: translateY(-1px);
-    }
-
-    .nl-subscribe-success {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: #10b981;
-        font-size: 0.9rem;
-        font-weight: 600;
-    }
 
     /* ============================================
        LATEST ISSUE — hero
@@ -686,18 +620,6 @@
     [data-theme="dark"] .nl-archive-cat-dot {
         opacity: 0.85;
     }
-    [data-theme="dark"] .nl-email-input {
-        background: hsl(220 16% 13%);
-        border-color: hsl(220 12% 22%);
-        color: hsl(210 15% 93%);
-    }
-    [data-theme="dark"] .nl-email-input::placeholder {
-        color: hsl(215 10% 45%);
-    }
-    [data-theme="dark"] .nl-subscribe-success {
-        color: hsl(160 60% 55%);
-    }
-
     [data-theme="dark"] .nl-heart-btn { color: hsl(215 10% 55%); }
     [data-theme="dark"] .nl-heart-btn:hover { color: hsl(210 15% 93%); }
     [data-theme="dark"] .nl-heart-btn.hearted { color: #F43F5E; }
@@ -736,8 +658,6 @@
             align-items: flex-start;
             padding: 2.5rem 1rem 1.5rem;
         }
-        .nl-subscribe { width: 100%; }
-        .nl-email-input { flex: 1; width: auto; }
         .nl-latest { padding: 2rem 1rem 0; }
         .nl-latest-card { grid-template-columns: 1fr; }
         .nl-archive { padding: 2rem 1rem 4rem; }
@@ -745,7 +665,7 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-        .nl-latest-card, .nl-archive-card, .nl-subscribe-btn {
+        .nl-latest-card, .nl-archive-card {
             transition: none;
         }
     }
@@ -753,26 +673,6 @@
 
 <script>
     (function () {
-        var form = document.getElementById('nlSubscribeForm');
-        var success = document.getElementById('nlSubscribeSuccess');
-        if (!form) return;
-
-        form.addEventListener('submit', function (e) {
-            e.preventDefault();
-            var data = new FormData(form);
-            fetch('/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams(data).toString()
-            }).then(function () {
-                form.style.display = 'none';
-                success.style.display = 'flex';
-            }).catch(function () {
-                form.style.display = 'none';
-                success.style.display = 'flex';
-            });
-        });
-
         // Heart functionality with live counter via Netlify Function
         var heartBtns = document.querySelectorAll('.nl-heart-btn');
         if (heartBtns.length > 0) {

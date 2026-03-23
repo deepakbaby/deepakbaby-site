@@ -437,6 +437,10 @@ body.type-newsletter * {
   --nl-text-subtle: hsl(215 12% 75%);
 }
 
+[data-theme='dark'] .newsletter-single .nl-category-title {
+  color: var(--cat-color);
+}
+
 [data-theme='light'] .newsletter-single {
   --nl-surface: #fff;
   --nl-text-subtle: hsl(215 15% 34%);
