@@ -1,12 +1,12 @@
 {{- $url := .url -}}
 {{- $parsed := urls.Parse $url -}}
 <div class="nl-item-footer">
-    <button class="nl-copy-btn" data-url="{{ $url }}" title="Copy link">
-        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+    <button class="nl-copy-btn" data-url="{{ $url }}" title="Copy link" aria-label="Copy story link">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
     </button>
-    <a href="{{ $url }}" class="nl-source-link" target="_blank" rel="noopener" title="{{ $parsed.Host }}">
+    <a href="{{ $url }}" class="nl-source-link" target="_blank" rel="noopener" title="{{ $parsed.Host }}" aria-label="Open source link from {{ $parsed.Host }}">
         <span>Source</span>
         <img class="nl-favicon" src="https://www.google.com/s2/favicons?domain={{ $parsed.Host }}&sz=32" alt="" width="16" height="16" loading="lazy" />
-        <svg class="nl-external-icon" width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+        <svg class="nl-external-icon" width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
     </a>
 </div>

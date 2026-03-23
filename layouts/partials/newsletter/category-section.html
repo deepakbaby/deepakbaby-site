@@ -1,0 +1,28 @@
+{{ $cat := . }}
+{{ $items := $cat.items }}
+{{ $count := len $items }}
+{{ $catColor := $cat.color }}
+{{ $id := printf "cat-%s" ($cat.category | anchorize) }}
+
+<section class="nl-category" id="{{ $id }}" style="--cat-color: {{ $catColor }}" aria-labelledby="{{ $id }}-title">
+    <header class="nl-category-header">
+        <h2 class="nl-category-title" id="{{ $id }}-title">
+            {{ $cat.category }}
+        </h2>
+        <span class="nl-category-count">{{ $count }} stories</span>
+    </header>
+
+    {{ if gt $count 0 }}
+        {{ with index $items 0 }}
+        {{ partial "newsletter/story-card.html" (dict "item" . "featured" true) }}
+        {{ end }}
+
+        {{ if gt $count 1 }}
+        <div class="nl-items-grid">
+            {{ range after 1 $items }}
+            {{ partial "newsletter/story-card.html" (dict "item" . "featured" false) }}
+            {{ end }}
+        </div>
+        {{ end }}
+    {{ end }}
+</section>

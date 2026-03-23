@@ -1,0 +1,15 @@
+{{ $item := .item }}
+{{ $featured := .featured }}
+<article class="nl-item{{ if $featured }} nl-item-featured{{ end }}">
+    <h3 class="nl-item-title">
+        {{ if $item.url }}<a href="{{ $item.url }}" target="_blank" rel="noopener">{{ $item.title }}</a>{{ else }}{{ $item.title }}{{ end }}
+    </h3>
+    <div class="nl-item-summary">
+        {{ if reflect.IsSlice $item.summary }}
+        <ul>{{ range $item.summary }}<li>{{ . }}</li>{{ end }}</ul>
+        {{ else }}<p>{{ $item.summary }}</p>{{ end }}
+    </div>
+    {{ if $item.url }}
+    {{ partial "newsletter/item-footer.html" (dict "url" $item.url) }}
+    {{ end }}
+</article>

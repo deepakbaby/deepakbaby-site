@@ -1,6 +1,7 @@
 // Minimal core application - NO heavy libraries
 // Only core utilities (lightweight)
 import './core'
+import './newsletter-single'
 
 // NOTE: Features (mermaid, katex, highlight.js) are NOT imported here
 // They add 2MB+ to the bundle. Load them via CDN or separate bundles if needed.
