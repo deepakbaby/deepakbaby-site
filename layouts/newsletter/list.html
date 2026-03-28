@@ -95,7 +95,16 @@
                 <div class="nl-month-header">{{ $monthKey }}</div>
             {{ end }}
             <div class="nl-archive-card">
-                <div class="nl-archive-date">{{ $ws.Format "Jan 02" }} — {{ $we.Format "Jan 02, 2006" }}</div>
+                <div class="nl-archive-date-row">
+                    <span class="nl-archive-date">{{ $ws.Format "Jan 02" }} — {{ $we.Format "Jan 02, 2006" }}</span>
+                    {{ if .Params.news }}
+                    <div class="nl-archive-cats">
+                        {{ range .Params.news }}
+                        <span class="nl-archive-cat-dot" style="--cat-color: {{ .color }}" title="{{ .category }}"></span>
+                        {{ end }}
+                    </div>
+                    {{ end }}
+                </div>
                 <div class="nl-archive-title"><a href="{{ .RelPermalink }}">{{ .Title }}</a></div>
                 <div class="nl-archive-meta">
                     {{ $wc := 0 }}
@@ -123,18 +132,11 @@
                         <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2"/></svg>
                         {{ $ic }} stories
                     </span>
+                    <a href="{{ .RelPermalink }}" class="nl-archive-read-link">
+                        Read this issue
+                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                    </a>
                 </div>
-                {{ if .Params.news }}
-                <div class="nl-archive-cats">
-                    {{ range .Params.news }}
-                    <span class="nl-archive-cat-dot" style="--cat-color: {{ .color }}" title="{{ .category }}"></span>
-                    {{ end }}
-                </div>
-                {{ end }}
-                <a href="{{ .RelPermalink }}" class="nl-archive-read-link">
-                    Read this issue
-                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                </a>
             </div>
             {{ end }}
         </div>
@@ -205,7 +207,7 @@
     }
 
     .nl-header-title {
-        font-size: clamp(2.4rem, 5vw, 3.2rem);
+        font-size: clamp(1.5rem, 3.5vw, 2.2rem);
         font-weight: 800;
         line-height: 1.1;
         letter-spacing: -0.02em;
@@ -214,8 +216,8 @@
     }
 
     .nl-header-desc {
-        font-size: 1.1rem;
-        line-height: 1.6;
+        font-size: 1rem;
+        line-height: 1.45;
         color: var(--text-secondary);
         max-width: 480px;
         margin: 0;
@@ -276,7 +278,7 @@
     }
 
     .nl-latest-title {
-        font-size: 1.75rem;
+        font-size: 1.35rem;
         font-weight: 800;
         line-height: 1.25;
         margin: 0 0 1rem;
@@ -292,7 +294,7 @@
     .nl-latest-meta {
         display: flex;
         gap: 1rem;
-        font-size: 0.9rem;
+        font-size: 0.82rem;
         color: var(--text-muted);
         margin-bottom: 1.25rem;
     }
@@ -314,7 +316,7 @@
         background: color-mix(in srgb, var(--cat-color) 12%, transparent);
         border: 1px solid color-mix(in srgb, var(--cat-color) 25%, transparent);
         border-radius: 50px;
-        font-size: 0.8rem;
+        font-size: 0.72rem;
         font-weight: 600;
         color: var(--cat-color);
     }
@@ -343,8 +345,8 @@
         gap: 1.15rem;
     }
     .nl-latest-highlights-list li {
-        font-size: 1.05rem;
-        line-height: 1.75;
+        font-size: 0.92rem;
+        line-height: 1.45;
         color: var(--text-secondary);
         position: relative;
         padding-left: 1.1rem;
@@ -364,7 +366,7 @@
         align-items: center;
         gap: 0.35rem;
         margin-top: 1.5rem;
-        font-size: 0.875rem;
+        font-size: 0.8rem;
         font-weight: 700;
         color: var(--nl-accent);
         text-transform: uppercase;
@@ -431,6 +433,16 @@
         gap: 0.5rem;
     }
 
+    .nl-archive-date-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .nl-archive-date-row .nl-archive-cats {
+        margin-left: auto;
+    }
+
     .nl-archive-date {
         font-size: 0.72rem;
         font-weight: 700;
@@ -441,9 +453,9 @@
     }
 
     .nl-archive-title {
-        font-size: 1.125rem;
+        font-size: 1rem;
         font-weight: 700;
-        line-height: 1.35;
+        line-height: 1.3;
         color: var(--text-primary);
     }
     .nl-archive-title a {
@@ -463,7 +475,8 @@
         text-decoration: none;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        margin-top: 0.25rem;
+        margin: 0 0 0 auto;
+        white-space: nowrap;
         transition: gap 0.2s;
     }
     .nl-archive-read-link:hover { gap: 0.5rem; text-decoration: none; }
@@ -471,7 +484,7 @@
     .nl-archive-meta {
         display: flex;
         gap: 0.75rem;
-        font-size: 0.85rem;
+        font-size: 0.78rem;
         color: var(--text-muted);
     }
     .nl-archive-meta span {
@@ -484,7 +497,6 @@
         display: flex;
         flex-wrap: wrap;
         gap: 0.3rem;
-        margin-top: 0.15rem;
     }
 
     .nl-archive-cat-dot {
@@ -507,7 +519,7 @@
         margin-bottom: 1.5rem;
     }
     .nl-empty h3 {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
         color: var(--text-primary);
         margin: 0 0 0.5rem;
     }

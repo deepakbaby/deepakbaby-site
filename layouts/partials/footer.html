@@ -271,4 +271,35 @@
             text-align: center;
         }
     }
+
+    /* Homepage camouflage — footer blends into page background */
+    .kind-home .site-footer {
+        background-color: var(--bg-primary) !important;
+        background-image: none !important;
+    }
+    .kind-home .site-footer .brand-name {
+        color: var(--text-primary) !important;
+    }
+    .kind-home .site-footer .brand-tagline {
+        color: var(--text-muted) !important;
+    }
+    .kind-home .site-footer .footer-nav a {
+        color: var(--text-secondary) !important;
+    }
+    .kind-home .site-footer .footer-nav a:hover {
+        color: var(--text-primary) !important;
+    }
+    .kind-home .site-footer .social-link {
+        color: var(--text-muted) !important;
+    }
+    .kind-home .site-footer .social-link:hover {
+        color: var(--text-primary) !important;
+    }
+    .kind-home .site-footer .copyright,
+    .kind-home .site-footer .credits {
+        color: var(--text-muted) !important;
+    }
+    .kind-home .site-footer .footer-social::after {
+        background: linear-gradient(90deg, var(--border-color), transparent) !important;
+    }
 </style>

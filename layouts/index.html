@@ -120,7 +120,7 @@
         z-index: 2;
     }
 
-    /* Pull footer up into the wave for seamless blend */
+    /* Pull footer up for seamless blend on homepage */
     .kind-home .site-footer {
         margin-top: -2rem;
         padding-top: 3rem;
@@ -143,31 +143,22 @@
     }
 
     .footer-wave-bridge .blend-wave-far {
-        fill: var(--blend-far, rgba(20, 24, 42, 0.4));
+        fill: var(--bg-primary, rgba(20, 24, 42, 0.4));
+        opacity: 0.3;
     }
 
     .footer-wave-bridge .blend-wave-mid {
-        fill: var(--blend-mid, rgba(22, 26, 44, 0.7));
+        fill: var(--bg-primary, rgba(22, 26, 44, 0.7));
+        opacity: 0.6;
     }
 
     .footer-wave-bridge .blend-wave-near {
-        fill: var(--footer-bg, #171B2E);
+        fill: var(--bg-primary, #171B2E);
     }
 
-    [data-theme="light"] .footer-wave-bridge .blend-wave-far {
-        --blend-far: rgba(30, 36, 60, 0.25);
-    }
-
-    [data-theme="light"] .footer-wave-bridge .blend-wave-mid {
-        --blend-mid: rgba(32, 38, 62, 0.55);
-    }
-
-    [data-theme="paper"] .footer-wave-bridge .blend-wave-far {
-        --blend-far: rgba(36, 40, 58, 0.2);
-    }
-
-    [data-theme="paper"] .footer-wave-bridge .blend-wave-mid {
-        --blend-mid: rgba(38, 42, 60, 0.5);
+    /* Wave bridge hidden — footer camouflages into page bg */
+    .footer-wave-bridge {
+        display: none;
     }
 
     /* Section separators */
