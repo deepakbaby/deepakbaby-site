@@ -105,6 +105,13 @@
                                 </svg>
                                 {{ $post.ReadingTime }} min
                             </span>
+                            <span class="meta-divider like-count-divider" style="display:none">•</span>
+                            <span class="meta-item like-count-item" data-path="{{ $post.RelPermalink }}" style="display:none">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                </svg>
+                                <span class="like-count-value"></span>
+                            </span>
                         </div>
 
                         <h2 class="card-title-text">{{ $post.Title }}</h2>
@@ -999,6 +1006,43 @@
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(init3DTilt, 250);
     });
+})();
+</script>
+
+<style>
+    .like-count-item svg {
+        color: #ef4444;
+        opacity: 0.8;
+    }
+</style>
+
+<script>
+(function () {
+    var SUPABASE_URL = {{ site.Params.supabase.url | default "" | jsonify | safeJS }};
+    var SUPABASE_KEY = {{ site.Params.supabase.anonKey | default "" | jsonify | safeJS }};
+    if (!SUPABASE_URL) return;
+
+    var items = document.querySelectorAll('.like-count-item[data-path]');
+    if (!items.length) return;
+
+    fetch(SUPABASE_URL + '/rest/v1/page_likes?select=page_path,like_count&like_count=gt.0', {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+        var counts = {};
+        data.forEach(function (row) { counts[row.page_path] = row.like_count; });
+        items.forEach(function (el) {
+            var c = counts[el.dataset.path];
+            if (c) {
+                el.querySelector('.like-count-value').textContent = c;
+                el.style.display = '';
+                var divider = el.previousElementSibling;
+                if (divider && divider.classList.contains('like-count-divider')) divider.style.display = '';
+            }
+        });
+    })
+    .catch(function () {});
 })();
 </script>
 {{ end }}
