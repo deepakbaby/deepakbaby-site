@@ -100,6 +100,12 @@ params:
   topNavbar:
     maxVisibleSections: 5
 
+  # Supabase configuration for like counters
+  # Set via HUGO_PARAMS_SUPABASE_URL and HUGO_PARAMS_SUPABASE_ANONKEY env vars
+  supabase:
+    url: "https://qqtbsfliatevjspapxya.supabase.co"
+    anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxdGJzZmxpYXRldmpzcGFweHlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyOTYwMzYsImV4cCI6MjA5MDg3MjAzNn0.POyTIgvS1nhXCrOhb5CrHVtSTJWX760Lsa_GFAocyso"
+
   # Configure various features of this theme
   features:
     # [Deprecated] Enable dark theme
