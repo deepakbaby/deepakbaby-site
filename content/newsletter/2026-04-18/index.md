@@ -1,5 +1,5 @@
 ---
-title: "AI Weekly: Stanford Index Sounds the Alarm, Claude Design Shakes Up Creative Tools"
+title: "AI Weekly: Stanford AI Index report 2026 is out, Anthropic releases claude design and Opus 4.7"
 date: 2026-04-18
 week_start: "2026-04-12"
 week_end: "2026-04-18"
