@@ -1,14 +1,29 @@
 ---
-title: "AI Weekly: Musk Takes the Stand, $650B AI Capex Declared"
-date: 2026-05-03
+title: "AI Weekly: Musk Takes the Stand, OpenAI Comes to AWS, $650B AI Capex Declared"
+date: 2026-05-02
 week_start: "2026-04-27"
 week_end: "2026-05-03"
 draft: false
 highlights:
   - "Elon Musk testified against Sam Altman in the landmark OpenAI for-profit conversion trial, revealing private founding emails and clashing on stage before a federal judge."
-  - "Big Tech Q1 earnings revealed a combined $650–700B AI capex commitment from Microsoft, Meta, Alphabet, and Amazon, with Google Cloud crossing $20B quarterly revenue for the first time."
   - "OpenAI ended its exclusive Microsoft partnership and simultaneously launched models, Codex, and Managed Agents on AWS Bedrock — making Amazon a full-stack OpenAI cloud provider."
+  - "Big Tech Q1 earnings revealed a combined $650–700B AI capex commitment from Microsoft, Meta, Alphabet, and Amazon, with Google Cloud crossing $20B quarterly revenue for the first time."
 news:
+  - category: "Models & Releases"
+    color: "#3b82f6"
+    items:
+      - title: "NVIDIA Nemotron 3 Nano Omni: 9x More Efficient Agents"
+        summary:
+          - "NVIDIA unveiled Nemotron 3 Nano Omni, an open multimodal model unifying vision, audio, image, and text in a single model rather than chaining separate specialists."
+          - "The model tops 6 leaderboards for document intelligence, video, and audio understanding, and is up to 9x more efficient than multi-model pipelines on agent tasks."
+          - "Early adopters include Foxconn, Palantir, H Company, Docusign, Oracle, Dell, and Infosys; H Company notes agents can now interpret full HD screen recordings in real time."
+        url: "https://blogs.nvidia.com/blog/nemotron-3-nano-omni-multimodal-ai-agents/"
+      - title: "Symphony: OpenAI's Open-Source Codex Orchestration Spec"
+        summary:
+          - "OpenAI open-sourced Symphony, a spec that turns an issue tracker (Linear) into an always-on control plane for Codex coding agents."
+          - "Teams using Symphony saw a 500% increase in landed PRs by keeping agents continuously aligned to the live backlog without manual task-passing."
+          - "Symphony is designed to be tool-agnostic and extends the Coding Agent Wars thread — now with an official open orchestration layer any platform can adopt."
+        url: "https://openai.com/index/open-source-codex-orchestration-symphony/"
   - category: "People & Business"
     color: "#8b5cf6"
     items:
@@ -84,24 +99,6 @@ news:
           - "The opt-in mode enables passkey-only login, disables email and SMS recovery, enforces short sessions, and automatically excludes accounts from model training."
           - "The feature also covers Codex and comes as OpenAI faces continued scrutiny after the April macOS security incident."
         url: "https://openai.com/index/advanced-account-security/"
-  - category: "Models & Releases"
-    color: "#3b82f6"
-    items:
-      - title: "NVIDIA Nemotron 3 Nano Omni: 9x More Efficient Agents"
-        summary:
-          - "NVIDIA unveiled Nemotron 3 Nano Omni, an open multimodal model unifying vision, audio, image, and text in a single model rather than chaining separate specialists."
-          - "The model tops 6 leaderboards for document intelligence, video, and audio understanding, and is up to 9x more efficient than multi-model pipelines on agent tasks."
-          - "Early adopters include Foxconn, Palantir, H Company, Docusign, Oracle, Dell, and Infosys; H Company notes agents can now interpret full HD screen recordings in real time."
-        url: "https://blogs.nvidia.com/blog/nemotron-3-nano-omni-multimodal-ai-agents/"
-  - category: "AI & Coding"
-    color: "#06b6d4"
-    items:
-      - title: "Symphony: OpenAI's Open-Source Codex Orchestration Spec"
-        summary:
-          - "OpenAI open-sourced Symphony, a spec that turns an issue tracker (Linear) into an always-on control plane for Codex coding agents."
-          - "Teams using Symphony saw a 500% increase in landed PRs by keeping agents continuously aligned to the live backlog without manual task-passing."
-          - "Symphony is designed to be tool-agnostic and extends the Coding Agent Wars thread — now with an official open orchestration layer any platform can adopt."
-        url: "https://openai.com/index/open-source-codex-orchestration-symphony/"
   - category: "Research & Papers"
     color: "#ec4899"
     items:
