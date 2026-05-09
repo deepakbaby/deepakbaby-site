@@ -1,6 +1,6 @@
 ---
 title: "AI Weekly: GPT-5.5 Instant Lands, Anthropic Cracks Agentic Misalignment"
-date: 2026-05-10
+date: 2026-05-09
 week_start: "2026-05-04"
 week_end: "2026-05-10"
 draft: false
