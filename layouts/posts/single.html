@@ -1,5 +1,8 @@
 {{ define "header" }}
 <meta name="description" content="{{ if .Description }}{{ .Description }}{{ else }}{{ .Title }}{{ end }}" />
+{{ if site.Params.features.math.enable }}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
+{{ end }}
 {{ with .Params.relcanonical }}
 <link rel="canonical" href="{{ . | relLangURL }}" itemprop="url" />
 {{ end }}
@@ -642,6 +645,16 @@
     /* Math rendering styles */
     .prose-content .katex {
         font-size: 1.1em;
+    }
+
+    .prose-content .katex .katex-mathml {
+        position: absolute;
+        clip: rect(1px, 1px, 1px, 1px);
+        padding: 0;
+        border: 0;
+        height: 1px;
+        width: 1px;
+        overflow: hidden;
     }
 
     .prose-content .katex-display {
