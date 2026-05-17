@@ -6,8 +6,8 @@
     </h3>
     <div class="nl-item-summary">
         {{ if reflect.IsSlice $item.summary }}
-        <ul>{{ range $item.summary }}<li>{{ . }}</li>{{ end }}</ul>
-        {{ else }}<p>{{ $item.summary }}</p>{{ end }}
+        <ul>{{ range $item.summary }}<li>{{ . | markdownify }}</li>{{ end }}</ul>
+        {{ else }}<p>{{ $item.summary | markdownify }}</p>{{ end }}
     </div>
     {{ if $item.url }}
     {{ partial "newsletter/item-footer.html" (dict "url" $item.url) }}
