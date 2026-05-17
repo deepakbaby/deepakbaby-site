@@ -6,7 +6,7 @@
     </div>
     <div class="nl-item-summary">
         {{ if reflect.IsSlice $item.summary }}
-        <ul>{{ range $item.summary }}<li>{{ . }}</li>{{ end }}</ul>
+        <ul>{{ range $item.summary }}<li>{{ . | markdownify }}</li>{{ end }}</ul>
         {{ else }}<p>{{ $item.summary }}</p>{{ end }}
     </div>
     {{ if $item.url }}
