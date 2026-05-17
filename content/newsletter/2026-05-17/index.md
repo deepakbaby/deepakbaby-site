@@ -14,7 +14,7 @@ news:
     items:
       - title: "TML-Interaction-Small: 200ms Full-Duplex AI Beats GPT Realtime"
         summary:
-          - "Thinking Machines Lab (ex-Google DeepMind) released TML-Interaction-Small, a 276B MoE (12B active) model natively built for real-time full-duplex interaction with a 200ms micro-turn architecture that continuously interleaves audio, video, and text without turn boundaries."
+          - "Thinking Machines Lab (ex-OpenAI) released TML-Interaction-Small, a 276B MoE (12B active) model natively built for real-time full-duplex interaction with a 200ms micro-turn architecture that continuously interleaves audio, video, and text without turn boundaries."
           - "It outperforms [GPT Realtime-2.0](https://openai.com/index/gpt-realtime-2/) and Gemini Flash Live on FD-bench while remaining competitive on intelligence benchmarks, and introduces new capabilities like time-awareness (speak at user-specified times) and visual proactivity (count pushups, respond to visual cues mid-stream)."
           - "First model to meaningfully score on TimeSpeak, CueSpeak, and RepCount benchmarks where all existing models score near-zero; research preview is coming."
         url: "https://thinkingmachines.ai/blog/interaction-models/"
