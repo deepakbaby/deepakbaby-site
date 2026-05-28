@@ -1,34 +1,48 @@
 ---
-title: "Attention Mechanisms, Part 1: From Seq2Seq to Transformers"
+title: "Attention Mechanisms, Part 1: From Seq2Seq to Learned Alignment"
 date: 2026-05-09
 draft: false
 hero: hero.png
-tags: ["deep learning", "attention", "transformers", "sequence-to-sequence"]
+tags: ["deep learning", "attention", "sequence-to-sequence", "machine translation"]
 categories: ["Machine Learning"]
-description: "Part 1 of a series on attention mechanisms: from fixed-vector seq2seq models, through Bahdanau and Luong attention, to Attention Is All You Need."
+description: "Part 1 of a series on attention mechanisms: the move from fixed-vector seq2seq models to Bahdanau and Luong attention, and the rapid spread of attention across translation, captioning, speech, and QA."
 ---
 
-This is the first post in a series on attention mechanisms. We start with neural machine translation in 2014 and follow the ideas forward: learned alignment, self-attention, efficient long-context variants, IO-aware kernels, and finally inference-time tricks such as KV-cache management.
+A lot of the most interesting things we ask neural networks to do look the same from a distance: take a sequence in, produce a sequence out. Translate an English sentence into French. Caption an image. Transcribe a recording of speech. Summarize a paragraph. Answer a question grounded in a story. Modern large language models sit squarely in the same frame; a prompt goes in, a continuation comes out, one token at a time. The input might be words, pixels, or audio frames; the output is almost always a sequence of tokens that has its own length, its own ordering, and only a loose, learned correspondence to the input. By the early 2010s, researchers had started asking whether one general neural architecture could learn all of these mappings end to end; without language-specific rules, hand-built pipelines, or modality-specific tricks. The answer, and the mechanism that made it work; and that still powers today's LLMs; is what this post is about: **attention**.
 
-The pattern to watch is bottleneck migration. Bahdanau attention fixed the fixed-vector problem in early encoder-decoder models. The Transformer removed recurrence, but made the quadratic attention matrix central. Later posts will pick up from there.
+This is the first post in a planned series on attention. It covers the 2014–2016 arc: from RNN encoder-decoder models, through learned soft alignment, to attention spreading across translation, image captioning, speech recognition, and question answering. Later posts will follow the story further as attention runs into new bottlenecks; approximate variants, IO-aware kernels, and inference-time tricks; but each post is meant to stand on its own.
 
-Before attention, neural translation systems asked one vector to carry an entire source sentence. An encoder RNN read the source token by token, compressed it into a final hidden state, and passed that state to a decoder RNN. This worked for short sentences, but degraded as sentences got longer.
+{{< vs 2>}}
+
+<iframe src="/visualizations/attention-history-timeline-simple.html" loading="lazy" frameborder="0" scrolling="no" title="Attention timeline (2014–2017)" style="width: 100%; border: none; background: transparent; display: block; height: 220px; margin: 1.5rem 0;"></iframe>
+
+Machine translation is a natural backdrop for the attention story because it spent two decades pushing against the same problem attention eventually solved: how to map a variable-length input sequence to a variable-length output sequence with possibly different word order, vocabulary, and structure.
+
+Early systems were rule-based, hand-coded by linguists. From the early 1990s onward, the field switched to **statistical machine translation (SMT)**. Systems like [IBM Models 1–5](https://aclanthology.org/J93-2003/) and later phrase-based systems such as [Moses](https://aclanthology.org/P07-2045/) decomposed translation into a pipeline of separate modules. A word/phrase alignment step learned which source words corresponded to which target words; this was the job of the famous IBM "alignment models". A translation model scored how likely a source phrase was to translate to a particular target phrase. A separate language model, usually an n-gram model trained on monolingual target-language text, scored how fluent a candidate output sentence sounded on its own. Finally, a decoder searched over combinations of phrase translations to maximize the combined score.
+
+This pipeline produced the dominant systems of the 2000s and early 2010s. But each stage was trained or estimated separately, and the alignment step in particular relied on heuristics and pre-processing that did not generalize well to new domains or languages.
+
+## Sequence-to-Sequence Learning
+
+In 2014, two papers reframed translation as a single end-to-end neural problem. [Cho et al.](https://arxiv.org/abs/1406.1078) introduced the **encoder-decoder** framing using GRUs, and [Sutskever, Vinyals, and Le](https://arxiv.org/abs/1409.3215) showed it could match strong phrase-based systems on WMT'14 English-French using deep LSTMs.
+
+The recipe was strikingly simple. An encoder RNN reads the source sentence one token at a time and updates a hidden state:
+
+$$h_t = f_{\text{enc}}(h_{t-1}, x_t)$$
+
+After the last source token, the final hidden state $h_S$ is treated as a fixed-size **context vector** $c$ that summarizes the source. A decoder RNN then generates the target sentence one token at a time, conditioned on $c$ and its own previous outputs:
+
+$$s_t = f_{\text{dec}}(s_{t-1}, y_{t-1}, c), \quad p(y_t \mid y_{<t}, x) = \text{softmax}(W s_t)$$
+
+The model is trained end to end by maximizing the log-likelihood of the target sentence given the source. There are no separate alignment models, phrase tables, or hand-crafted features. Everything that translation needs to know; vocabulary correspondences, reordering, agreement, fluency; must be packed into the parameters of the encoder, decoder, and the embedding tables, and routed through that one context vector at decoding time.
+
+That was both the breakthrough and, almost immediately, the limitation.
 
 ## The Fixed-Vector Bottleneck
 
-The early sequence-to-sequence systems from [Cho et al.](https://arxiv.org/abs/1406.1078) and [Sutskever, Vinyals, and Le](https://arxiv.org/abs/1409.3215) in 2014 used the same high-level recipe:
-
-1. Read the source sequence with an encoder RNN.
-2. Store the final encoder state as a fixed context vector.
-3. Decode the target sequence from that vector.
-
-That context vector is fixed-size no matter how long the input is. A five-word sentence and a fifty-word sentence both have to pass through the same narrow channel.
-
-The encoder-decoder objective was simple:
+The context vector $c$ is fixed-size regardless of input length. A five-word sentence and a fifty-word sentence both have to pass through the same narrow channel. Every output token is predicted from earlier output tokens and the same compressed source summary:
 
 $$p(y_1,\ldots,y_T \mid x_1,\ldots,x_S) = \prod_{t=1}^{T} p(y_t \mid y_1,\ldots,y_{t-1}, c)$$
-
-Every output token is predicted from earlier output tokens and the same compressed source summary.
 
 That compression was the problem. [Bahdanau, Cho, and Bengio](https://arxiv.org/abs/1409.0473) showed that translation quality dropped sharply for longer sentences. The model did not just need a better hidden state; it needed a way to look back at the source while decoding.
 
@@ -181,20 +195,7 @@ For each output token, the model learns a soft pointer over the source sentence,
 }
 </style>
 
-<div class="embedded-html-wrapper" data-src="/visualizations/attention-bahdanau-alignment.html">
-  <div class="embedded-html-toolbar">
-    <span class="embedded-html-toolbar-label">Bahdanau alignment visualization</span>
-    <button type="button" class="embedded-html-toolbar-button" data-action="open-new-tab" aria-label="Open the Bahdanau alignment visualization in a new tab">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7h-2V6.414l-9.293 9.293-1.414-1.414L17.586 5H14V3zM5 5h5v2H6v11h11v-4h2v5H5V5z" /></svg>
-      <span class="sr-only">Open Bahdanau alignment visualization in new tab</span>
-    </button>
-    <button type="button" class="embedded-html-toolbar-button" data-action="fullscreen" data-label-base="Enter fullscreen view for the Bahdanau alignment visualization" data-label-active="Exit fullscreen view for the Bahdanau alignment visualization" aria-label="Enter fullscreen view for the Bahdanau alignment visualization">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v2H6v4H4V4zm10 0h6v6h-2V6h-4V4zm6 10v6h-6v-2h4v-4h2zm-10 6H4v-6h2v4h4v2z" /></svg>
-      <span class="sr-only">Toggle fullscreen for Bahdanau alignment visualization</span>
-    </button>
-  </div>
-  <iframe src="/visualizations/attention-bahdanau-alignment.html" loading="lazy" allowfullscreen frameborder="0" scrolling="no" title="Bahdanau attention alignment visualization"></iframe>
-</div>
+<iframe src="/visualizations/attention-bahdanau-alignment.html" loading="lazy" frameborder="0" scrolling="no" title="Bahdanau attention alignment visualization" style="width: 100%; border: none; background: transparent; display: block; height: 520px; margin: 1.5rem 0;"></iframe>
 
 The heatmap shows the alignment directly. Rows are target tokens. Columns are source tokens. Each row sums to one. A bright cell means "the decoder leaned heavily on this source token while producing that target token."
 
@@ -235,6 +236,10 @@ The local variant is an early hint of a theme that returns in Part 2: full atten
 
 Luong attention made attention feel less like a special alignment module and more like a computational primitive. Two ideas from this period kept resurfacing later: use matmul-friendly scores, and restrict the attended region when full attention is unnecessary.
 
+<iframe src="/visualizations/luong-attention-variants.html" loading="lazy" frameborder="0" scrolling="no" title="Luong attention variants" style="width: 100%; border: none; background: transparent; display: block; height: 540px; margin: 1.5rem 0;"></iframe>
+
+The first tab compares the three scoring functions on the same query/key pair, including parameter count and per-pair compute. The second tab toggles between global attention (all source tokens contribute) and local attention (only a window around the predicted alignment $p_t$), with a slider for the half-width $D$.
+
 ## 2015-2017: Attention Becomes the Default
 
 Bahdanau attention quickly became standard in competitive RNN encoder-decoder systems, especially in neural machine translation. It improved long-sentence translation and produced alignment heatmaps that researchers could inspect.
@@ -243,143 +248,22 @@ By 2016, attention-based encoder-decoder models were showing up across sequence 
 
 The common pattern was still recurrent: an RNN processed tokens sequentially, and attention helped it look back at useful inputs. Attention had become common, but it was still attached to recurrence.
 
-[Attention Is All You Need](https://arxiv.org/abs/1706.03762) made a stronger claim. Instead of adding a better attention module to an RNN, it removed recurrence from the sequence model.
-
-## 2017: Attention Is All You Need
-
-The Transformer dropped recurrence entirely.
-
-Instead of processing tokens one step at a time with an RNN, each layer computes attention among all tokens in parallel:
-
-$$\text{Attention}(Q,K,V)=\text{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}\right)V$$
-
-Glossary:
-
-| Term | Meaning |
-|---|---|
-| Query $Q$ | What this token is looking for |
-| Key $K$ | What each token offers as an address |
-| Value $V$ | The content that gets mixed into the output |
-
-The $QK^\top$ matrix contains all pairwise token compatibility scores. Softmax turns each row into a distribution. Multiplying by $V$ blends token content according to those weights.
-
-### Why Divide by Square Root of the Head Dimension?
-
-If query and key dimensions are random with variance 1, their dot product has variance roughly $d_k$. With $d_k=64$, raw dot products are often large. Large logits push softmax toward near-one-hot outputs, which makes gradients small.
-
-Scaling fixes the variance:
-
-| Head dimension $d_k$ | Raw dot-product std. dev. | After dividing by $\sqrt{d_k}$ |
-|---:|---:|---:|
-| 4 | 2 | 1 |
-| 64 | 8 | 1 |
-| 512 | 22.6 | 1 |
-
-The scale factor keeps the softmax in a useful range as the head dimension grows.
-
-The scaled-dot version kept the matmul efficiency of Luong dot attention while avoiding softmax saturation at larger dimensions.
-
-Here is the readable PyTorch version, without fused kernels:
-
-```python
-import math
-import torch
-
-def scaled_dot_product_attention(q, k, v, mask=None):
-    # q, k, v: [batch, heads, tokens, head_dim]
-    scores = q @ k.transpose(-2, -1)
-    scores = scores / math.sqrt(q.size(-1))
-
-    if mask is not None:
-        scores = scores.masked_fill(mask == 0, float("-inf"))
-
-    weights = torch.softmax(scores, dim=-1)
-    return weights @ v
-```
-
-This is the algorithmic core of the Transformer. Part 3 will show why high-performance kernels execute the same computation in a very different way.
-
-## Multi-Head Self-Attention
-
-One attention distribution is useful. Several attention distributions in parallel are more expressive.
-
-Multi-head attention projects the same input into $h$ separate query, key, and value spaces:
-
-$$\text{head}_i=\text{Attention}(XW_i^Q, XW_i^K, XW_i^V)$$
-
-Then the heads are concatenated and projected back:
-
-$$\text{MultiHead}(X)=\text{Concat}(\text{head}_1,\ldots,\text{head}_h)W^O$$
-
-The practical reason is specialization. One head might focus on nearby tokens. Another may track syntax. Another may link pronouns to nouns. Real heads are messier than textbook examples, but separate heads do learn different patterns.
-
-<div class="embedded-html-wrapper" data-src="/visualizations/attention-multihead-self.html">
+<div class="embedded-html-wrapper" data-src="/visualizations/attention-applications.html">
   <div class="embedded-html-toolbar">
-    <span class="embedded-html-toolbar-label">Multi-head self-attention visualization</span>
-    <button type="button" class="embedded-html-toolbar-button" data-action="open-new-tab" aria-label="Open the multi-head self-attention visualization in a new tab">
+    <span class="embedded-html-toolbar-label">Where attention was used (2014–2017)</span>
+    <button type="button" class="embedded-html-toolbar-button" data-action="open-new-tab" aria-label="Open the attention applications gallery in a new tab">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7h-2V6.414l-9.293 9.293-1.414-1.414L17.586 5H14V3zM5 5h5v2H6v11h11v-4h2v5H5V5z" /></svg>
-      <span class="sr-only">Open multi-head self-attention visualization in new tab</span>
+      <span class="sr-only">Open attention applications gallery in new tab</span>
     </button>
-    <button type="button" class="embedded-html-toolbar-button" data-action="fullscreen" data-label-base="Enter fullscreen view for the multi-head self-attention visualization" data-label-active="Exit fullscreen view for the multi-head self-attention visualization" aria-label="Enter fullscreen view for the multi-head self-attention visualization">
+    <button type="button" class="embedded-html-toolbar-button" data-action="fullscreen" data-label-base="Enter fullscreen view for the attention applications gallery" data-label-active="Exit fullscreen view for the attention applications gallery" aria-label="Enter fullscreen view for the attention applications gallery">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v2H6v4H4V4zm10 0h6v6h-2V6h-4V4zm6 10v6h-6v-2h4v-4h2zm-10 6H4v-6h2v4h4v2z" /></svg>
-      <span class="sr-only">Toggle fullscreen for multi-head self-attention visualization</span>
+      <span class="sr-only">Toggle fullscreen for attention applications gallery</span>
     </button>
   </div>
-  <iframe src="/visualizations/attention-multihead-self.html" loading="lazy" allowfullscreen frameborder="0" scrolling="no" title="Multi-head self-attention visualization"></iframe>
+  <iframe src="/visualizations/attention-applications.html" loading="lazy" allowfullscreen frameborder="0" scrolling="no" title="Where attention was used (2014–2017)"></iframe>
 </div>
 
-### Why Positional Encoding Is Necessary
-
-Self-attention by itself is permutation-invariant. If you shuffle the input tokens and also shuffle the rows and columns of $Q$, $K$, and $V$, attention has no built-in notion that one token came before another.
-
-The original Transformer added sinusoidal positional encodings:
-
-$$PE(pos, 2i) = \sin(pos / 10000^{2i/d})$$
-
-$$PE(pos, 2i + 1) = \cos(pos / 10000^{2i/d})$$
-
-The point is to add a deterministic position signal to each token embedding. Without it, attention sees a set of tokens, not an ordered sequence.
-
-## The Transformer Leap
-
-The original Transformer architecture combined a few ingredients:
-
-| Component | Purpose |
-|---|---|
-| Multi-head self-attention | Mix information between tokens |
-| Feed-forward network | Apply per-token nonlinear computation |
-| Residual connections | Preserve signal through deep stacks |
-| LayerNorm | Stabilize optimization |
-| Masked decoder attention | Prevent future-token leakage during generation |
-| Positional encoding | Restore order information |
-
-The claim in "Attention Is All You Need" was not that attention helps RNNs. It was that recurrence could be removed.
-
-That gave Transformers two practical advantages:
-
-| Constraint | RNN seq2seq | Transformer |
-|---|---|---|
-| Training parallelism | Sequential over tokens | Parallel over tokens within a layer |
-| Long-range paths | Many recurrent steps | One attention hop |
-| Alignment | Learned, but tied to decoding steps | Learned throughout every layer |
-
-In 2017, this was computationally reasonable. The WMT'14 English-German experiments used sequence lengths around a few hundred tokens, and the base model trained in about 12 hours on 8 NVIDIA P100 GPUs.
-
-## Why Quadratic Attention Was Fine Until It Wasn't
-
-The self-attention matrix has $N^2$ entries per head. At first, that was acceptable: 512-token sequences were small enough that the attention matrix was not the dominant memory cost. But the numbers grow quadratically. Double the context, quadruple the matrix.
-
-For BERT-base-like training with 12 layers and 12 heads, the attention probabilities alone are roughly:
-
-$$12 \times 12 \times 512^2 \times 2\,\text{bytes} \approx 75\,\text{MB}$$
-
-That is manageable. But at 8k tokens:
-
-$$12 \times 12 \times 8192^2 \times 2\,\text{bytes} \approx 18\,\text{GB}$$
-
-And this is only the attention matrix storage, not parameters, optimizer states, activations from other layers, or batch size.
-
-The Transformer solved the RNN's sequential bottleneck by making token-token interactions explicit. But explicit all-pairs interaction created the next bottleneck: $O(N^2)$ memory and compute.
+Click between the tabs to see what was being attended to in each setting. The mechanism is the same softmax-weighted sum; only the source of "things to attend over" changes.
 
 ## Pros and Cons
 
@@ -387,15 +271,12 @@ The Transformer solved the RNN's sequential bottleneck by making token-token int
 |---|---:|---|---|---|
 | Bahdanau additive attention | MLP per decoder/source pair | Decoder still sequential | Handles longer inputs better than fixed vector | Interpretable alignment in RNN encoder-decoder models |
 | Luong dot/general attention | Matmul-friendly | Decoder still sequential | Global mode still attends to all source positions | Faster RNN attention, local alignment windows |
-| Transformer self-attention | Large batched matmuls | High training parallelism | Quadratic in sequence length | General-purpose sequence modeling when context length is moderate |
 
-The pattern is already visible: Bahdanau removed the fixed-vector bottleneck but kept recurrent decoding. Luong made attention cheaper but still lived inside RNNs. The Transformer removed recurrence, but paid with dense $N \times N$ attention.
+The pattern is already visible: Bahdanau removed the fixed-vector bottleneck but kept recurrent decoding. Luong made attention cheaper but still lived inside RNNs. Both lived as **add-ons to recurrence**.
 
 ## What Comes Next
 
-By 2019, researchers wanted Transformers to read documents, code, images, and genomic sequences with thousands or tens of thousands of tokens. The dense attention matrix became the dominant cost.
-
-The first wave of answers said: do not compute every pair. Use sparse patterns, hashing, low-rank projections, or kernel tricks. That approximation era is Part 2.
+The next paper in the timeline made a stronger claim. Instead of adding a better attention module to an RNN, it removed recurrence entirely. That paper is "Attention Is All You Need"; one of the most cited papers in modern machine learning and the architecture behind nearly every large model since. It is the subject of the next post in this series.
 
 ## References
 
@@ -403,10 +284,10 @@ The first wave of answers said: do not compute every pair. Use sparse patterns, 
 - Cho et al., [Learning Phrase Representations using RNN Encoder-Decoder for Statistical Machine Translation](https://arxiv.org/abs/1406.1078), 2014.
 - Bahdanau, Cho, and Bengio, [Neural Machine Translation by Jointly Learning to Align and Translate](https://arxiv.org/abs/1409.0473), 2014.
 - Luong, Pham, and Manning, [Effective Approaches to Attention-based Neural Machine Translation](https://arxiv.org/abs/1508.04025), 2015.
-- Vaswani et al., [Attention Is All You Need](https://arxiv.org/abs/1706.03762), 2017.
-- Clark et al., [What Does BERT Look at? An Analysis of BERT's Attention](https://arxiv.org/abs/1906.04341), 2019.
-- Harvard NLP, [The Annotated Transformer](http://nlp.seas.harvard.edu/annotated-transformer/).
-- Jay Alammar, [The Illustrated Transformer](https://jalammar.github.io/illustrated-transformer/).
+- Xu et al., [Show, Attend and Tell: Neural Image Caption Generation with Visual Attention](https://arxiv.org/abs/1502.03044), 2015.
+- Chan et al., [Listen, Attend and Spell](https://arxiv.org/abs/1508.01211), 2015.
+- Sukhbaatar et al., [End-to-End Memory Networks](https://arxiv.org/abs/1503.08895), 2015.
+- Wu et al., [Google's Neural Machine Translation System](https://arxiv.org/abs/1609.08144), 2016.
 
 <script>
 (function() {

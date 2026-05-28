@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seq2Seq vs Bahdanau vs Transformer</title>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --panel: #141414;
+      --border: #2a2a2a;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --active: #3b82f6;
+      --hot: #f59e0b;
+      --green: #10b981;
+      --red: #ef4444;
+      --purple: #a78bfa;
+      --pink: #ec4899;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 12% 10%, rgba(239,68,68,0.14), transparent 30%),
+        radial-gradient(circle at 50% 10%, rgba(245,158,11,0.14), transparent 30%),
+        radial-gradient(circle at 88% 10%, rgba(167,139,250,0.16), transparent 30%),
+        var(--bg);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .app { height: 100vh; padding: 18px; display: grid; grid-template-rows: auto 1fr auto; gap: 14px; }
+    header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+    h1 { margin: 0; font-size: clamp(18px, 2vw, 28px); letter-spacing: -0.03em; font-weight: 760; }
+    .subtitle { margin-top: 5px; color: var(--muted); font-size: 13px; max-width: 760px; }
+    .controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    button {
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 8px 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button:hover { background: rgba(255,255,255,0.14); }
+    .stage {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+    }
+    .col {
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(180deg, rgba(20,20,20,0.94), rgba(12,12,12,0.96));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+      overflow: hidden;
+      min-height: 0;
+    }
+    .col h2 { margin: 0 0 4px; font-size: 16px; letter-spacing: -0.02em; }
+    .col .yr { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+    .arch { flex: 1; min-height: 0; margin: 10px 0; }
+    .arch svg { width: 100%; height: 100%; }
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .chip {
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .chip .k { font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+    .chip .v { font-size: 14px; font-weight: 700; color: var(--text); }
+    .chip.bad .v { color: #fca5a5; }
+    .chip.ok .v { color: #fcd34d; }
+    .chip.good .v { color: #6ee7b7; }
+    .legend { color: var(--muted); font-size: 12px; }
+    .col.seq h2 { color: #fca5a5; }
+    .col.bah h2 { color: #fcd34d; }
+    .col.tr h2 { color: #c4b5fd; }
+    @media (max-width: 1024px) {
+      body { overflow: auto; }
+      .app { min-height: 100vh; height: auto; padding: 12px; }
+      .stage { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <h1>Three architectures, one decade of compromise</h1>
+        <div class="subtitle">Press Play to send a signal through each architecture. Watch how far a single token has to travel to influence a distant decoder step — and how many steps run in parallel.</div>
+      </div>
+      <div class="controls">
+        <button id="play">Play</button>
+        <button id="reset">Reset</button>
+      </div>
+    </header>
+
+    <section class="stage">
+      <article class="col seq">
+        <div class="yr">2014</div>
+        <h2>Seq2Seq (fixed vector)</h2>
+        <div class="arch"><svg id="svgA" viewBox="0 0 360 260"></svg></div>
+        <div class="stats">
+          <div class="chip bad"><div class="k">Path length</div><div class="v">≈ N + T</div></div>
+          <div class="chip bad"><div class="k">Parallel?</div><div class="v">No</div></div>
+          <div class="chip bad"><div class="k">Source access</div><div class="v">1 vector</div></div>
+          <div class="chip ok"><div class="k">Params</div><div class="v">Low</div></div>
+        </div>
+      </article>
+
+      <article class="col bah">
+        <div class="yr">2014–2016</div>
+        <h2>Bahdanau attention (RNN + soft alignment)</h2>
+        <div class="arch"><svg id="svgB" viewBox="0 0 360 260"></svg></div>
+        <div class="stats">
+          <div class="chip ok"><div class="k">Path length</div><div class="v">≈ N + 1</div></div>
+          <div class="chip bad"><div class="k">Parallel?</div><div class="v">Decoder still sequential</div></div>
+          <div class="chip good"><div class="k">Source access</div><div class="v">Full sequence</div></div>
+          <div class="chip ok"><div class="k">Params</div><div class="v">Moderate</div></div>
+        </div>
+      </article>
+
+      <article class="col tr">
+        <div class="yr">2017</div>
+        <h2>Transformer (self-attention)</h2>
+        <div class="arch"><svg id="svgC" viewBox="0 0 360 260"></svg></div>
+        <div class="stats">
+          <div class="chip good"><div class="k">Path length</div><div class="v">1 hop / layer</div></div>
+          <div class="chip good"><div class="k">Parallel?</div><div class="v">All tokens at once</div></div>
+          <div class="chip good"><div class="k">Source access</div><div class="v">Full sequence</div></div>
+          <div class="chip bad"><div class="k">Memory</div><div class="v">O(N²)</div></div>
+        </div>
+      </article>
+    </section>
+
+    <div class="legend">Path length is the number of computation steps between the first source token and the last target token. Shorter = easier gradient flow, less compounding loss.</div>
+  </main>
+
+  <script>
+    const NS = "http://www.w3.org/2000/svg";
+    let t = 0;
+    let timer = null;
+    const N = 6, T = 5;
+
+    function svgEl(tag, attrs = {}) {
+      const el = document.createElementNS(NS, tag);
+      for (const k in attrs) el.setAttribute(k, attrs[k]);
+      return el;
+    }
+
+    function drawA(phase) {
+      const svg = document.getElementById("svgA");
+      svg.innerHTML = "";
+      // Encoder RNN
+      for (let i = 0; i < N; i++) {
+        const x = 24 + i * 50;
+        const lit = phase >= i && phase < N;
+        const c = svgEl("circle", { cx: x, cy: 50, r: 12, fill: lit ? "#ef4444" : "#1d1d1d", stroke: "#3b82f6", "stroke-width": 1.5 });
+        svg.appendChild(c);
+        if (i > 0) {
+          const ln = svgEl("line", { x1: x - 38, y1: 50, x2: x - 12, y2: 50, stroke: "#3b82f6", "stroke-width": 1.5, opacity: 0.7 });
+          svg.appendChild(ln);
+        }
+      }
+      // Single context c
+      const cy = 130;
+      const c = svgEl("circle", { cx: 180, cy, r: 18, fill: phase >= N - 1 ? "#ef4444" : "#1d1d1d", stroke: "#ef4444", "stroke-width": 2 });
+      svg.appendChild(c);
+      const tt = svgEl("text", { x: 180, y: cy + 5, fill: "#fff", "font-size": 13, "font-weight": 700, "text-anchor": "middle" }); tt.textContent = "c"; svg.appendChild(tt);
+      const ln = svgEl("line", { x1: 24 + (N - 1) * 50, y1: 62, x2: 180, y2: 112, stroke: "#475569", "stroke-width": 1.5 });
+      svg.appendChild(ln);
+      // Decoder RNN
+      for (let i = 0; i < T; i++) {
+        const x = 50 + i * 60;
+        const lit = phase >= N + i;
+        const r = svgEl("rect", { x: x - 14, y: 200, width: 28, height: 28, rx: 7, fill: lit ? "#ef4444" : "#1d1d1d", stroke: "#a78bfa", "stroke-width": 1.5 });
+        svg.appendChild(r);
+        if (i > 0) {
+          const lln = svgEl("line", { x1: x - 46, y1: 214, x2: x - 14, y2: 214, stroke: "#a78bfa", "stroke-width": 1.5, opacity: 0.7 });
+          svg.appendChild(lln);
+        }
+      }
+      const ln2 = svgEl("line", { x1: 180, y1: 148, x2: 50, y2: 200, stroke: "#ef4444", "stroke-width": 1.5, opacity: 0.7 });
+      svg.appendChild(ln2);
+      const lbl1 = svgEl("text", { x: 180, y: 28, fill: "#94a3b8", "font-size": 10, "text-anchor": "middle" }); lbl1.textContent = "encoder (sequential)"; svg.appendChild(lbl1);
+      const lbl2 = svgEl("text", { x: 180, y: 252, fill: "#94a3b8", "font-size": 10, "text-anchor": "middle" }); lbl2.textContent = "decoder (sequential)"; svg.appendChild(lbl2);
+    }
+
+    function drawB(phase) {
+      const svg = document.getElementById("svgB");
+      svg.innerHTML = "";
+      // Bi-directional encoder
+      for (let i = 0; i < N; i++) {
+        const x = 24 + i * 50;
+        const lit = phase >= i;
+        const c = svgEl("circle", { cx: x, cy: 50, r: 12, fill: lit ? "#f59e0b" : "#1d1d1d", stroke: "#3b82f6", "stroke-width": 1.5 });
+        svg.appendChild(c);
+        if (i > 0) {
+          const ln1 = svgEl("line", { x1: x - 38, y1: 46, x2: x - 12, y2: 46, stroke: "#3b82f6", "stroke-width": 1.5, opacity: 0.7 });
+          const ln2 = svgEl("line", { x1: x - 12, y1: 54, x2: x - 38, y2: 54, stroke: "#3b82f6", "stroke-width": 1.5, opacity: 0.7 });
+          svg.appendChild(ln1); svg.appendChild(ln2);
+        }
+      }
+      // Decoder + attention to all source for the active decoder step
+      const decoderStep = Math.max(0, Math.min(T - 1, phase - N));
+      for (let i = 0; i < T; i++) {
+        const x = 50 + i * 60;
+        const lit = phase >= N + i;
+        const r = svgEl("rect", { x: x - 14, y: 200, width: 28, height: 28, rx: 7, fill: lit ? "#f59e0b" : "#1d1d1d", stroke: "#a78bfa", "stroke-width": 1.5 });
+        svg.appendChild(r);
+        if (i > 0) {
+          const lln = svgEl("line", { x1: x - 46, y1: 214, x2: x - 14, y2: 214, stroke: "#a78bfa", "stroke-width": 1.5, opacity: 0.7 });
+          svg.appendChild(lln);
+        }
+      }
+      if (phase >= N) {
+        const dx = 50 + decoderStep * 60;
+        for (let i = 0; i < N; i++) {
+          const sx = 24 + i * 50;
+          const d = i - decoderStep;
+          const w = Math.exp(-d * d / 4);
+          const ln = svgEl("line", { x1: sx, y1: 62, x2: dx, y2: 200, stroke: "#f59e0b", "stroke-width": 0.5 + w * 4, opacity: 0.25 + w * 0.7 });
+          svg.appendChild(ln);
+        }
+      }
+      const lbl1 = svgEl("text", { x: 180, y: 28, fill: "#94a3b8", "font-size": 10, "text-anchor": "middle" }); lbl1.textContent = "bi-directional encoder (sequential)"; svg.appendChild(lbl1);
+      const lbl2 = svgEl("text", { x: 180, y: 252, fill: "#94a3b8", "font-size": 10, "text-anchor": "middle" }); lbl2.textContent = "decoder + soft alignment per step"; svg.appendChild(lbl2);
+    }
+
+    function drawC(phase) {
+      const svg = document.getElementById("svgC");
+      svg.innerHTML = "";
+      // All tokens in parallel
+      const tokens = N + T;
+      // 2 stacked self-attention layers
+      const layers = 2;
+      for (let L = 0; L < layers; L++) {
+        const y = 60 + L * 100;
+        for (let i = 0; i < tokens; i++) {
+          const x = 18 + i * 30;
+          const lit = phase >= L * 2 + 1;
+          const c = svgEl("circle", { cx: x, cy: y, r: 9, fill: lit ? "#a78bfa" : "#1d1d1d", stroke: "#a78bfa", "stroke-width": 1.2 });
+          svg.appendChild(c);
+        }
+        // dense connections
+        if (phase >= L * 2 + 2) {
+          for (let i = 0; i < tokens; i++) {
+            for (let j = 0; j < tokens; j++) {
+              const x1 = 18 + i * 30;
+              const x2 = 18 + j * 30;
+              const ln = svgEl("path", {
+                d: `M ${x1} ${y + 9} Q ${(x1 + x2) / 2} ${y + 50} ${x2} ${y + 91 - (L < layers - 1 ? 0 : -50)}`,
+                stroke: "#f59e0b", "stroke-width": 0.4, opacity: 0.18, fill: "none"
+              });
+              svg.appendChild(ln);
+            }
+          }
+        }
+      }
+      const lbl1 = svgEl("text", { x: 180, y: 28, fill: "#94a3b8", "font-size": 10, "text-anchor": "middle" }); lbl1.textContent = "all tokens processed in parallel per layer"; svg.appendChild(lbl1);
+      const lbl2 = svgEl("text", { x: 180, y: 252, fill: "#94a3b8", "font-size": 10, "text-anchor": "middle" }); lbl2.textContent = "2 self-attention layers shown · 1 hop per layer"; svg.appendChild(lbl2);
+    }
+
+    function render() {
+      drawA(t);
+      drawB(t);
+      drawC(t);
+    }
+
+    document.getElementById("play").addEventListener("click", () => {
+      if (timer) { clearInterval(timer); timer = null; document.getElementById("play").textContent = "Play"; return; }
+      timer = setInterval(() => {
+        t = (t + 1) % (N + T + 1);
+        render();
+      }, 500);
+      document.getElementById("play").textContent = "Pause";
+    });
+    document.getElementById("reset").addEventListener("click", () => { t = 0; render(); });
+
+    render();
+  </script>
+</body>
+</html>

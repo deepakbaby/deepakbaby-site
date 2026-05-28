@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Where attention was used (2014–2017)</title>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --panel: #141414;
+      --border: #2a2a2a;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --active: #3b82f6;
+      --hot: #f59e0b;
+      --green: #10b981;
+      --pink: #ec4899;
+      --purple: #a78bfa;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 12% 10%, rgba(245,158,11,0.18), transparent 32%),
+        radial-gradient(circle at 88% 14%, rgba(167,139,250,0.18), transparent 34%),
+        var(--bg);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .app { height: 100vh; padding: 18px; display: grid; grid-template-rows: auto auto 1fr auto; gap: 14px; }
+    header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+    h1 { margin: 0; font-size: clamp(18px, 2vw, 28px); letter-spacing: -0.03em; font-weight: 760; }
+    .subtitle { margin-top: 5px; color: var(--muted); font-size: 13px; max-width: 760px; }
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+    .tab {
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.05);
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 13px;
+      transition: all 180ms ease;
+    }
+    .tab:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+    .tab.active {
+      background: linear-gradient(135deg, var(--hot), var(--pink));
+      color: #0a0a0a;
+      border-color: rgba(255,255,255,0.4);
+    }
+    .stage { min-height: 0; display: grid; grid-template-columns: 1.3fr 1fr; gap: 14px; }
+    .card {
+      background: linear-gradient(180deg, rgba(20,20,20,0.94), rgba(12,12,12,0.96));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      min-height: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .viz { flex: 1; display: grid; place-items: center; min-height: 0; }
+    svg { width: 100%; height: 100%; }
+    .info h2 { margin: 0 0 4px; font-size: 22px; letter-spacing: -0.02em; }
+    .info .meta { color: var(--muted); font-size: 12px; margin-bottom: 12px; }
+    .info p { font-size: 13.5px; line-height: 1.55; color: #e2e8f0; margin: 8px 0; }
+    .info .label { font-size: 11px; font-weight: 700; letter-spacing: 0.07em; color: var(--hot); text-transform: uppercase; margin-top: 14px; }
+    .legend { color: var(--muted); font-size: 12px; }
+    .controls { display: flex; gap: 8px; }
+    button {
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 8px 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button:hover { background: rgba(255,255,255,0.14); }
+    @media (max-width: 820px) {
+      body { overflow: auto; }
+      .app { min-height: 100vh; height: auto; padding: 12px; }
+      .stage { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <h1>Where attention showed up (2014–2017)</h1>
+        <div class="subtitle">A soft-pointer over a sequence is a general primitive. Click a domain to see what was being attended to and what it replaced.</div>
+      </div>
+      <div class="controls">
+        <button id="play">Auto-cycle</button>
+      </div>
+    </header>
+
+    <div class="tabs" id="tabs"></div>
+
+    <section class="stage">
+      <article class="card">
+        <div class="viz" id="viz"></div>
+      </article>
+      <article class="card info">
+        <h2 id="title"></h2>
+        <div class="meta" id="meta"></div>
+        <p id="body"></p>
+        <div class="label">Attended over</div>
+        <p id="over"></p>
+        <div class="label">Replaced / improved on</div>
+        <p id="rep"></p>
+      </article>
+    </section>
+
+    <div class="legend">Amber regions show where the attention weight is highest at the current decoder step.</div>
+  </main>
+
+  <script>
+    const NS = "http://www.w3.org/2000/svg";
+    const apps = [
+      {
+        key: "nmt",
+        tab: "Machine translation",
+        title: "Neural machine translation",
+        meta: "Bahdanau 2014, Luong 2015, GNMT 2016",
+        body: "Source sentence is encoded by a bidirectional RNN. Each target word query pulls a fresh weighted mix of source states.",
+        over: "Source-sentence encoder states",
+        rep: "Phrase-based statistical MT (Moses, IBM models). Removed the need for separate word-alignment pipelines."
+      },
+      {
+        key: "caption",
+        tab: "Image captioning",
+        title: "Image captioning (Show, Attend & Tell)",
+        meta: "Xu et al., 2015",
+        body: "A CNN encodes the image into a spatial grid of feature vectors. The decoder attends to a soft region of the image while generating each caption word.",
+        over: "CNN feature grid (e.g. 14×14 spatial map)",
+        rep: "Single-vector image embedding + RNN decoder. Made captions reference the right region; also produced interpretable attention masks."
+      },
+      {
+        key: "asr",
+        tab: "Speech recognition",
+        title: "Listen, Attend and Spell",
+        meta: "Chan et al., 2015",
+        body: "Pyramidal encoder downsamples acoustic frames; the speller attends over them while emitting characters. End-to-end ASR with no separate HMM/AM/LM stages.",
+        over: "Acoustic feature frames (mel-spectrogram)",
+        rep: "Hybrid HMM-DNN ASR pipelines. Folded alignment, acoustic modelling, and language modelling into one differentiable system."
+      },
+      {
+        key: "qa",
+        tab: "Question answering",
+        title: "End-to-End Memory Networks",
+        meta: "Sukhbaatar et al., 2015",
+        body: "Stories are stored as a memory bank. A query attends over the memories with softmax weights; multiple hops let the model chain facts.",
+        over: "Memory slots (sentences encoded as vectors)",
+        rep: "Pipelined IR + reader systems. Stacked attention layers became a direct ancestor of multi-layer self-attention."
+      },
+      {
+        key: "summ",
+        tab: "Summarization",
+        title: "Pointer-generator summarization",
+        meta: "Rush 2015, See et al. 2017",
+        body: "Attention scores over the source double as a copy distribution — the decoder can either generate a token from a fixed vocabulary or copy from the input.",
+        over: "Source document tokens",
+        rep: "Extractive summarizers. Solved OOV / rare-name problems by letting the model copy directly from the source."
+      }
+    ];
+
+    let idx = 0;
+    let timer = null;
+    const tabsEl = document.getElementById("tabs");
+    const vizEl = document.getElementById("viz");
+    const titleEl = document.getElementById("title");
+    const metaEl = document.getElementById("meta");
+    const bodyEl = document.getElementById("body");
+    const overEl = document.getElementById("over");
+    const repEl = document.getElementById("rep");
+    const playBtn = document.getElementById("play");
+
+    apps.forEach((a, i) => {
+      const t = document.createElement("button");
+      t.className = "tab";
+      t.textContent = a.tab;
+      t.addEventListener("click", () => { idx = i; render(); });
+      tabsEl.appendChild(t);
+    });
+
+    function svgEl(tag, attrs = {}) {
+      const el = document.createElementNS(NS, tag);
+      for (const k in attrs) el.setAttribute(k, attrs[k]);
+      return el;
+    }
+
+    function draw(key) {
+      vizEl.innerHTML = "";
+      const svg = svgEl("svg", { viewBox: "0 0 480 320" });
+      vizEl.appendChild(svg);
+      // pulsing focus index used for animation
+      const focus = Math.floor((Date.now() / 700) % 5);
+
+      if (key === "nmt") {
+        const src = ["the", "agreement", "was", "signed", "in", "1992"];
+        const tgt = ["l'accord", "a", "été", "signé", "en", "1992"];
+        src.forEach((s, i) => {
+          const x = 40 + i * 70;
+          const r = svgEl("rect", { x: x - 28, y: 30, width: 56, height: 26, rx: 8, fill: "#1d1d1d", stroke: "#3b82f6", "stroke-width": 1 });
+          svg.appendChild(r);
+          const t = svgEl("text", { x, y: 47, fill: "#bfdbfe", "font-size": 11, "text-anchor": "middle" }); t.textContent = s; svg.appendChild(t);
+        });
+        const focusT = 3;
+        tgt.forEach((s, i) => {
+          const x = 40 + i * 70;
+          const r = svgEl("rect", { x: x - 28, y: 250, width: 56, height: 26, rx: 8, fill: i === focusT ? "#f59e0b" : "#1d1d1d", stroke: "#a78bfa", "stroke-width": 1 });
+          svg.appendChild(r);
+          const t = svgEl("text", { x, y: 267, fill: i === focusT ? "#0a0a0a" : "#ddd6fe", "font-size": 11, "text-anchor": "middle", "font-weight": i === focusT ? 700 : 400 }); t.textContent = s; svg.appendChild(t);
+        });
+        // attention lines from focusT to source, with weights
+        const weights = [0.05, 0.1, 0.05, 0.65, 0.1, 0.05];
+        weights.forEach((w, i) => {
+          const x1 = 40 + i * 70;
+          const x2 = 40 + focusT * 70;
+          const ln = svgEl("path", { d: `M ${x1} 56 Q ${(x1 + x2) / 2} 150 ${x2} 250`, stroke: "#f59e0b", "stroke-width": 1 + w * 8, opacity: 0.3 + w, fill: "none" });
+          svg.appendChild(ln);
+        });
+        const cap = svgEl("text", { x: 240, y: 165, fill: "#fbbf24", "font-size": 12, "font-weight": 700, "text-anchor": "middle" }); cap.textContent = 'while generating "signé", attend to "signed"'; svg.appendChild(cap);
+      } else if (key === "caption") {
+        // 5x5 grid of patches
+        for (let i = 0; i < 5; i++) {
+          for (let j = 0; j < 5; j++) {
+            const lit = (i === 2 && (j === 2 || j === 3)) || (i === 3 && (j === 2 || j === 3));
+            const v = lit ? 0.9 : 0.18;
+            const r = svgEl("rect", { x: 60 + j * 36, y: 60 + i * 36, width: 32, height: 32, rx: 5,
+              fill: lit ? "#f59e0b" : "#1d1d1d", stroke: "#3b82f6", "stroke-width": 1, opacity: lit ? 0.95 : 0.6 });
+            svg.appendChild(r);
+          }
+        }
+        // word output
+        const r = svgEl("rect", { x: 290, y: 130, width: 150, height: 36, rx: 10, fill: "#1d1d1d", stroke: "#a78bfa", "stroke-width": 1.5 });
+        svg.appendChild(r);
+        const t = svgEl("text", { x: 365, y: 154, fill: "#fbbf24", "font-size": 16, "font-weight": 700, "text-anchor": "middle" }); t.textContent = '"dog"'; svg.appendChild(t);
+        const arr = svgEl("path", { d: "M 245 148 L 285 148", stroke: "#f59e0b", "stroke-width": 2 }); svg.appendChild(arr);
+        const cap = svgEl("text", { x: 240, y: 300, fill: "#94a3b8", "font-size": 12, "text-anchor": "middle" }); cap.textContent = "decoder attends to highlighted region while emitting this word"; svg.appendChild(cap);
+      } else if (key === "asr") {
+        // spectrogram
+        for (let i = 0; i < 40; i++) {
+          for (let j = 0; j < 10; j++) {
+            const v = Math.abs(Math.sin(i * 0.35 + j * 0.6) * Math.cos(i * 0.1)) * 0.9;
+            const hot = i >= 16 && i <= 22;
+            const fill = hot ? `rgba(245,158,11,${0.4 + v * 0.6})` : `rgba(59,130,246,${v})`;
+            const r = svgEl("rect", { x: 30 + i * 9, y: 40 + j * 12, width: 8, height: 11, fill });
+            svg.appendChild(r);
+          }
+        }
+        // output chars
+        const chars = ["h", "e", "l", "l", "o"];
+        chars.forEach((c, i) => {
+          const x = 80 + i * 70;
+          const focusC = i === 2;
+          const r = svgEl("rect", { x: x - 18, y: 220, width: 36, height: 36, rx: 8, fill: focusC ? "#f59e0b" : "#1d1d1d", stroke: "#a78bfa", "stroke-width": 1.5 });
+          svg.appendChild(r);
+          const t = svgEl("text", { x, y: 244, fill: focusC ? "#0a0a0a" : "#ddd6fe", "font-size": 18, "font-weight": 700, "text-anchor": "middle" }); t.textContent = c; svg.appendChild(t);
+        });
+        const ln = svgEl("path", { d: "M 200 170 Q 210 200 220 220", stroke: "#f59e0b", "stroke-width": 2.5, fill: "none" }); svg.appendChild(ln);
+        const cap = svgEl("text", { x: 240, y: 300, fill: "#94a3b8", "font-size": 12, "text-anchor": "middle" }); cap.textContent = "speller emits 'l' while attending to the highlighted acoustic frames"; svg.appendChild(cap);
+      } else if (key === "qa") {
+        const mem = ["John went to the kitchen.", "Mary picked up the apple.", "John moved to the garden.", "Mary dropped the apple.", "Where is the apple?"];
+        mem.forEach((m, i) => {
+          const y = 40 + i * 44;
+          const hot = i === 3;
+          const r = svgEl("rect", { x: 30, y, width: 280, height: 34, rx: 8, fill: hot ? "#f59e0b" : "#1d1d1d", stroke: "#3b82f6", "stroke-width": 1, opacity: hot ? 0.95 : 0.75 });
+          svg.appendChild(r);
+          const t = svgEl("text", { x: 42, y: y + 22, fill: hot ? "#0a0a0a" : "#bfdbfe", "font-size": 12, "font-weight": hot ? 700 : 400 });
+          t.textContent = m; svg.appendChild(t);
+        });
+        // query + hop
+        const r = svgEl("rect", { x: 340, y: 130, width: 120, height: 60, rx: 10, fill: "#1d1d1d", stroke: "#a78bfa", "stroke-width": 1.5 });
+        svg.appendChild(r);
+        const t = svgEl("text", { x: 400, y: 155, fill: "#a78bfa", "font-size": 11, "text-anchor": "middle" }); t.textContent = "query hop 2"; svg.appendChild(t);
+        const t2 = svgEl("text", { x: 400, y: 178, fill: "#fbbf24", "font-size": 14, "font-weight": 700, "text-anchor": "middle" }); t2.textContent = "garden"; svg.appendChild(t2);
+        const arr = svgEl("path", { d: "M 315 169 L 338 160", stroke: "#f59e0b", "stroke-width": 2 }); svg.appendChild(arr);
+        const cap = svgEl("text", { x: 240, y: 305, fill: "#94a3b8", "font-size": 11, "text-anchor": "middle" }); cap.textContent = "hop 2 attends to 'Mary dropped the apple' → resolves location via John's last move"; svg.appendChild(cap);
+      } else if (key === "summ") {
+        const src = ["President", "Macron", "met", "Chancellor", "Merkel", "in", "Berlin", "Tuesday"];
+        src.forEach((s, i) => {
+          const x = 30 + i * 56;
+          const hot = i === 1 || i === 4;
+          const r = svgEl("rect", { x: x - 26, y: 40, width: 52, height: 28, rx: 7, fill: hot ? "#f59e0b" : "#1d1d1d", stroke: "#3b82f6", "stroke-width": 1, opacity: hot ? 0.95 : 0.7 });
+          svg.appendChild(r);
+          const t = svgEl("text", { x, y: 58, fill: hot ? "#0a0a0a" : "#bfdbfe", "font-size": 10, "text-anchor": "middle", "font-weight": hot ? 700 : 400 }); t.textContent = s; svg.appendChild(t);
+        });
+        // copy distribution arrows
+        [1, 4].forEach((i) => {
+          const x = 30 + i * 56;
+          const ln = svgEl("path", { d: `M ${x} 68 Q ${x} 150 240 250`, stroke: "#f59e0b", "stroke-width": 2, fill: "none", opacity: 0.7 });
+          svg.appendChild(ln);
+        });
+        // generated summary
+        const r = svgEl("rect", { x: 100, y: 240, width: 280, height: 36, rx: 10, fill: "#1d1d1d", stroke: "#a78bfa", "stroke-width": 1.5 });
+        svg.appendChild(r);
+        const t = svgEl("text", { x: 240, y: 263, fill: "#fbbf24", "font-size": 14, "font-weight": 700, "text-anchor": "middle" }); t.textContent = '"Macron met Merkel."'; svg.appendChild(t);
+        const cap = svgEl("text", { x: 240, y: 305, fill: "#94a3b8", "font-size": 12, "text-anchor": "middle" }); cap.textContent = "names copied directly from the source via attention"; svg.appendChild(cap);
+      }
+    }
+
+    function render() {
+      [...tabsEl.children].forEach((c, i) => c.classList.toggle("active", i === idx));
+      const a = apps[idx];
+      titleEl.textContent = a.title;
+      metaEl.textContent = a.meta;
+      bodyEl.textContent = a.body;
+      overEl.textContent = a.over;
+      repEl.textContent = a.rep;
+      draw(a.key);
+    }
+
+    playBtn.addEventListener("click", () => {
+      if (timer) { clearInterval(timer); timer = null; playBtn.textContent = "Auto-cycle"; return; }
+      timer = setInterval(() => { idx = (idx + 1) % apps.length; render(); }, 3500);
+      playBtn.textContent = "Stop";
+    });
+
+    render();
+  </script>
+</body>
+</html>

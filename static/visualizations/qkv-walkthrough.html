@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QKV walkthrough</title>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --panel: #141414;
+      --border: #2a2a2a;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --active: #3b82f6;
+      --hot: #f59e0b;
+      --green: #10b981;
+      --purple: #a78bfa;
+      --pink: #ec4899;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 14% 8%, rgba(59,130,246,0.18), transparent 30%),
+        radial-gradient(circle at 86% 14%, rgba(167,139,250,0.18), transparent 32%),
+        var(--bg);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .app { height: 100vh; padding: 16px; display: grid; grid-template-rows: auto auto 1fr auto; gap: 12px; }
+    header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+    h1 { margin: 0; font-size: clamp(18px, 2vw, 26px); letter-spacing: -0.03em; font-weight: 760; }
+    .subtitle { margin-top: 5px; color: var(--muted); font-size: 13px; max-width: 720px; }
+    .controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    button {
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 8px 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button:hover { background: rgba(255,255,255,0.14); }
+    .stepbar {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .stepbtn {
+      flex: 1;
+      min-width: 100px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.04);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      text-align: left;
+    }
+    .stepbtn .num { color: var(--hot); margin-right: 6px; }
+    .stepbtn.active {
+      background: linear-gradient(135deg, rgba(245,158,11,0.18), rgba(236,72,153,0.18));
+      border-color: rgba(245,158,11,0.5);
+      color: var(--text);
+    }
+    .stage {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 12px;
+    }
+    .card {
+      background: linear-gradient(180deg, rgba(20,20,20,0.94), rgba(12,12,12,0.96));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      min-height: 0;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .matrix {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .mat-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .mat-block .label {
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .mat-table {
+      display: grid;
+      gap: 3px;
+    }
+    .mat-row {
+      display: grid;
+      gap: 3px;
+      grid-template-columns: 90px repeat(var(--cols), 1fr);
+      align-items: center;
+    }
+    .mat-row .token {
+      font-size: 11px;
+      color: var(--text);
+      font-weight: 600;
+      padding-right: 4px;
+      text-align: right;
+    }
+    .cell {
+      padding: 7px 6px;
+      border-radius: 5px;
+      text-align: center;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 11px;
+      background: rgba(255,255,255,0.05);
+      color: var(--text);
+      transition: background 240ms ease, transform 220ms ease;
+    }
+    .cell.q { background: rgba(59,130,246,0.18); color: #bfdbfe; }
+    .cell.k { background: rgba(245,158,11,0.18); color: #fde68a; }
+    .cell.v { background: rgba(167,139,250,0.18); color: #ddd6fe; }
+    .cell.score { background: rgba(236,72,153,0.16); color: #fbcfe8; }
+    .cell.weight { background: rgba(16,185,129,0.2); color: #6ee7b7; font-weight: 700; }
+    .cell.focus { transform: scale(1.05); box-shadow: 0 0 0 2px rgba(245,158,11,0.6); }
+    .info h2 { margin: 0 0 6px; font-size: 18px; letter-spacing: -0.02em; }
+    .info p { font-size: 13px; line-height: 1.55; color: #e2e8f0; margin: 6px 0; }
+    .equation {
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      color: #fcd34d;
+      line-height: 1.5;
+    }
+    .legend { color: var(--muted); font-size: 12px; }
+    @media (max-width: 880px) {
+      body { overflow: auto; }
+      .app { min-height: 100vh; height: auto; padding: 12px; }
+      .stage { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <h1>One self-attention layer, walked through with real numbers</h1>
+        <div class="subtitle">A 4-token sentence with head dim d_k = 4. Step through Q/K/V projection, score, scale, softmax, and the weighted sum. Numbers are computed live.</div>
+      </div>
+      <div class="controls">
+        <button id="play">Play</button>
+        <button id="prev">Prev</button>
+        <button id="next">Next</button>
+      </div>
+    </header>
+
+    <div class="stepbar" id="stepbar"></div>
+
+    <section class="stage">
+      <article class="card">
+        <div class="matrix" id="matrix"></div>
+      </article>
+      <article class="card info">
+        <h2 id="title"></h2>
+        <div class="equation" id="eq"></div>
+        <p id="body"></p>
+      </article>
+    </section>
+
+    <div class="legend" id="legend">Tokens are "the cat sat down". The query is token 1 ("cat"). Watch where attention concentrates as we move through the pipeline.</div>
+  </main>
+
+  <script>
+    const tokens = ["the", "cat", "sat", "down"];
+    // tiny d=4 embeddings hand-tuned so the result is interesting
+    const X = [
+      [1.0, 0.1, 0.0, 0.2],   // the
+      [0.2, 1.2, 0.3, 0.1],   // cat
+      [0.1, 0.4, 1.1, 0.2],   // sat
+      [0.0, 0.2, 0.5, 1.0]    // down
+    ];
+    // Tiny projections (identity-ish for clarity)
+    const WQ = [[0.8,0,0,0.2],[0,0.9,0.1,0],[0,0.1,0.9,0],[0.1,0,0,0.9]];
+    const WK = [[0.9,0.1,0,0],[0.1,0.8,0,0.1],[0,0,1.0,0],[0,0,0.1,0.9]];
+    const WV = [[1.0,0,0,0],[0,1.0,0,0],[0,0,1.0,0],[0,0,0,1.0]];
+
+    function matmul(A, B) {
+      const m = A.length, n = B[0].length, k = B.length;
+      const C = Array.from({length: m}, () => Array(n).fill(0));
+      for (let i = 0; i < m; i++)
+        for (let j = 0; j < n; j++)
+          for (let p = 0; p < k; p++)
+            C[i][j] += A[i][p] * B[p][j];
+      return C;
+    }
+
+    const Q = matmul(X, WQ);
+    const K = matmul(X, WK);
+    const V = matmul(X, WV);
+    // Scores: Q · K^T
+    const Kt = K[0].map((_, j) => K.map(row => row[j]));
+    const S = matmul(Q, Kt);
+    const dk = 4;
+    const Sscaled = S.map(row => row.map(v => v / Math.sqrt(dk)));
+    function softmax(row) {
+      const m = Math.max(...row);
+      const ex = row.map(v => Math.exp(v - m));
+      const z = ex.reduce((a,b) => a+b, 0);
+      return ex.map(e => e / z);
+    }
+    const P = Sscaled.map(softmax);
+    const O = matmul(P, V);
+
+    const focusRow = 1; // "cat"
+
+    const steps = [
+      {
+        title: "1. Embeddings X",
+        eq: "X ∈ ℝ^(N × d), one row per token",
+        body: "We start with 4 token embeddings of dimension 4. These are the inputs to the attention layer.",
+        show: ["X"]
+      },
+      {
+        title: "2. Project to Q, K, V",
+        eq: "Q = X W^Q   ·   K = X W^K   ·   V = X W^V",
+        body: "Three learned linear projections produce queries, keys, and values. Each row of Q asks a question; each row of K offers an address; each row of V carries the content.",
+        show: ["Q","K","V"]
+      },
+      {
+        title: "3. Score = Q · Kᵀ",
+        eq: "S_ij = Q_i · K_j",
+        body: "Row i of S contains the raw compatibility between query i and every key. The highlighted row is the query for 'cat'.",
+        show: ["S"]
+      },
+      {
+        title: "4. Scale by √d_k",
+        eq: "S' = S / √d_k    (d_k = 4 → √d_k = 2)",
+        body: "Dividing keeps the variance of the scores near 1 regardless of head dimension. Otherwise softmax saturates and gradients vanish.",
+        show: ["S2"]
+      },
+      {
+        title: "5. Softmax to attention weights",
+        eq: "α_ij = exp(S'_ij) / Σ_k exp(S'_ik)",
+        body: "Each row becomes a probability distribution over the source tokens. The query 'cat' decides how much to read from each of (the, cat, sat, down).",
+        show: ["P"]
+      },
+      {
+        title: "6. Output = weights · V",
+        eq: "O_i = Σ_j α_ij V_j",
+        body: "The new representation of 'cat' is a weighted blend of all value rows. Tokens with higher attention contribute more. That's one self-attention layer.",
+        show: ["O"]
+      }
+    ];
+
+    let idx = 0;
+    let timer = null;
+    const stepbar = document.getElementById("stepbar");
+    const matrixEl = document.getElementById("matrix");
+    const titleEl = document.getElementById("title");
+    const eqEl = document.getElementById("eq");
+    const bodyEl = document.getElementById("body");
+    const playBtn = document.getElementById("play");
+
+    steps.forEach((s, i) => {
+      const b = document.createElement("button");
+      b.className = "stepbtn";
+      b.innerHTML = `<span class="num">${i + 1}</span>${s.title.replace(/^\d+\.\s*/, "")}`;
+      b.addEventListener("click", () => { idx = i; render(); });
+      stepbar.appendChild(b);
+    });
+
+    function renderMat(label, data, klass, cols, focusRowIdx) {
+      const wrap = document.createElement("div");
+      wrap.className = "mat-block";
+      wrap.innerHTML = `<div class="label">${label}</div>`;
+      const t = document.createElement("div");
+      t.className = "mat-table";
+      data.forEach((row, i) => {
+        const r = document.createElement("div");
+        r.className = "mat-row";
+        r.style.setProperty("--cols", cols);
+        r.innerHTML = `<div class="token">${tokens[i] || ""}</div>` + row.map(v => {
+          const txt = typeof v === "number" ? (Math.abs(v) >= 10 ? v.toFixed(1) : v.toFixed(2)) : v;
+          const focus = focusRowIdx === i;
+          return `<div class="cell ${klass} ${focus ? "focus" : ""}">${txt}</div>`;
+        }).join("");
+        t.appendChild(r);
+      });
+      wrap.appendChild(t);
+      matrixEl.appendChild(wrap);
+    }
+
+    function render() {
+      [...stepbar.children].forEach((b, i) => b.classList.toggle("active", i === idx));
+      const s = steps[idx];
+      titleEl.textContent = s.title;
+      eqEl.textContent = s.eq;
+      bodyEl.textContent = s.body;
+
+      matrixEl.innerHTML = "";
+      s.show.forEach(key => {
+        if (key === "X") renderMat("X · input embeddings", X, "", 4);
+        if (key === "Q") renderMat("Q · queries (rows)", Q, "q", 4, focusRow);
+        if (key === "K") renderMat("K · keys (rows)", K, "k", 4);
+        if (key === "V") renderMat("V · values (rows)", V, "v", 4);
+        if (key === "S") renderMat("S = Q · Kᵀ · raw scores", S, "score", 4, focusRow);
+        if (key === "S2") renderMat("S / √d_k · scaled scores", Sscaled, "score", 4, focusRow);
+        if (key === "P") renderMat("α · softmax(scores) — rows sum to 1", P, "weight", 4, focusRow);
+        if (key === "O") {
+          renderMat("α · attention weights", P, "weight", 4, focusRow);
+          renderMat("V · values", V, "v", 4);
+          renderMat("O = α · V · new representations", O, "q", 4, focusRow);
+        }
+      });
+    }
+
+    document.getElementById("next").addEventListener("click", () => { idx = (idx + 1) % steps.length; render(); });
+    document.getElementById("prev").addEventListener("click", () => { idx = (idx - 1 + steps.length) % steps.length; render(); });
+    playBtn.addEventListener("click", () => {
+      if (timer) { clearInterval(timer); timer = null; playBtn.textContent = "Play"; return; }
+      timer = setInterval(() => { idx = (idx + 1) % steps.length; render(); }, 2400);
+      playBtn.textContent = "Pause";
+    });
+
+    render();
+  </script>
+</body>
+</html>
