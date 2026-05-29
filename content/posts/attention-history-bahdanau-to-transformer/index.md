@@ -44,7 +44,7 @@ That was both the breakthrough and, almost immediately, the limitation.
 
 <iframe src="/visualizations/seq2seq-encoder-decoder.html" loading="lazy" frameborder="0" scrolling="no" title="Sequence-to-sequence encoder-decoder architecture" style="width: 100%; border: none; background: transparent; display: block; height: 580px; margin: 1.5rem 0;"></iframe>
 
-Step through the animation to watch the data flow. The encoder reads the input words $x_t$ one at a time, each one updating the single fixed context vector $c$. Decoding is then seeded with a special start-of-sequence token `<sos>` and runs *autoregressively*: the decoder emits one word at a time, and each word it produces is fed back in as the input for the next step, until it finally emits an end-of-sequence token `<eos>` to stop.
+Step through the animation to watch the data flow. The encoder reads the input words $x_t$ one at a time, each one updating the single fixed context vector $c$. Decoding is then seeded with a special start-of-sequence token `<sos>` and runs **autoregressively**: the decoder emits one word at a time, and each word it produces is fed back in as the input for the next step, until it finally emits an end-of-sequence token `<eos>` to stop.
 
 ## The Fixed-Vector Bottleneck
 
@@ -67,9 +67,7 @@ For the short sentence, a single vector can plausibly carry the core meaning. Fo
 
 Long-sentence translation errors were not just a data problem. They followed from the architecture. The decoder had no mechanism for saying, "while generating this French word, look specifically at that English phrase."
 
-## Bahdanau Attention: Learned Soft Alignment
-
-[Bahdanau attention](https://arxiv.org/abs/1409.0473) fixed the bottleneck by changing the decoder's job. Instead of decoding from one source summary, the decoder computes a fresh context vector $c_i$ for each output step $i$.
+[Bahdanau attention](https://arxiv.org/abs/1409.0473) fixed the bottleneck by changing the decoder's job. Instead of decoding from one source summary, the encoder produces a high-resolution **Memory Matrix ($H$)** containing context-aware vectors for every source token. The decoder then computes a fresh **context vector $c_i$** for each output step $i$ by querying this matrix.
 
 The encoder is a bidirectional GRU, so each source token gets its own annotation:
 
@@ -205,7 +203,7 @@ For each output token, the model learns a soft pointer over the source sentence,
 
 <iframe src="/visualizations/attention-bahdanau-alignment.html" loading="lazy" frameborder="0" scrolling="no" title="Bahdanau attention alignment visualization" style="width: 100%; border: none; background: transparent; display: block; height: 520px; margin: 1.5rem 0;"></iframe>
 
-The heatmap shows the alignment directly. Rows are target tokens. Columns are source tokens. Each row sums to one. A bright cell means "the decoder leaned heavily on this source token while producing that target token."
+The visualization above illustrates this data flow. On the left, the input words are compressed into a multi-vector **Memory Matrix ($H$)**. For each decoding step, you can see the decoder query this matrix, triggering **attention beams** of varying intensities that represent the alignment scores $\alpha_{ij}$. These are then blended into a single **context vector $c_i$** which guides the generation of the next target word.
 
 This was a major break from older statistical machine translation pipelines. The alignment was no longer a separate pre-processing artifact; it was learned end-to-end as part of the model.
 
