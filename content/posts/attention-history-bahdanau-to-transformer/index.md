@@ -42,6 +42,10 @@ The model is trained end to end by maximizing the log-likelihood of the target s
 
 That was both the breakthrough and, almost immediately, the limitation.
 
+<iframe src="/visualizations/seq2seq-encoder-decoder.html" loading="lazy" frameborder="0" scrolling="no" title="Sequence-to-sequence encoder-decoder architecture" style="width: 100%; border: none; background: transparent; display: block; height: 580px; margin: 1.5rem 0;"></iframe>
+
+Step through the animation to watch the data flow. The encoder reads the input words $x_t$ one at a time, each one updating the single fixed context vector $c$. Decoding is then seeded with a special start-of-sequence token `<sos>` and runs *autoregressively*: the decoder emits one word at a time, and each word it produces is fed back in as the input for the next step, until it finally emits an end-of-sequence token `<eos>` to stop.
+
 ## The Fixed-Vector Bottleneck
 
 The context vector $c$ is fixed-size regardless of input length. A five-word sentence and a fifty-word sentence both have to pass through the same narrow channel. Every output token is predicted from earlier output tokens and the same compressed source summary:
