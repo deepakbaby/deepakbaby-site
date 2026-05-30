@@ -42,7 +42,7 @@ The model is trained end to end by maximizing the log-likelihood of the target s
 
 That was both the breakthrough and, almost immediately, the limitation.
 
-<iframe src="/visualizations/seq2seq-encoder-decoder.html" loading="lazy" frameborder="0" scrolling="no" title="Sequence-to-sequence encoder-decoder architecture" style="width: 100%; border: none; background: transparent; display: block; height: 580px; margin: 1.5rem 0;"></iframe>
+<iframe src="/visualizations/seq2seq-encoder-decoder.html" loading="lazy" frameborder="0" scrolling="no" title="Sequence-to-sequence encoder-decoder architecture" style="width: 100%; border: none; background: transparent; display: block; height: 360px; margin: 1.5rem 0;"></iframe>
 
 Step through the animation to watch the data flow. The encoder reads the input words $x_t$ one at a time, each one updating the single fixed context vector $c$. Decoding is then seeded with a special start-of-sequence token `<sos>` and runs **autoregressively**: the decoder emits one word at a time, and each word it produces is fed back in as the input for the next step, until it finally emits an end-of-sequence token `<eos>` to stop.
 
@@ -203,7 +203,7 @@ For each output token, the model learns a soft pointer over the source sentence,
 
 <iframe src="/visualizations/attention-bahdanau-alignment.html" loading="lazy" frameborder="0" scrolling="no" title="Bahdanau attention alignment visualization" style="width: 100%; border: none; background: transparent; display: block; height: 520px; margin: 1.5rem 0;"></iframe>
 
-The visualization above illustrates this data flow. On the left, the input words are compressed into a multi-vector **Memory Matrix ($H$)**. For each decoding step, you can see the decoder query this matrix, triggering **attention beams** of varying intensities that represent the alignment scores $\alpha_{ij}$. These are then blended into a single **context vector $c_i$** which guides the generation of the next target word.
+The visualization above illustrates this data flow. On the left, input words are encoded into a multi-vector **Memory Matrix ($H$)**. During each scoring phase, the previous decoder state **$s_{i-1}$** (shown on the feedback arc) is combined with each source annotation to produce alignment scores $\alpha_{ij}$, visualized as brighter/thicker attention beams. Those weighted annotations are then summed into the per-step **context vector $c_i$**, which is passed into the decoder to generate the next target token.
 
 This was a major break from older statistical machine translation pipelines. The alignment was no longer a separate pre-processing artifact; it was learned end-to-end as part of the model.
 
