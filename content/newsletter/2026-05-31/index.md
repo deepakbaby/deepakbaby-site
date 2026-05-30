@@ -1,6 +1,6 @@
 ---
 title: "AI Weekly: Anthropic Hits $965B, Opus 4.8 Rewrites Agent Benchmarks"
-date: 2026-05-31
+date: 2026-05-30
 week_start: "2026-05-25"
 week_end: "2026-05-31"
 draft: false
