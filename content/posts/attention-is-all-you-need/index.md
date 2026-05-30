@@ -8,13 +8,17 @@ categories: ["Machine Learning"]
 description: "A dedicated walkthrough of the 2017 Transformer paper: scaled dot-product attention, multi-head self-attention, positional encoding, and why dropping recurrence changed everything."
 ---
 
-This post is a deep dive into [Attention Is All You Need](https://arxiv.org/abs/1706.03762) — the 2017 paper that replaced recurrence with stacked self-attention and quietly became the architecture behind nearly every modern large model. It assumes you already have intuition for the attention mechanism itself; if not, the [first post in this series](/posts/attention-history-bahdanau-to-transformer/) walks through Bahdanau and Luong attention from scratch.
+This post is a guided deep dive into [Attention Is All You Need](https://arxiv.org/abs/1706.03762), the 2017 paper that replaced recurrence with stacked self-attention and became the base architecture behind modern language models.
 
-By 2017, attention had become standard inside RNN encoder-decoders. The decoder no longer had to squeeze the entire source into one vector; it could attend back at every step. But the encoder and decoder themselves were still RNNs, processing tokens one at a time. Training was sequential. Long-range dependencies still passed through many recurrent steps. The next leap was to ask: what if attention is not just a useful add-on to recurrence, but enough on its own?
+I assume basic ML knowledge (vectors, matrix multiply, softmax), but not deep familiarity with Transformers. If you are new to attention itself, read the [first post in this series](/posts/attention-history-bahdanau-to-transformer/) first.
+
+By 2017, attention had already improved RNN encoder-decoders. The decoder no longer had to compress the entire source into one vector; it could look back at the source states at each step. But both encoder and decoder were still RNNs, so token processing stayed sequential and long-range dependencies still traveled through many recurrent steps.
+
+The key question became: what if attention is not an add-on to recurrence, but the main mechanism?
 
 ## Scaled Dot-Product Attention
 
-The Transformer dropped recurrence entirely. Instead of processing tokens one step at a time with an RNN, each layer computes attention among all tokens in parallel:
+The Transformer drops recurrence entirely. Instead of processing tokens one step at a time, each layer computes attention among all tokens in parallel:
 
 $$\text{Attention}(Q,K,V)=\text{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}\right)V$$
 
@@ -26,11 +30,21 @@ Glossary:
 | Key $K$ | What each token offers as an address |
 | Value $V$ | The content that gets mixed into the output |
 
-The $QK^\top$ matrix contains all pairwise token compatibility scores. Softmax turns each row into a distribution. Multiplying by $V$ blends token content according to those weights.
+If the input has shape `[tokens, d_model]`, then each head projects to:
+
+- `Q`: `[tokens, d_k]`
+- `K`: `[tokens, d_k]`
+- `V`: `[tokens, d_v]`
+
+Then:
+
+- `QK^T` gives `[tokens, tokens]` pairwise scores
+- row-wise softmax turns each row into attention weights
+- multiplying by `V` mixes token content using those weights
 
 ### Why Divide by Square Root of the Head Dimension?
 
-If query and key dimensions are random with variance 1, their dot product has variance roughly $d_k$. With $d_k=64$, raw dot products are often large. Large logits push softmax toward near-one-hot outputs, which makes gradients small.
+If query and key components are roughly zero-mean with variance 1, then their dot product has variance about $d_k$. As $d_k$ grows, raw logits get large, softmax saturates, and gradients become small.
 
 Scaling fixes the variance:
 
@@ -40,7 +54,7 @@ Scaling fixes the variance:
 | 64 | 8 | 1 |
 | 512 | 22.6 | 1 |
 
-The scale factor keeps the softmax in a useful range as the head dimension grows.
+The scale factor keeps logits in a stable range as head dimension grows.
 
 Here is the readable PyTorch version, without fused kernels:
 
@@ -75,11 +89,20 @@ def scaled_dot_product_attention(q, k, v, mask=None):
   <iframe src="/visualizations/qkv-walkthrough.html" loading="lazy" allowfullscreen frameborder="0" scrolling="no" title="QKV walkthrough on a 4-token example"></iframe>
 </div>
 
-Step through the six stages; embeddings, projection to Q/K/V, score, scale, softmax, weighted sum; on a 4-token sentence. Every cell shows the actual number produced by the row above it.
+Use the visualization as a numerical trace:
+
+1. token embeddings
+2. linear projection to Q/K/V
+3. score matrix (`QK^T`)
+4. scaling by `sqrt(d_k)`
+5. softmax per row
+6. weighted sum with `V`
+
+Each cell shows the exact value produced by the previous stage.
 
 ## Multi-Head Self-Attention
 
-One attention distribution is useful. Several attention distributions in parallel are more expressive.
+One attention distribution is useful. Multiple attention distributions in parallel are more expressive.
 
 Multi-head attention projects the same input into $h$ separate query, key, and value spaces:
 
@@ -89,7 +112,7 @@ Then the heads are concatenated and projected back:
 
 $$\text{MultiHead}(X)=\text{Concat}(\text{head}_1,\ldots,\text{head}_h)W^O$$
 
-The practical reason is specialization. One head might focus on nearby tokens. Another may track syntax. Another may link pronouns to nouns. Real heads are messier than textbook examples, but separate heads do learn different patterns.
+The practical reason is specialization. One head may focus on nearby tokens, another on syntax-like structure, and another on coreference-like links. Real heads are noisier than textbook cartoons, but different heads do learn different patterns based on training data.
 
 <div class="embedded-html-wrapper" data-src="/visualizations/attention-multihead-self.html">
   <div class="embedded-html-toolbar">
@@ -108,15 +131,15 @@ The practical reason is specialization. One head might focus on nearby tokens. A
 
 ### Why Positional Encoding Is Necessary
 
-Self-attention by itself is permutation-invariant. If you shuffle the input tokens and also shuffle the rows and columns of $Q$, $K$, and $V$, attention has no built-in notion that one token came before another.
+Self-attention without positional information is permutation-equivariant: if you permute token order, outputs are permuted the same way. So the model has no built-in notion of absolute or relative order.
 
-The original Transformer added sinusoidal positional encodings:
+The original Transformer adds sinusoidal positional encodings:
 
-$$PE(pos, 2i) = \sin(pos / 10000^{2i/d})$$
+$$PE(pos, 2i) = \sin\left(pos / 10000^{2i/d_{\text{model}}}\right)$$
 
-$$PE(pos, 2i + 1) = \cos(pos / 10000^{2i/d})$$
+$$PE(pos, 2i + 1) = \cos\left(pos / 10000^{2i/d_{\text{model}}}\right)$$
 
-The point is to add a deterministic position signal to each token embedding. Without it, attention sees a set of tokens, not an ordered sequence.
+The point is to add a deterministic position signal to each token embedding. Without positional information, attention treats the input as an unordered set.
 
 ## The Transformer Architecture
 
@@ -131,7 +154,7 @@ The original Transformer architecture combined a few ingredients:
 | Masked decoder attention | Prevent future-token leakage during generation |
 | Positional encoding | Restore order information |
 
-The claim in "Attention Is All You Need" was not that attention helps RNNs. It was that recurrence could be removed.
+The core claim in "Attention Is All You Need" was not "attention helps RNNs." It was that recurrence can be removed.
 
 That gave Transformers two practical advantages:
 
@@ -141,7 +164,7 @@ That gave Transformers two practical advantages:
 | Long-range paths | Many recurrent steps | One attention hop |
 | Alignment | Learned, but tied to decoding steps | Learned throughout every layer |
 
-In 2017, this was computationally reasonable. The WMT'14 English-German experiments used sequence lengths around a few hundred tokens, and the base model trained in about 12 hours on 8 NVIDIA P100 GPUs.
+In 2017, this was computationally reasonable. In the WMT'14 experiments, training examples were length-filtered (up to 100 subword tokens per side), and the base model trained in about 12 hours on 8 NVIDIA P100 GPUs.
 
 <style>
 .embedded-html-wrapper {
@@ -266,23 +289,27 @@ In 2017, this was computationally reasonable. The WMT'14 English-German experime
   <iframe src="/visualizations/seq2seq-vs-bahdanau-vs-transformer.html" loading="lazy" allowfullscreen frameborder="0" scrolling="no" title="Seq2Seq vs Bahdanau vs Transformer architectures"></iframe>
 </div>
 
-Press Play and watch the same signal travel through all three. Seq2Seq pushes everything through a single bottleneck vector. Bahdanau lets the decoder reach back to any source state. The Transformer drops recurrence entirely and lets every token talk to every other token in one parallel step per layer.
+Press Play and watch the same signal path in all three architectures:
+
+- Seq2Seq pushes source information through one bottleneck vector.
+- Bahdanau attention lets each decoder step read from all encoder states.
+- Transformer self-attention lets every token read from every other token within a layer, in parallel.
 
 ## Why Quadratic Attention Was Fine Until It Wasn't
 
 The self-attention matrix has $N^2$ entries per head. At first, that was acceptable: 512-token sequences were small enough that the attention matrix was not the dominant memory cost. But the numbers grow quadratically. Double the context, quadruple the matrix.
 
-For BERT-base-like training with 12 layers and 12 heads, the attention probabilities alone are roughly:
+For BERT-base-like training (12 layers, 12 heads), storing attention probabilities alone in fp16 is roughly:
 
-$$12 \times 12 \times 512^2 \times 2\,\text{bytes} \approx 75\,\text{MB}$$
+$$12 \times 12 \times 512^2 \times 2\,\text{bytes} \approx 75\,\text{MB} \; (\approx 72\,\text{MiB})$$
 
 That is manageable. But at 8k tokens:
 
-$$12 \times 12 \times 8192^2 \times 2\,\text{bytes} \approx 18\,\text{GB}$$
+$$12 \times 12 \times 8192^2 \times 2\,\text{bytes} \approx 19.3\,\text{GB} \; (\approx 18\,\text{GiB})$$
 
 And this is only the attention matrix storage, not parameters, optimizer states, activations from other layers, or batch size.
 
-The Transformer solved the RNN's sequential bottleneck by making token-token interactions explicit. But explicit all-pairs interaction created the next bottleneck: $O(N^2)$ memory and compute. The next post in this series picks up the story from there.
+Transformer solved the RNN's sequential bottleneck by making token-token interactions explicit. But explicit all-pairs interaction created the next bottleneck: $O(N^2)$ memory and compute. The next post in this series picks up from there (sparse attention, linear attention, and kernel tricks).
 
 ## References
 
@@ -366,4 +393,3 @@ The Transformer solved the RNN's sequential bottleneck by making token-token int
   }
 })();
 </script>
-</content>

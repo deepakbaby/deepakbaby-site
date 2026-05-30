@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seq2Seq Encoder-Decoder (3b1b Style)</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #1c1c1c;
+      --text: #ffffff;
+      --text-muted: #d0d0d0;
+      --encoder: #3ed0f0;
+      --decoder: #b0f580;
+      --context: #ffa500;
+      --special: #ff60ad;
+      --line: rgba(255, 255, 255, 0.4);
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Crimson Pro', serif;
+      overflow: hidden;
+      width: 100%; height: auto !important;
+    }
+
+    .container {
+      width: 100%; height: auto !important;
+      padding: 0; margin: 0;
+    }
+
+    .controls {
+      display: flex; gap: 6px; margin-bottom: 2px; z-index: 10;
+    }
+
+    button {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      color: #fff;
+      padding: 4px 10px; border-radius: 4px;
+      cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 10px;
+      font-weight: 700;
+      transition: all 0.2s ease;
+    }
+
+    button:hover { background: rgba(255, 255, 255, 0.25); }
+
+    .canvas-wrapper { 
+      width: 100%;
+      height: auto !important;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    svg { width: 100%; height: auto; display: block; overflow: visible; margin-bottom: -5px; }
+
+    .token-text { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; }
+    .label-text { font-family: 'Crimson Pro', serif; font-style: italic; font-size: 12px; font-weight: 700; }
+    .math-text { font-family: 'Crimson Pro', serif; font-style: italic; font-size: 15px; font-weight: 700; }
+    .port-text { font-family: 'JetBrains Mono', monospace; font-size: 8px; fill: #fff; font-weight: 700; }
+
+    .caption {
+      margin-top: -2px;
+      margin-bottom: 0;
+      text-align: center;
+      max-width: 98%; font-size: 15px; line-height: 1.3;
+      background: rgba(0, 0, 0, 0.85);
+      color: #fff;
+      padding: 5px 15px; border-radius: 12px;
+    }
+    .caption b { color: var(--context); }
+
+    .vector-cell { stroke: var(--bg); stroke-width: 0.5px; }
+    .comet { stroke-linecap: round; fill: none; }
+    .feedback-path { stroke: var(--line); stroke-dasharray: 4 4; fill: none; opacity: 0.3; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="controls">
+      <button id="play-pause">Play</button>
+      <button id="step">Next</button>
+      <button id="reset">Reset</button>
+    </div>
+
+    <div class="canvas-wrapper">
+      <svg id="viz" viewBox="0 0 800 210" preserveAspectRatio="xMidYMin meet">
+        <!-- Labels -->
+        <text x="50" y="15" class="label-text" fill="var(--text-muted)">INPUT</text>
+        <text x="750" y="15" class="label-text" fill="var(--text-muted)" text-anchor="end">OUTPUT</text>
+
+        <!-- Compact Trapezoids -->
+        <path id="encoder-block" d="M 150 60 L 220 90 L 220 150 L 150 180 Z" 
+              fill="rgba(62, 208, 240, 0.1)" stroke="var(--encoder)" stroke-width="2" />
+        <text x="185" y="120" class="token-text" fill="var(--encoder)" text-anchor="middle" transform="rotate(-90, 185, 120)">ENCODER</text>
+        
+        <path id="decoder-block" d="M 580 90 L 650 60 L 650 180 L 580 150 Z" 
+              fill="rgba(176, 245, 128, 0.1)" stroke="var(--decoder)" stroke-width="2" />
+        <text x="615" y="120" class="token-text" fill="var(--decoder)" text-anchor="middle" transform="rotate(90, 615, 120)">DECODER</text>
+        
+        <!-- y_{t-1} Port -->
+        <g id="input-port" transform="translate(485, 120)">
+           <circle r="10" fill="rgba(255,255,255,0.05)" stroke="var(--line)" stroke-width="1" />
+           <text y="3" class="port-text" text-anchor="middle">yₜ₋₁</text>
+        </g>
+
+        <!-- Context Area -->
+        <g id="context-group" transform="translate(400, 80)">
+          <text x="10" y="-10" class="math-text" fill="var(--context)" text-anchor="middle">c</text>
+        </g>
+
+        <g id="encoder-tokens"></g>
+        <g id="decoder-tokens"></g>
+
+        <!-- Paths -->
+        <path id="enc-to-ctx" d="M 220 120 L 394 120" stroke="var(--line)" stroke-width="1.2" fill="none" marker-end="url(#arrow-head)" />
+        <path id="ctx-to-port" d="M 420 120 L 473 120" stroke="var(--line)" stroke-width="1.2" fill="none" marker-end="url(#arrow-head)" />
+        <path id="port-to-dec" d="M 497 120 L 580 120" stroke="var(--line)" stroke-width="1.2" fill="none" marker-end="url(#arrow-head)" />
+        
+        <!-- Feedback Path -->
+        <path id="feedback-loop" class="feedback-path" d="M 740 60 C 740 20, 485 20, 485 108" />
+
+        <defs>
+          <marker id="arrow-head" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#fff" />
+          </marker>
+        </defs>
+      </svg>
+
+      <div class="caption" id="caption">
+        The input sequence is processed into a single fixed-size <b>context vector</b>.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const inputTokens = ["<sos>", "the", "agreement", "was", "signed", "<eos>"];
+    const outputTokens = ["l'accord", "a", "été", "signé", "<eos>"];
+    
+    const viz = document.getElementById("viz");
+    const encoderTokens = document.getElementById("encoder-tokens");
+    const decoderTokens = document.getElementById("decoder-tokens");
+    const contextGroup = document.getElementById("context-group");
+    const caption = document.getElementById("caption");
+    
+    const vectorCells = [];
+    for (let i = 0; i < 10; i++) {
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      g.setAttribute("x", 0); g.setAttribute("y", i * 8);
+      g.setAttribute("width", 20); g.setAttribute("height", 6);
+      g.setAttribute("rx", 1); g.setAttribute("fill", "rgba(255, 165, 0, 0.2)");
+      g.setAttribute("class", "vector-cell");
+      contextGroup.appendChild(g);
+      vectorCells.push(g);
+    }
+
+    const inputTokenElements = [];
+    inputTokens.forEach((t, i) => {
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      const r = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      const isSpecial = t.startsWith("<") || t.startsWith("[");
+      const color = isSpecial ? "var(--special)" : "var(--encoder)";
+      const y = 30 + i * 28;
+      r.setAttribute("x", 30); r.setAttribute("y", y);
+      r.setAttribute("width", 70); r.setAttribute("height", 18);
+      r.setAttribute("rx", 3); r.setAttribute("fill", "rgba(0,0,0,0.3)");
+      r.setAttribute("stroke", color); r.setAttribute("stroke-width", "1");
+      txt.setAttribute("x", 65); txt.setAttribute("y", y + 9);
+      txt.setAttribute("class", "token-text"); txt.setAttribute("text-anchor", "middle");
+      txt.setAttribute("dominant-baseline", "middle"); txt.textContent = t;
+      txt.setAttribute("fill", "#fff");
+      g.appendChild(r); g.appendChild(txt);
+      g.setAttribute("opacity", "0");
+      encoderTokens.appendChild(g);
+      inputTokenElements.push({ group: g, x: 65, y: y + 9, color });
+    });
+
+    const outputTokenElements = [];
+    outputTokens.forEach((t, i) => {
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      const r = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      const isSpecial = t.startsWith("<") || t.startsWith("[");
+      const color = isSpecial ? "var(--special)" : "var(--decoder)";
+      const y = 30 + i * 28;
+      r.setAttribute("x", 700); r.setAttribute("y", y);
+      r.setAttribute("width", 75); r.setAttribute("height", 18);
+      r.setAttribute("rx", 3); r.setAttribute("fill", "rgba(0,0,0,0.3)");
+      r.setAttribute("stroke", color); r.setAttribute("stroke-width", "1");
+      txt.setAttribute("x", 737.5); txt.setAttribute("y", y + 9);
+      txt.setAttribute("class", "token-text"); txt.setAttribute("text-anchor", "middle");
+      txt.setAttribute("dominant-baseline", "middle"); txt.textContent = t;
+      txt.setAttribute("fill", "#fff");
+      g.appendChild(r); g.appendChild(txt);
+      g.setAttribute("opacity", "0");
+      decoderTokens.appendChild(g);
+      outputTokenElements.push({ group: g, x: 737.5, y: y + 9, color });
+    });
+
+    function createComet(startX, startY, endX, endY, color, duration = 0.3, isFeedback = false) {
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        let d = `M ${startX} ${startY} L ${endX} ${endY}`;
+        if (isFeedback) {
+            d = `M ${startX} ${startY} C ${startX} ${startY - 60}, ${endX} ${startY - 60}, ${endX} ${endY}`;
+        }
+        path.setAttribute("d", d); path.setAttribute("class", "comet");
+        path.setAttribute("stroke", color); path.setAttribute("stroke-width", "2.5");
+        const len = path.getTotalLength();
+        path.style.strokeDasharray = `${len * 0.4} ${len}`;
+        path.style.strokeDashoffset = len;
+        viz.appendChild(path);
+        gsap.to(path.style, { strokeDashoffset: -len * 0.4, duration, ease: "power1.inOut", onComplete: () => path.remove() });
+        const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        dot.setAttribute("r", 2.5); dot.setAttribute("fill", color);
+        viz.appendChild(dot);
+        const move = { t: 0 };
+        gsap.to(move, {
+            t: 1, duration, ease: "power1.inOut",
+            onUpdate: () => {
+                const p = path.getPointAtLength(move.t * len);
+                dot.setAttribute("cx", p.x); dot.setAttribute("cy", p.y);
+            },
+            onComplete: () => dot.remove()
+        });
+    }
+
+    let currentStep = 0; let isPlaying = false; let timer = null;
+
+    const timeline = [
+      {
+        caption: "Encoder processing begins. Input tokens are read sequentially.",
+        action: () => { gsap.to(inputTokenElements.map(e => e.group), { opacity: 0.3, duration: 0.3 }); }
+      },
+      ...inputTokens.map((t, i) => ({
+        caption: `Encoder reads <b>${t}</b>. State compresses this into context vector <b>c</b>.`,
+        action: () => {
+          const el = inputTokenElements[i];
+          gsap.to(el.group, { opacity: 1, duration: 0.2 });
+          createComet(el.x + 35, el.y, 150, 120, el.color, 0.25);
+          setTimeout(() => {
+              createComet(220, 120, 400, 120, "var(--context)", 0.25);
+              vectorCells.forEach(cell => {
+                gsap.to(cell, { fill: `rgba(255, 165, 0, ${0.4 + Math.random() * 0.6})`, duration: 0.15 });
+              });
+          }, 250);
+        }
+      })),
+      {
+        caption: "Encoding complete. The context vector <b>c</b> holds the summary of the input.",
+        action: () => {
+          gsap.to(vectorCells, { fill: "rgba(255, 165, 0, 1)", duration: 0.3, stagger: 0.02 });
+          gsap.to("#encoder-block", { opacity: 0.5, duration: 0.15 });
+        }
+      },
+      ...outputTokens.map((t, i) => ({
+        caption: i === 0 
+          ? `Decoding begins. Decoder uses <b>c</b> to predict the first token: <b>${t}</b>.`
+          : `<b>Autoregression</b>: Previous output <b>"${outputTokens[i-1]}"</b> fed back as next input.`,
+        action: () => {
+          const el = outputTokenElements[i];
+          if (i > 0) {
+            const prev = outputTokenElements[i-1];
+            gsap.to("#feedback-loop", { opacity: 0.8, duration: 0.15 });
+            createComet(prev.x, prev.y, 485, 108, "var(--decoder)", 0.4, true);
+            setTimeout(() => { gsap.to("#input-port", { scale: 1.25, duration: 0.15, yoyo: true, repeat: 1 }); }, 350);
+          }
+          setTimeout(() => {
+            if (i === 0) createComet(420, 120, 580, 120, "var(--context)", 0.35);
+            else {
+                createComet(420, 120, 473, 120, "var(--context)", 0.2);
+                setTimeout(() => createComet(497, 120, 580, 120, "#fff", 0.2), 200);
+            }
+            gsap.to(el.group, { opacity: 1, duration: 0.25, delay: 0.2 });
+            if (i > 0) gsap.to("#feedback-loop", { opacity: 0.3, duration: 0.2, delay: 0.4 });
+          }, i > 0 ? 400 : 0);
+        }
+      }))
+    ];
+
+    function runStep() {
+      if (currentStep >= timeline.length) { currentStep = 0; reset(); return; }
+      const step = timeline[currentStep];
+      caption.innerHTML = step.caption;
+      step.action();
+      currentStep++;
+    }
+
+    function reset() {
+      currentStep = 0; isPlaying = false;
+      document.getElementById("play-pause").textContent = "Play";
+      clearInterval(timer);
+      gsap.set([...inputTokenElements.map(e => e.group), ...outputTokenElements.map(e => e.group)], { opacity: 0 });
+      gsap.set(vectorCells, { fill: "rgba(255, 165, 0, 0.2)" });
+      gsap.set("#encoder-block, #decoder-block", { opacity: 1 });
+      gsap.set("#feedback-loop", { opacity: 0 });
+      caption.innerHTML = "The input sequence is processed into a single fixed-size <b>context vector</b>.";
+    }
+
+    document.getElementById("step").addEventListener("click", () => {
+        if (isPlaying) { clearInterval(timer); isPlaying = false; document.getElementById("play-pause").textContent = "Play"; }
+        runStep();
+    });
+    document.getElementById("play-pause").addEventListener("click", () => {
+        if (isPlaying) { clearInterval(timer); isPlaying = false; document.getElementById("play-pause").textContent = "Play"; }
+        else { isPlaying = true; document.getElementById("play-pause").textContent = "Pause"; runStep(); timer = setInterval(runStep, 1600); }
+    });
+    document.getElementById("reset").addEventListener("click", reset);
+    reset();
+  </script>
+</body>
+</html>
