@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Luong Attention Variants (3b1b Style)</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #1c1c1c;
+      --text: #ffffff;
+      --text-muted: #d0d0d0;
+      --encoder: #3ed0f0;
+      --decoder: #b0f580;
+      --accent: #ffa500;
+      --attention: #ffa500;
+      --line: rgba(255, 255, 255, 0.25);
+      --panel: rgba(255, 255, 255, 0.1);
+      --special: #ff60ad;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Crimson Pro', serif;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .container {
+      width: 100%;
+      padding: 5px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+      z-index: 10;
+    }
+
+    button {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      transition: all 0.2s ease;
+    }
+
+    button:hover { background: rgba(255, 255, 255, 0.25); }
+
+    .tabs {
+      display: flex; gap: 8px; margin-bottom: 10px;
+    }
+
+    .tab-btn {
+      background: var(--panel);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      color: var(--text-muted);
+      padding: 6px 16px; border-radius: 999px;
+      cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      font-weight: 700;
+      transition: all 0.3s ease;
+    }
+
+    .tab-btn.active {
+      color: #fff;
+      border-color: var(--accent);
+      background: rgba(255, 165, 0, 0.2);
+    }
+
+    .view { display: none; position: relative; width: 100%; }
+    .view.active { display: block; }
+
+    .panels-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+      height: auto;
+    }
+
+    .scoring-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+
+    .scoring-panel h3 { margin: 0; font-size: 16px; color: var(--accent); font-weight: 700; }
+    .formula {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; color: #fff; padding: 4px;
+      background: rgba(0,0,0,0.3); border-radius: 4px;
+    }
+
+    svg { width: 100%; height: auto; display: block; overflow: visible; }
+    .viz-box { height: 140px; }
+
+    .gl-controls { display: flex; align-items: center; gap: 15px; margin-bottom: 8px; }
+    .mode-toggle { display: flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+    .mode-toggle button {
+        background: transparent; border: 0; color: var(--text-muted);
+        padding: 4px 12px; font-family: 'JetBrains Mono', monospace; cursor: pointer; font-size: 11px;
+        font-weight: 700;
+    }
+    .mode-toggle button.active { background: var(--accent); color: #fff; }
+
+    .slider-row { display: flex; align-items: center; gap: 8px; color: #fff; font-size: 12px; }
+    input[type=range] { accent-color: var(--accent); width: 80px; }
+
+    .gl-viz {
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 10px;
+      padding: 6px;
+      background: rgba(0, 0, 0, 0.35);
+      height: auto;
+    }
+
+    .math-label { font-family: 'Crimson Pro', serif; font-style: italic; font-size: 14px; font-weight: 700; }
+    .token-text { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; }
+    .label-text { font-family: 'Crimson Pro', serif; font-style: italic; font-size: 12px; font-weight: 700; }
+    .math-text { font-family: 'Crimson Pro', serif; font-style: italic; font-size: 16px; font-weight: 700; }
+    .port-text { font-family: 'JetBrains Mono', monospace; font-size: 9px; fill: #fff; font-weight: 700; }
+    .feedback-path { stroke: rgba(255, 255, 255, 0.35); stroke-dasharray: 4 4; fill: none; opacity: 0; }
+
+    .caption {
+      margin-top: 6px;
+      text-align: center;
+      max-width: 95%;
+      font-size: 16px;
+      line-height: 1.4;
+      background: rgba(0, 0, 0, 0.85);
+      color: #fff;
+      padding: 6px 20px;
+      border-radius: 20px;
+    }
+    .caption b { color: var(--attention); }
+    .note {
+      margin-top: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      text-align: center;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="tabs">
+      <button class="tab-btn active" data-view="window">Global vs Local</button>
+      <button class="tab-btn" data-view="scoring">Scoring Functions</button>
+    </div>
+
+    <div id="view-scoring" class="view">
+      <div class="panels-grid">
+        <div class="scoring-panel">
+          <h3>Dot</h3>
+          <div class="formula">score(s, h) = sᵀh</div>
+          <div class="viz-box"><svg id="viz-dot" viewBox="0 0 300 120" preserveAspectRatio="xMidYMid meet"></svg></div>
+          <div style="font-size: 12px; color: var(--text-muted)">Efficient directly identifies alignment.</div>
+        </div>
+        <div class="scoring-panel">
+          <h3>General</h3>
+          <div class="formula">score(s, h) = sᵀWₐh</div>
+          <div class="viz-box"><svg id="viz-general" viewBox="0 0 300 120" preserveAspectRatio="xMidYMid meet"></svg></div>
+          <div style="font-size: 12px; color: var(--text-muted)">Learns a mapping between spaces.</div>
+        </div>
+        <div class="scoring-panel">
+          <h3>Concat</h3>
+          <div class="formula">vₐᵀ tanh(Wₐ[s;h])</div>
+          <div class="viz-box"><svg id="viz-concat" viewBox="0 0 300 120" preserveAspectRatio="xMidYMid meet"></svg></div>
+          <div style="font-size: 12px; color: var(--text-muted)">Multilayer Perceptron alignment.</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="view-window" class="view active">
+      <div class="controls">
+        <button id="gl-play-pause">Play</button>
+        <button id="gl-step">Next</button>
+        <button id="gl-reset">Reset</button>
+      </div>
+      <div class="gl-controls">
+        <div class="mode-toggle">
+          <button id="btn-global" class="active">Global</button>
+          <button id="btn-local">Local</button>
+        </div>
+        <div id="local-controls" class="slider-row" style="opacity: 0.3; pointer-events: none;">
+          <span>Window (D):</span>
+          <input type="range" id="window-d" min="1" max="5" value="2">
+          <span id="label-d">2</span>
+        </div>
+      </div>
+      <div class="gl-viz">
+        <svg id="viz-gl" viewBox="0 10 900 320" preserveAspectRatio="xMidYMin meet"></svg>
+      </div>
+      <div class="caption" id="gl-caption"><b>Global attention</b>: all source rows in <b>H</b> receive non-zero weight.</div>
+      <div class="note" id="gl-note">Local mode restricts support to a window around predicted position p_t (radius D).</div>
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(`view-${btn.dataset.view}`).classList.add('active');
+        if (btn.dataset.view === 'window') {
+          renderGL();
+        } else if (typeof glIsPlaying !== "undefined" && glIsPlaying) {
+          clearInterval(glTimer);
+          glIsPlaying = false;
+          const playBtn = document.getElementById("gl-play-pause");
+          if (playBtn) playBtn.textContent = "Play";
+        }
+      });
+    });
+
+    function createVector(svg, x, y, label, color) {
+        const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        const r = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        r.setAttribute("x", x); r.setAttribute("y", y);
+        r.setAttribute("width", 50); r.setAttribute("height", 10);
+        r.setAttribute("rx", 2); r.setAttribute("fill", color); r.setAttribute("stroke", "rgba(255,255,255,0.1)");
+        const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        t.setAttribute("x", x + 25); t.setAttribute("y", y - 5);
+        t.setAttribute("class", "math-label"); t.setAttribute("text-anchor", "middle");
+        t.setAttribute("fill", "#fff"); t.textContent = label;
+        g.appendChild(r); g.appendChild(t);
+        svg.appendChild(g);
+        return g;
+    }
+
+    const dotSvg = document.getElementById("viz-dot");
+    createVector(dotSvg, 40, 60, "sₜ", "var(--decoder)");
+    createVector(dotSvg, 200, 60, "hⱼ", "var(--encoder)");
+    const dotSym = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    dotSym.setAttribute("x", 150); dotSym.setAttribute("y", 70);
+    dotSym.setAttribute("class", "math-label"); dotSym.setAttribute("font-size", "20");
+    dotSym.setAttribute("fill", "#fff"); dotSym.textContent = "·"; dotSvg.appendChild(dotSym);
+
+    const genSvg = document.getElementById("viz-general");
+    createVector(genSvg, 30, 60, "sₜ", "var(--decoder)");
+    const wBox = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    wBox.setAttribute("x", 125); wBox.setAttribute("y", 45);
+    wBox.setAttribute("width", 30); wBox.setAttribute("height", 30);
+    wBox.setAttribute("rx", 5); wBox.setAttribute("fill", "rgba(255,165,0,0.2)"); 
+    wBox.setAttribute("stroke", "var(--accent)"); wBox.setAttribute("stroke-width", "1.5");
+    genSvg.appendChild(wBox);
+    const wTxt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    wTxt.setAttribute("x", 140); wTxt.setAttribute("y", 65);
+    wTxt.setAttribute("class", "math-label"); wTxt.setAttribute("text-anchor", "middle"); 
+    wTxt.setAttribute("fill", "#fff"); wTxt.textContent = "Wₐ"; genSvg.appendChild(wTxt);
+    createVector(genSvg, 210, 60, "hⱼ", "var(--encoder)");
+
+    const conSvg = document.getElementById("viz-concat");
+    createVector(conSvg, 30, 50, "sₜ", "var(--decoder)");
+    createVector(conSvg, 30, 65, "hⱼ", "var(--encoder)");
+    const mlpBox = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    mlpBox.setAttribute("x", 140); mlpBox.setAttribute("y", 45);
+    mlpBox.setAttribute("width", 70); mlpBox.setAttribute("height", 30);
+    mlpBox.setAttribute("rx", 5); mlpBox.setAttribute("fill", "rgba(255,96,173,0.2)");
+    mlpBox.setAttribute("stroke", "var(--special)"); mlpBox.setAttribute("stroke-width", "1.5");
+    conSvg.appendChild(mlpBox);
+    const vTxt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    vTxt.setAttribute("x", 175); vTxt.setAttribute("y", 65);
+    vTxt.setAttribute("class", "math-label"); vTxt.setAttribute("text-anchor", "middle"); vTxt.setAttribute("font-size", "11");
+    vTxt.setAttribute("fill", "#fff"); vTxt.textContent = "tanh/vₐ"; conSvg.appendChild(vTxt);
+
+    const NS = "http://www.w3.org/2000/svg";
+    const tokens = ["the", "agreement", "on", "European", "Economic", "Area", "signed", "August", "1992"];
+    const outputTokens = ["l'accord", "sur", "l'Espace", "economique", "europeen", "signe", "1992"];
+    let isLocal = false;
+    let windowD = 2;
+    let focusIdx = 0;
+    let glIsPlaying = false;
+    let glTimer = null;
+    const glSvg = document.getElementById("viz-gl");
+    const cap = document.getElementById("gl-caption");
+    const note = document.getElementById("gl-note");
+
+    function svgEl(tag, attrs = {}) {
+      const el = document.createElementNS(NS, tag);
+      Object.keys(attrs).forEach((k) => el.setAttribute(k, attrs[k]));
+      return el;
+    }
+
+    function beamWeight(i) {
+      const dist = Math.abs(i - focusIdx);
+      const raw = Math.exp(-0.55 * dist);
+      if (isLocal && dist > windowD) return 0;
+      return raw;
+    }
+
+    function renderGL() {
+      glSvg.innerHTML = "";
+      const matrixX = 280;
+      const matrixY = 45;
+      const rowStep = 28;
+      const rowH = 22;
+      const alphaX = 492;
+      const alphaY = 150;
+      const ciX = 558;
+      const ciY = 167.5;
+      const stateX = 605;
+      const stateY = 167.5;
+
+      glSvg.appendChild(svgEl("text", { x: 50, y: 25, class: "label-text", fill: "var(--text-muted)" })).textContent = "INPUT";
+      glSvg.appendChild(svgEl("text", { x: 850, y: 25, class: "label-text", fill: "var(--text-muted)", "text-anchor": "end" })).textContent = "OUTPUT";
+
+      glSvg.appendChild(svgEl("path", {
+        d: "M 165 45 L 245 75 L 245 265 L 165 295 Z",
+        fill: "rgba(62, 208, 240, 0.1)",
+        stroke: "var(--encoder)",
+        "stroke-width": 2.5
+      }));
+      glSvg.appendChild(svgEl("text", {
+        x: 205, y: 170, class: "token-text", fill: "var(--encoder)", "text-anchor": "middle",
+        transform: "rotate(-90, 205, 170)"
+      })).textContent = "BI-ENCODER";
+
+      glSvg.appendChild(svgEl("path", {
+        d: "M 640 85 L 720 55 L 720 280 L 640 250 Z",
+        fill: "rgba(176, 245, 128, 0.1)",
+        stroke: "var(--decoder)",
+        "stroke-width": 2.5
+      }));
+      glSvg.appendChild(svgEl("text", {
+        x: 680, y: 170, class: "token-text", fill: "var(--decoder)", "text-anchor": "middle",
+        transform: "rotate(90, 680, 170)"
+      })).textContent = "DECODER";
+
+      const matrix = svgEl("g", { transform: "translate(280, 45)" });
+      matrix.appendChild(svgEl("rect", {
+        x: -10, y: -10, width: 110, height: 270, rx: 10,
+        fill: "rgba(62, 208, 240, 0.05)", stroke: "var(--encoder)", "stroke-width": 1.5, "stroke-dasharray": "4 4"
+      }));
+      matrix.appendChild(svgEl("text", { x: 45, y: -15, class: "math-text", fill: "var(--encoder)", "text-anchor": "middle" })).textContent = "H";
+      glSvg.appendChild(matrix);
+
+      const maxW = Math.max(...tokens.map((_, i) => beamWeight(i)), 1e-6);
+      tokens.forEach((tok, i) => {
+        const y = matrixY + i * rowStep;
+        const w = beamWeight(i) / maxW;
+        const active = w > 0;
+        const row = svgEl("g");
+        for (let c = 0; c < 4; c++) {
+          row.appendChild(svgEl("rect", {
+            x: matrixX + c * 22, y, width: 20, height: rowH, rx: 2,
+            fill: active ? `rgba(62, 208, 240, ${0.18 + 0.82 * w})` : "rgba(62, 208, 240, 0.07)",
+            stroke: "var(--encoder)",
+            "stroke-width": 0.5
+          }));
+        }
+        row.appendChild(svgEl("text", {
+          x: matrixX + 95, y: y + 11, class: "token-text", fill: active ? "var(--encoder)" : "var(--text-muted)",
+          "font-size": 9, "text-anchor": "start", "dominant-baseline": "middle"
+        })).textContent = `h${i + 1}`;
+        glSvg.appendChild(row);
+
+        glSvg.appendChild(svgEl("text", {
+          x: 62.5, y: 47 + i * rowStep, class: "token-text", "text-anchor": "middle", "dominant-baseline": "middle",
+          fill: active ? "#fff" : "var(--text-muted)"
+        })).textContent = tok;
+
+        if (active) {
+          glSvg.appendChild(svgEl("path", {
+            d: `M ${matrixX + 88} ${y + 11} Q ${alphaX - 45} ${y + 11} ${alphaX} 167.5`,
+            stroke: "var(--attention)",
+            "stroke-width": 0.8 + 2.8 * w,
+            fill: "none",
+            opacity: 0.2 + 0.75 * w
+          }));
+        }
+      });
+
+      const ci = svgEl("g", { transform: "translate(538, 141)" });
+      ci.appendChild(svgEl("text", { x: 20, y: -12, class: "math-text", fill: "var(--attention)", "text-anchor": "middle" })).textContent = "c_i";
+      for (let d = 0; d < 4; d++) {
+        ci.appendChild(svgEl("rect", {
+          x: 0, y: d * 16, width: 26, height: 14, rx: 2,
+          fill: `rgba(255, 165, 0, ${0.25 + 0.15 * d})`,
+          stroke: "var(--attention)",
+          "stroke-width": 0.7
+        }));
+      }
+      glSvg.appendChild(ci);
+
+      glSvg.appendChild(svgEl("path", {
+        d: `M ${ciX} ${ciY} L 640 ${ciY}`,
+        stroke: "var(--line)",
+        "stroke-width": 2,
+        fill: "none"
+      }));
+      glSvg.appendChild(svgEl("path", {
+        d: `M 810 75 C 810 35, 720 80, ${stateX} ${stateY}`,
+        class: "feedback-path",
+        opacity: 0.8
+      }));
+      glSvg.appendChild(svgEl("text", {
+        x: 786, y: 62, class: "port-text", fill: "var(--decoder)", "text-anchor": "middle", opacity: 1
+      })).textContent = "s_{i-1}";
+
+      outputTokens.forEach((tok, i) => {
+        const y = 45 + i * 38;
+        const active = i <= focusIdx % outputTokens.length;
+        glSvg.appendChild(svgEl("rect", {
+          x: 760, y, width: 85, height: 28, rx: 4,
+          fill: "rgba(0,0,0,0.3)",
+          stroke: "var(--decoder)",
+          "stroke-width": active ? 1.8 : 1.2,
+          opacity: active ? 1 : 0.3
+        }));
+        glSvg.appendChild(svgEl("text", {
+          x: 802.5, y: y + 14, class: "token-text", "text-anchor": "middle", "dominant-baseline": "middle", fill: "#fff",
+          opacity: active ? 1 : 0.35
+        })).textContent = tok;
+      });
+
+      if (isLocal) {
+        cap.innerHTML = `<b>Local attention</b>: only rows in a window around p_t contribute to c_i (radius D = <b>${windowD}</b>).`;
+        note.textContent = "Compare with Bahdanau: same c_i flow, but Luong local prunes attended rows for efficiency.";
+      } else {
+        cap.innerHTML = "<b>Global attention</b>: all rows in H receive non-zero score before forming c_i.";
+        note.textContent = "Compare with Bahdanau: same per-step c_i pipeline, but Luong uses cheaper score functions.";
+      }
+    }
+
+    function glStep() {
+      focusIdx = (focusIdx + 1) % outputTokens.length;
+      renderGL();
+    }
+
+    function glReset() {
+      focusIdx = 0;
+      glIsPlaying = false;
+      clearInterval(glTimer);
+      document.getElementById("gl-play-pause").textContent = "Play";
+      renderGL();
+    }
+
+    document.getElementById("btn-global").addEventListener("click", () => {
+        isLocal = false;
+        document.getElementById("btn-global").classList.add("active");
+        document.getElementById("btn-local").classList.remove("active");
+        gsap.to("#local-controls", { opacity: 0.3, pointerEvents: "none", duration: 0.15 });
+        renderGL();
+    });
+    document.getElementById("btn-local").addEventListener("click", () => {
+        isLocal = true;
+        document.getElementById("btn-local").classList.add("active");
+        document.getElementById("btn-global").classList.remove("active");
+        gsap.to("#local-controls", { opacity: 1, pointerEvents: "all", duration: 0.15 });
+        renderGL();
+    });
+    document.getElementById("window-d").addEventListener("input", (e) => {
+        windowD = parseInt(e.target.value);
+        document.getElementById("label-d").textContent = windowD;
+        renderGL();
+    });
+    document.getElementById("gl-step").addEventListener("click", () => {
+      if (glIsPlaying) {
+        clearInterval(glTimer);
+        glIsPlaying = false;
+        document.getElementById("gl-play-pause").textContent = "Play";
+      }
+      glStep();
+    });
+    document.getElementById("gl-play-pause").addEventListener("click", () => {
+      if (glIsPlaying) {
+        clearInterval(glTimer);
+        glIsPlaying = false;
+        document.getElementById("gl-play-pause").textContent = "Play";
+      } else {
+        glIsPlaying = true;
+        document.getElementById("gl-play-pause").textContent = "Pause";
+        glStep();
+        glTimer = setInterval(glStep, 1400);
+      }
+    });
+    document.getElementById("gl-reset").addEventListener("click", glReset);
+    renderGL();
+  </script>
+</body>
+</html>

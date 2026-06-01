@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attention history timeline (2014–2017)</title>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --panel: #141414;
+      --border: #2a2a2a;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --active: #3b82f6;
+      --hot: #f59e0b;
+      --green: #10b981;
+      --pink: #ec4899;
+      --purple: #a78bfa;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 12% 8%, rgba(59, 130, 246, 0.22), transparent 32%),
+        radial-gradient(circle at 88% 12%, rgba(236, 72, 153, 0.15), transparent 34%),
+        var(--bg);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .app {
+      height: 100vh;
+      padding: 18px;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 14px;
+    }
+    header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+    h1 { margin: 0; font-size: clamp(18px, 2vw, 28px); letter-spacing: -0.03em; font-weight: 760; }
+    .subtitle { margin-top: 5px; color: var(--muted); font-size: 13px; max-width: 760px; }
+    .controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    button {
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 8px 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 160ms ease, background 160ms ease;
+    }
+    button:hover { transform: translateY(-1px); background: rgba(255,255,255,0.14); }
+
+    .timeline-track {
+      position: relative;
+      padding: 22px 12px 14px;
+      background: linear-gradient(180deg, rgba(20,20,20,0.7), rgba(12,12,12,0.85));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+    }
+    .track-line {
+      position: absolute;
+      left: 24px; right: 24px; top: 50%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--active), var(--purple), var(--pink), var(--hot));
+      border-radius: 999px;
+      opacity: 0.55;
+    }
+    .nodes {
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .node {
+      position: relative;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .dot {
+      width: 18px; height: 18px;
+      border-radius: 999px;
+      background: rgba(20,20,20,0.95);
+      border: 2px solid rgba(255,255,255,0.4);
+      box-shadow: 0 0 0 6px rgba(0,0,0,0.4);
+      transition: transform 200ms ease, border-color 200ms ease, background 200ms ease, box-shadow 200ms ease;
+    }
+    .node.active .dot {
+      background: var(--hot);
+      border-color: #fff;
+      transform: scale(1.35);
+      box-shadow: 0 0 0 6px rgba(245,158,11,0.25);
+    }
+    .node:hover .dot { transform: scale(1.15); border-color: #fff; }
+    .year {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .node.active .year { color: var(--hot); }
+    .nm {
+      font-size: 11px;
+      color: var(--text);
+      text-align: center;
+      margin-top: 2px;
+      max-width: 110px;
+      line-height: 1.2;
+      opacity: 0.85;
+    }
+
+    .stage {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 14px;
+    }
+    .card {
+      background: linear-gradient(180deg, rgba(20,20,20,0.94), rgba(12,12,12,0.96));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      min-height: 0;
+      overflow: auto;
+    }
+    .card h2 { margin: 0 0 4px; font-size: 20px; letter-spacing: -0.02em; }
+    .card .meta { color: var(--muted); font-size: 12px; margin-bottom: 12px; }
+    .pillrow { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      color: var(--muted);
+    }
+    .pill.tag-bottleneck { color: #fecaca; border-color: rgba(239,68,68,0.35); background: rgba(239,68,68,0.08); }
+    .pill.tag-fix { color: #bbf7d0; border-color: rgba(16,185,129,0.35); background: rgba(16,185,129,0.08); }
+    .pill.tag-app { color: #bfdbfe; border-color: rgba(59,130,246,0.35); background: rgba(59,130,246,0.08); }
+    .body p { font-size: 13.5px; line-height: 1.55; color: #e2e8f0; margin: 8px 0; }
+    .body code { background: rgba(255,255,255,0.06); padding: 1px 6px; border-radius: 6px; font-size: 12px; }
+
+    .diagram {
+      display: grid;
+      place-items: center;
+      padding: 8px;
+      min-height: 0;
+    }
+    svg { width: 100%; height: 100%; max-height: 320px; }
+
+    .legend {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 820px) {
+      body { overflow: auto; }
+      .app { min-height: 100vh; height: auto; padding: 12px; }
+      .stage { grid-template-columns: 1fr; }
+      .nm { font-size: 10px; max-width: 80px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <h1>From alignment to self-attention: the path that built the Transformer</h1>
+        <div class="subtitle">Click any milestone to see what bottleneck it exposed, what idea it introduced, and where it was first used. Play to walk through the era end to end.</div>
+      </div>
+      <div class="controls">
+        <button id="play">Play</button>
+        <button id="prev">Prev</button>
+        <button id="next">Next</button>
+      </div>
+    </header>
+
+    <div class="timeline-track">
+      <div class="track-line"></div>
+      <div class="nodes" id="nodes"></div>
+    </div>
+
+    <section class="stage">
+      <article class="card">
+        <h2 id="title"></h2>
+        <div class="meta" id="meta"></div>
+        <div class="pillrow" id="pills"></div>
+        <div class="body" id="body"></div>
+      </article>
+      <article class="card diagram" id="diagram"></article>
+    </section>
+
+    <div class="legend">
+      <span id="counter">1 / 8</span>
+      <span>red pill = bottleneck exposed · green pill = idea introduced · blue pill = where it was used</span>
+    </div>
+  </main>
+
+  <script>
+    const NS = "http://www.w3.org/2000/svg";
+
+    const events = [
+      {
+        year: "2014",
+        short: "Seq2Seq",
+        title: "Sequence to Sequence Learning (Sutskever, Vinyals, Le)",
+        meta: "Encoder–decoder LSTM · one fixed context vector",
+        pills: [
+          ["bottleneck", "Fixed-size context vector"],
+          ["fix", "End-to-end NMT without phrase tables"],
+          ["app", "WMT'14 EN→FR translation"]
+        ],
+        body: "An LSTM encoder reads the entire source sentence and squeezes it into a single hidden vector. A decoder LSTM unrolls the target from that vector. Works for short inputs; BLEU collapses on sentences past ~30 tokens.",
+        diagram: "fixed"
+      },
+      {
+        year: "2014",
+        short: "Bahdanau attention",
+        title: "Neural MT by Jointly Learning to Align and Translate",
+        meta: "Bahdanau, Cho, Bengio · additive scoring · ICLR 2015",
+        pills: [
+          ["fix", "Soft, learned alignment per output token"],
+          ["fix", "Bidirectional encoder annotations"],
+          ["app", "Long-sentence machine translation"]
+        ],
+        body: "Each decoder step computes a fresh context vector as a weighted sum over all source token states. The weights are produced by an additive scoring MLP and softmax. Alignment is learned end to end instead of from a separate IBM model.",
+        diagram: "bahdanau"
+      },
+      {
+        year: "2015",
+        short: "Show, Attend & Tell",
+        title: "Image captioning with visual attention (Xu et al.)",
+        meta: "Soft + hard attention over CNN feature grid",
+        pills: [
+          ["fix", "Attention moves to the vision modality"],
+          ["app", "Image captioning (MS COCO, Flickr)"]
+        ],
+        body: "Replaces the source RNN with a CNN feature grid. The decoder attends over image regions while generating each caption word. First clear demonstration that attention is a general primitive, not just a translation trick.",
+        diagram: "image"
+      },
+      {
+        year: "2015",
+        short: "Luong attention",
+        title: "Effective Approaches to Attention-based NMT (Luong, Pham, Manning)",
+        meta: "Dot · general · concat scoring · global vs local",
+        pills: [
+          ["fix", "Dot-product scoring → one matmul"],
+          ["fix", "Local attention window"],
+          ["app", "WMT EN↔DE translation"]
+        ],
+        body: "Compares three scoring functions and introduces local attention around a predicted alignment position. Dot and general scoring batch cleanly as matmuls — quietly setting up the hardware case for self-attention two years later.",
+        diagram: "scoring"
+      },
+      {
+        year: "2015",
+        short: "Listen, Attend, Spell",
+        title: "Attention-based speech recognition (Chan et al.)",
+        meta: "Pyramidal listener · attending speller",
+        pills: [
+          ["fix", "Replaces HMMs end-to-end for ASR"],
+          ["app", "Speech-to-text on Google voice search"]
+        ],
+        body: "Encoder downsamples acoustic frames; decoder attends over them while emitting characters. End-of-the-line for separate acoustic / pronunciation / language models in many systems.",
+        diagram: "speech"
+      },
+      {
+        year: "2015",
+        short: "End-to-End MemNets",
+        title: "End-to-End Memory Networks (Sukhbaatar et al.)",
+        meta: "Multi-hop soft attention over a memory bank",
+        pills: [
+          ["fix", "Multi-hop reasoning via stacked attention"],
+          ["app", "bAbI question answering"]
+        ],
+        body: "Memory entries are read via softmax attention with a query vector; multiple hops let the model chain facts. A direct ancestor of the stacked self-attention layers in the Transformer.",
+        diagram: "memory"
+      },
+      {
+        year: "2016",
+        short: "GNMT",
+        title: "Google's Neural Machine Translation system",
+        meta: "8-layer LSTM encoder/decoder + attention in production",
+        pills: [
+          ["fix", "Attention + deep LSTMs at production scale"],
+          ["app", "Google Translate (EN↔ZH, EN↔FR, ...)"]
+        ],
+        body: "Industrial validation: attention-based encoder-decoder replaces phrase-based SMT in Google Translate. The architecture is still recurrent, but attention is now the cross-tongue glue, not an optional add-on.",
+        diagram: "gnmt"
+      },
+      {
+        year: "2017",
+        short: "Transformer",
+        title: "Attention Is All You Need (Vaswani et al.)",
+        meta: "Scaled dot-product · multi-head · positional encoding",
+        pills: [
+          ["bottleneck", "Recurrence blocks parallel training"],
+          ["fix", "Drop recurrence; attend everywhere"],
+          ["app", "NMT first — then everything else"]
+        ],
+        body: "Stacked self-attention + feed-forward blocks. No recurrence, no convolution. Trains in parallel over all tokens; receptive field is one hop per layer. Same year: WMT'14 EN-DE SOTA in 12 hours on 8 P100s. The architecture that ate the field.",
+        diagram: "transformer"
+      }
+    ];
+
+    let idx = 0;
+    let timer = null;
+
+    const nodesEl = document.getElementById("nodes");
+    const titleEl = document.getElementById("title");
+    const metaEl = document.getElementById("meta");
+    const pillsEl = document.getElementById("pills");
+    const bodyEl = document.getElementById("body");
+    const diagramEl = document.getElementById("diagram");
+    const counterEl = document.getElementById("counter");
+    const playBtn = document.getElementById("play");
+
+    events.forEach((ev, i) => {
+      const n = document.createElement("div");
+      n.className = "node";
+      n.innerHTML = `<div class="dot"></div><div class="year">${ev.year}</div><div class="nm">${ev.short}</div>`;
+      n.addEventListener("click", () => { idx = i; render(); });
+      nodesEl.appendChild(n);
+    });
+
+    function render() {
+      [...nodesEl.children].forEach((c, i) => c.classList.toggle("active", i === idx));
+      const ev = events[idx];
+      titleEl.textContent = ev.title;
+      metaEl.textContent = ev.meta;
+      pillsEl.innerHTML = ev.pills.map(([k, t]) => `<span class="pill tag-${k}">${t}</span>`).join("");
+      bodyEl.innerHTML = `<p>${ev.body}</p>`;
+      counterEl.textContent = `${idx + 1} / ${events.length}`;
+      drawDiagram(ev.diagram);
+    }
+
+    function svgEl(tag, attrs = {}) {
+      const el = document.createElementNS(NS, tag);
+      for (const k in attrs) el.setAttribute(k, attrs[k]);
+      return el;
+    }
+
+    function drawDiagram(kind) {
+      diagramEl.innerHTML = "";
+      const svg = svgEl("svg", { viewBox: "0 0 400 260" });
+      diagramEl.appendChild(svg);
+
+      const tokenRow = (y, n, color, label) => {
+        for (let i = 0; i < n; i++) {
+          const x = 30 + i * ((340) / (n - 1));
+          const r = svgEl("rect", { x: x - 12, y: y - 10, width: 24, height: 20, rx: 6, fill: color, opacity: 0.85 });
+          svg.appendChild(r);
+        }
+        if (label) {
+          const t = svgEl("text", { x: 200, y: y - 22, fill: "#94a3b8", "font-size": 11, "text-anchor": "middle" });
+          t.textContent = label;
+          svg.appendChild(t);
+        }
+      };
+
+      if (kind === "fixed") {
+        tokenRow(50, 7, "#3b82f6", "encoder states");
+        const c = svgEl("circle", { cx: 200, cy: 130, r: 22, fill: "#ef4444", opacity: 0.9 });
+        svg.appendChild(c);
+        const tc = svgEl("text", { x: 200, y: 134, fill: "#fff", "font-size": 12, "font-weight": 700, "text-anchor": "middle" });
+        tc.textContent = "c";
+        svg.appendChild(tc);
+        for (let i = 0; i < 7; i++) {
+          const x = 30 + i * (340 / 6);
+          const ln = svgEl("line", { x1: x, y1: 60, x2: 200, y2: 110, stroke: "#475569", "stroke-width": 1 });
+          svg.appendChild(ln);
+        }
+        tokenRow(210, 6, "#a78bfa", "decoder reads same c at every step");
+        for (let i = 0; i < 6; i++) {
+          const x = 30 + i * (340 / 5);
+          const ln = svgEl("line", { x1: 200, y1: 150, x2: x, y2: 200, stroke: "#ef4444", "stroke-width": 1, opacity: 0.6 });
+          svg.appendChild(ln);
+        }
+      } else if (kind === "bahdanau") {
+        tokenRow(50, 7, "#3b82f6", "bidirectional encoder states h_j");
+        tokenRow(210, 6, "#a78bfa", "decoder builds fresh c_i each step");
+        // attention weights as varying lines from one decoder token to all source
+        const target = 2;
+        const tx = 30 + target * (340 / 5);
+        for (let i = 0; i < 7; i++) {
+          const x = 30 + i * (340 / 6);
+          const w = [0.05, 0.1, 0.55, 0.15, 0.05, 0.05, 0.05][i];
+          const ln = svgEl("line", { x1: x, y1: 60, x2: tx, y2: 200, stroke: "#f59e0b", "stroke-width": 1 + w * 8, opacity: 0.4 + w });
+          svg.appendChild(ln);
+        }
+        const note = svgEl("text", { x: 200, y: 135, fill: "#f59e0b", "font-size": 12, "font-weight": 700, "text-anchor": "middle" });
+        note.textContent = "α_ij = softmax(score(s_{i-1}, h_j))";
+        svg.appendChild(note);
+      } else if (kind === "scoring") {
+        const cols = [
+          { x: 70, label: "dot", text: "s·h" },
+          { x: 200, label: "general", text: "s·W·h" },
+          { x: 330, label: "concat", text: "v·tanh(W[s;h])" }
+        ];
+        cols.forEach(c => {
+          const r = svgEl("rect", { x: c.x - 50, y: 80, width: 100, height: 100, rx: 14, fill: "#1d1d1d", stroke: "#3b82f6", "stroke-width": 1 });
+          svg.appendChild(r);
+          const t1 = svgEl("text", { x: c.x, y: 110, fill: "#bfdbfe", "font-size": 13, "font-weight": 700, "text-anchor": "middle" });
+          t1.textContent = c.label;
+          svg.appendChild(t1);
+          const t2 = svgEl("text", { x: c.x, y: 145, fill: "#f8fafc", "font-size": 12, "text-anchor": "middle", "font-family": "ui-monospace, monospace" });
+          t2.textContent = c.text;
+          svg.appendChild(t2);
+        });
+        const cap = svgEl("text", { x: 200, y: 220, fill: "#94a3b8", "font-size": 11, "text-anchor": "middle" });
+        cap.textContent = "dot/general → one batched matmul → GPU-friendly";
+        svg.appendChild(cap);
+      } else if (kind === "image") {
+        // 4x4 grid representing image patches
+        for (let i = 0; i < 4; i++) {
+          for (let j = 0; j < 4; j++) {
+            const lit = (i === 1 && j === 2) || (i === 2 && j === 2);
+            const r = svgEl("rect", {
+              x: 80 + j * 30, y: 50 + i * 30, width: 26, height: 26, rx: 5,
+              fill: lit ? "#f59e0b" : "#1d1d1d", stroke: "#3b82f6", "stroke-width": 1, opacity: lit ? 0.9 : 0.6
+            });
+            svg.appendChild(r);
+          }
+        }
+        const t = svgEl("text", { x: 250, y: 110, fill: "#f8fafc", "font-size": 13, "font-weight": 700 });
+        t.textContent = "→ \"a dog\"";
+        svg.appendChild(t);
+        const t2 = svgEl("text", { x: 250, y: 135, fill: "#94a3b8", "font-size": 11 });
+        t2.textContent = "decoder attends to";
+        svg.appendChild(t2);
+        const t3 = svgEl("text", { x: 250, y: 150, fill: "#94a3b8", "font-size": 11 });
+        t3.textContent = "highlighted CNN cells";
+        svg.appendChild(t3);
+        const cap = svgEl("text", { x: 200, y: 220, fill: "#94a3b8", "font-size": 11, "text-anchor": "middle" });
+        cap.textContent = "attention over CNN feature map, one weight per region";
+        svg.appendChild(cap);
+      } else if (kind === "speech") {
+        // spectrogram-ish
+        for (let i = 0; i < 30; i++) {
+          for (let j = 0; j < 8; j++) {
+            const v = Math.abs(Math.sin(i * 0.4 + j * 0.7)) * 0.9;
+            const r = svgEl("rect", { x: 30 + i * 10, y: 40 + j * 12, width: 9, height: 11, fill: `rgba(59,130,246,${v})` });
+            svg.appendChild(r);
+          }
+        }
+        const cap = svgEl("text", { x: 200, y: 155, fill: "#f59e0b", "font-size": 12, "font-weight": 700, "text-anchor": "middle" });
+        cap.textContent = "speller emits 'h' 'e' 'l' 'l' 'o' attending over acoustic frames";
+        svg.appendChild(cap);
+        tokenRow(200, 5, "#a78bfa");
+        const lbl = svgEl("text", { x: 200, y: 235, fill: "#94a3b8", "font-size": 11, "text-anchor": "middle" });
+        lbl.textContent = "character outputs";
+        svg.appendChild(lbl);
+      } else if (kind === "memory") {
+        // memory bank + hops
+        for (let i = 0; i < 5; i++) {
+          const y = 40 + i * 28;
+          const r = svgEl("rect", { x: 40, y, width: 130, height: 22, rx: 6, fill: "#1d1d1d", stroke: "#3b82f6", "stroke-width": 1 });
+          svg.appendChild(r);
+          const t = svgEl("text", { x: 105, y: y + 15, fill: "#bfdbfe", "font-size": 11, "text-anchor": "middle" });
+          t.textContent = `memory[${i}]`;
+          svg.appendChild(t);
+        }
+        const hops = [{ y: 80 }, { y: 140 }, { y: 200 }];
+        hops.forEach((h, i) => {
+          const c = svgEl("circle", { cx: 280, cy: h.y, r: 16, fill: "#f59e0b", opacity: 0.85 });
+          svg.appendChild(c);
+          const t = svgEl("text", { x: 280, y: h.y + 4, fill: "#0a0a0a", "font-size": 11, "font-weight": 700, "text-anchor": "middle" });
+          t.textContent = `hop ${i + 1}`;
+          svg.appendChild(t);
+          if (i < hops.length - 1) {
+            const ln = svgEl("line", { x1: 280, y1: h.y + 16, x2: 280, y2: hops[i + 1].y - 16, stroke: "#f59e0b", "stroke-width": 2 });
+            svg.appendChild(ln);
+          }
+        });
+        const cap = svgEl("text", { x: 200, y: 235, fill: "#94a3b8", "font-size": 11, "text-anchor": "middle" });
+        cap.textContent = "soft attention over memory, repeated K times";
+        svg.appendChild(cap);
+      } else if (kind === "gnmt") {
+        // stacked LSTM layers with attention
+        for (let L = 0; L < 4; L++) {
+          tokenRow(50 + L * 16, 7, L < 2 ? "#3b82f6" : "#10b981");
+        }
+        const arrow = svgEl("path", { d: "M 80 140 Q 200 170 320 140", stroke: "#f59e0b", "stroke-width": 2, fill: "none" });
+        svg.appendChild(arrow);
+        const cap = svgEl("text", { x: 200, y: 200, fill: "#94a3b8", "font-size": 11, "text-anchor": "middle" });
+        cap.textContent = "8-layer LSTMs + attention bridge — production-scale validation";
+        svg.appendChild(cap);
+        tokenRow(220, 6, "#a78bfa");
+      } else if (kind === "transformer") {
+        tokenRow(50, 7, "#3b82f6", "all tokens attend to all tokens, one hop");
+        // dense lines between all pairs
+        for (let i = 0; i < 7; i++) {
+          for (let j = 0; j < 7; j++) {
+            const x1 = 30 + i * (340 / 6);
+            const x2 = 30 + j * (340 / 6);
+            const ln = svgEl("path", {
+              d: `M ${x1} 60 Q ${(x1 + x2) / 2} 140 ${x2} 60`,
+              stroke: "#f59e0b", "stroke-width": 0.6, opacity: 0.18, fill: "none"
+            });
+            svg.appendChild(ln);
+          }
+        }
+        const t = svgEl("text", { x: 200, y: 180, fill: "#fbbf24", "font-size": 12, "font-weight": 700, "text-anchor": "middle" });
+        t.textContent = "softmax(QKᵀ/√d_k) V";
+        svg.appendChild(t);
+        const cap = svgEl("text", { x: 200, y: 210, fill: "#94a3b8", "font-size": 11, "text-anchor": "middle" });
+        cap.textContent = "no recurrence · parallel over tokens · O(N²) interactions";
+        svg.appendChild(cap);
+      }
+    }
+
+    document.getElementById("next").addEventListener("click", () => { idx = (idx + 1) % events.length; render(); });
+    document.getElementById("prev").addEventListener("click", () => { idx = (idx - 1 + events.length) % events.length; render(); });
+    playBtn.addEventListener("click", () => {
+      if (timer) { clearInterval(timer); timer = null; playBtn.textContent = "Play"; return; }
+      timer = setInterval(() => { idx = (idx + 1) % events.length; render(); }, 2400);
+      playBtn.textContent = "Pause";
+    });
+
+    render();
+  </script>
+</body>
+</html>

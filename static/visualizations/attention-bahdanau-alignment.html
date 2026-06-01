@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bahdanau Attention - Refined (3b1b Style)</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #1c1c1c;
+      --text: #ffffff;
+      --text-muted: #d0d0d0;
+      --encoder: #3ed0f0;
+      --decoder: #b0f580;
+      --attention: #ffa500;
+      --special: #ff60ad;
+      --line: rgba(255, 255, 255, 0.4);
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Crimson Pro', serif;
+      overflow: hidden;
+      width: 100%; height: auto;
+    }
+
+    .container {
+      width: 100%; height: auto;
+      display: flex; flex-direction: column;
+      padding: 5px;
+    }
+
+    .controls {
+      display: flex; gap: 8px; margin-bottom: 5px; z-index: 10;
+    }
+
+    button {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      color: #fff;
+      padding: 6px 14px; border-radius: 6px;
+      cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      font-weight: 700;
+      transition: all 0.2s ease;
+    }
+
+    button:hover { background: rgba(255, 255, 255, 0.25); }
+
+    .canvas-wrapper { 
+      width: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    svg { width: 100%; height: auto; display: block; overflow: visible; }
+
+    .token-text { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; }
+    .label-text { font-family: 'Crimson Pro', serif; font-style: italic; font-size: 12px; font-weight: 700; }
+    .math-text { font-family: 'Crimson Pro', serif; font-style: italic; font-size: 16px; font-weight: 700; }
+    .port-text { font-family: 'JetBrains Mono', monospace; font-size: 9px; fill: #fff; font-weight: 700; }
+
+    .caption {
+      margin-top: 5px;
+      text-align: center;
+      max-width: 95%; font-size: 16px; line-height: 1.4;
+      background: rgba(0, 0, 0, 0.85);
+      color: #fff;
+      padding: 6px 20px; border-radius: 20px;
+    }
+    .caption b { color: var(--attention); }
+    .note {
+      margin-top: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      text-align: center;
+      opacity: 0.9;
+    }
+
+    .comet { stroke-linecap: round; fill: none; }
+    .feedback-path { stroke: var(--line); stroke-dasharray: 4 4; fill: none; opacity: 0.3; }
+    .attn-line { stroke: var(--attention); fill: none; opacity: 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="controls">
+      <button id="play-pause">Play</button>
+      <button id="step">Next</button>
+      <button id="reset">Reset</button>
+    </div>
+
+    <div class="canvas-wrapper">
+      <svg id="viz" viewBox="0 10 900 320" preserveAspectRatio="xMidYMin meet">
+        <!-- Labels -->
+        <text x="50" y="25" class="label-text" fill="var(--text-muted)">INPUT</text>
+        <text x="850" y="25" class="label-text" fill="var(--text-muted)" text-anchor="end">OUTPUT</text>
+
+        <!-- Encoder Block -->
+        <path id="encoder-block" d="M 165 45 L 245 75 L 245 265 L 165 295 Z" 
+              fill="rgba(62, 208, 240, 0.1)" stroke="var(--encoder)" stroke-width="2.5" />
+        <text x="205" y="170" class="token-text" fill="var(--encoder)" text-anchor="middle" transform="rotate(-90, 205, 170)">BI-ENCODER</text>
+
+        <!-- Memory Matrix H -->
+        <g id="memory-matrix" transform="translate(280, 45)">
+            <rect x="-10" y="-10" width="110" height="270" fill="rgba(62, 208, 240, 0.05)" stroke="var(--encoder)" stroke-width="1.5" stroke-dasharray="4 4" rx="10" />
+            <text x="45" y="-15" class="math-text" fill="var(--encoder)" text-anchor="middle">H</text>
+            <g id="matrix-rows"></g>
+        </g>
+        
+        <!-- Alpha vector (shown during decoding) -->
+        <g id="alpha-vector" transform="translate(480,45)" opacity="0">
+            <text x="12" y="-10" class="math-text" fill="var(--attention)" text-anchor="middle">αᵢ</text>
+            <g id="alpha-cells"></g>
+        </g>
+
+        <!-- Attention Mechanism & Context Vector c_i -->
+        <g id="attention-system" transform="translate(480, 45)" opacity="0">
+            <text x="72" y="-12" class="math-text" fill="var(--attention)" text-anchor="middle">cᵢ</text>
+            <g id="ci-vector" transform="translate(58, 96)"></g>
+        </g>
+
+        <!-- Decoder Block -->
+        <path id="decoder-block" d="M 640 85 L 720 55 L 720 280 L 640 250 Z" 
+              fill="rgba(176, 245, 128, 0.1)" stroke="var(--decoder)" stroke-width="2.5" />
+        <text x="680" y="170" class="token-text" fill="var(--decoder)" text-anchor="middle" transform="rotate(90, 680, 170)">DECODER</text>
+        
+        <g id="encoder-tokens"></g>
+        <g id="decoder-tokens"></g>
+
+        <!-- Previous decoder state source into alignment model -->
+        <path id="state-to-alpha" d="M 737 277 V 315 H 492 V 291" stroke="var(--line)" stroke-width="1.5" fill="none" marker-end="url(#arrow-head)" opacity="0" />
+
+        <!-- Beams (Static container) -->
+        <g id="attn-beams"></g>
+        <g id="weighted-copy" transform="translate(410,45)" opacity="0">
+          <rect x="-10" y="-10" width="118" height="270" fill="rgba(255,165,0,0.05)" stroke="var(--attention)" stroke-width="1.5" stroke-dasharray="4 4" rx="10" />
+          <text x="48" y="-15" class="math-text" fill="var(--attention)" text-anchor="middle">α ⊙ H</text>
+          <g id="weighted-rows"></g>
+        </g>
+
+        <!-- Paths -->
+        <path id="ci-to-dec" d="M 558 167.5 L 640 167.5" stroke="var(--line)" stroke-width="2" fill="none" marker-end="url(#arrow-head)" opacity="0" />
+        <g id="si-vector" transform="translate(724, 55)" opacity="1">
+          <text x="13" y="-12" class="math-text" fill="var(--decoder)" text-anchor="middle">sᵢ</text>
+          <g id="si-cells"></g>
+        </g>
+        
+        <!-- Feedback Path -->
+        <path id="feedback-loop" class="feedback-path" d="M 810 75 C 810 35, 788 138, 737 167.5" />
+
+        <defs>
+          <marker id="arrow-head" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#fff" />
+          </marker>
+        </defs>
+      </svg>
+
+      <div class="caption" id="caption">
+        The encoder processes input to build a **Memory Matrix (H)** of hidden states.
+      </div>
+      <div class="note">Illustrative weights and word-level labels for readability; in practice both inputs and outputs are tokenized sequences.</div>
+    </div>
+  </div>
+
+  <script>
+    const inputTokens = ["the", "agreement", "on", "European", "Economic", "Area", "signed", "August", "1992"];
+    const outputTokens = ["l'accord", "sur", "l'Espace", "économique", "européen", "signé", "1992"];
+
+    const attnWeights = [
+      [0.08, 0.62, 0.08, 0.04, 0.04, 0.03, 0.07, 0.02, 0.02],
+      [0.05, 0.10, 0.58, 0.08, 0.06, 0.04, 0.04, 0.03, 0.02],
+      [0.02, 0.05, 0.05, 0.31, 0.18, 0.30, 0.03, 0.03, 0.03],
+      [0.02, 0.04, 0.03, 0.17, 0.56, 0.12, 0.02, 0.02, 0.02],
+      [0.02, 0.03, 0.02, 0.58, 0.17, 0.13, 0.02, 0.01, 0.02],
+      [0.04, 0.12, 0.03, 0.03, 0.03, 0.04, 0.61, 0.06, 0.04],
+      [0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.06, 0.24, 0.58]
+    ];
+
+    const NS = "http://www.w3.org/2000/svg";
+    const viz = document.getElementById("viz");
+    const encoderTokensGroup = document.getElementById("encoder-tokens");
+    const decoderTokensGroup = document.getElementById("decoder-tokens");
+    const matrixGroup = document.getElementById("matrix-rows");
+    const alphaCellsGroup = document.getElementById("alpha-cells");
+    const ciVectorGroup = document.getElementById("ci-vector");
+    const beamsGroup = document.getElementById("attn-beams");
+    const caption = document.getElementById("caption");
+    const alphaVectorGroup = document.getElementById("alpha-vector");
+    const weightedCopyGroup = document.getElementById("weighted-copy");
+    const weightedRowsGroup = document.getElementById("weighted-rows");
+    const siVectorGroup = document.getElementById("si-vector");
+    const siCellsGroup = document.getElementById("si-cells");
+
+    const encoderCore = { xIn: 165, yMid: 170, xOut: 245 };
+    const matrixXLeft = 280;
+    const matrixYTop = 45;
+    const ciX = 548;
+    const contextY = 167.5;
+    const portY = 167.5;
+    const stateSource = { x: 737, y: 167.5 };
+    const statePathStart = { x: 737, y: 277 };
+    const statePathLowerY = 315;
+    const alphaBottom = { x: 492, y: 291 };
+    const siDim = 14;
+    const alphaInput = { x: 492, y: 167.5 };
+    const alphaMidTransform = "translate(480,45)";
+    const alphaOverHTransform = "translate(332,45)";
+
+    function svgEl(tag, attrs = {}) {
+      const el = document.createElementNS(NS, tag);
+      Object.keys(attrs).forEach((k) => el.setAttribute(k, attrs[k]));
+      return el;
+    }
+
+    function syncStatePaths() {
+      const stateToAlpha = document.getElementById("state-to-alpha");
+      const feedbackLoop = document.getElementById("feedback-loop");
+      if (stateToAlpha) stateToAlpha.setAttribute("d", `M ${statePathStart.x} ${statePathStart.y} V ${statePathLowerY} H ${alphaBottom.x} V ${alphaBottom.y}`);
+      if (feedbackLoop) feedbackLoop.setAttribute("d", `M 810 75 C 810 35, 788 138, ${stateSource.x} ${stateSource.y}`);
+    }
+
+    const inputTokenElements = [];
+    inputTokens.forEach((token, i) => {
+      const y = 35 + i * 28;
+      const g = svgEl("g");
+      const r = svgEl("rect", {
+        x: 25, y, width: 75, height: 24, rx: 3,
+        fill: "rgba(0,0,0,0.3)", stroke: "var(--encoder)", "stroke-width": 1
+      });
+      const txt = svgEl("text", {
+        x: 62.5, y: y + 12, class: "token-text", "text-anchor": "middle", "dominant-baseline": "middle", fill: "#fff"
+      });
+      txt.textContent = token;
+      g.appendChild(r);
+      g.appendChild(txt);
+      g.setAttribute("opacity", "0.45");
+      encoderTokensGroup.appendChild(g);
+      inputTokenElements.push({ group: g, rect: r, x: 62.5, y: y + 12 });
+    });
+
+    const matrixRows = [];
+    const weightedRows = [];
+    const beamElements = [];
+    inputTokens.forEach((_, i) => {
+      const y = i * 28;
+      const rowY = matrixYTop + y + 11;
+      const g = svgEl("g");
+      const cells = [];
+      for (let j = 0; j < 4; j++) {
+        const cell = svgEl("rect", {
+          x: j * 22, y, width: 20, height: 22, rx: 2,
+          fill: "rgba(62, 208, 240, 0.15)", stroke: "var(--encoder)", "stroke-width": 0.5
+        });
+        g.appendChild(cell);
+        cells.push(cell);
+      }
+      const label = svgEl("text", {
+        x: 95, y: y + 11, class: "token-text", fill: "var(--encoder)", "font-size": 9, "text-anchor": "start", "dominant-baseline": "middle"
+      });
+      label.textContent = `h${i + 1}`;
+      g.appendChild(label);
+      g.setAttribute("opacity", "0.08");
+      matrixGroup.appendChild(g);
+      matrixRows.push({ group: g, cells, cx: matrixXLeft + 88, cy: rowY });
+
+      const beam = svgEl("path", {
+        d: `M ${matrixXLeft + 88} ${rowY} Q ${alphaInput.x - 45} ${rowY} ${alphaInput.x} ${contextY}`,
+        class: "attn-line",
+        "stroke-width": 1
+      });
+      beamsGroup.appendChild(beam);
+      beamElements.push(beam);
+
+      const wg = svgEl("g");
+      const weightedCells = [];
+      for (let c = 0; c < 4; c++) {
+        const wCell = svgEl("rect", {
+          x: c * 22, y, width: 20, height: 22, rx: 2,
+          fill: "rgba(255, 165, 0, 0.10)", stroke: "var(--attention)", "stroke-width": 0.5
+        });
+        wg.appendChild(wCell);
+        weightedCells.push(wCell);
+      }
+      wg.setAttribute("opacity", "0.08");
+      weightedRowsGroup.appendChild(wg);
+      const wLabel = svgEl("text", {
+        x: 95, y: y + 11, class: "token-text", fill: "var(--attention)", "font-size": 9, "text-anchor": "start", "dominant-baseline": "middle"
+      });
+      wLabel.textContent = `h${i + 1}`;
+      wg.appendChild(wLabel);
+
+      weightedRows.push({ group: wg, cells: weightedCells, cx: 410 + 88, cy: rowY });
+    });
+
+    const alphaCellElements = [];
+    inputTokens.forEach((_, i) => {
+      const y = i * 28;
+      const cell = svgEl("rect", {
+        x: 0, y, width: 25, height: 22, rx: 2,
+        fill: "rgba(255, 165, 0, 0.16)", stroke: "var(--attention)", "stroke-width": 0.5
+      });
+      cell.setAttribute("opacity", "0");
+      alphaCellsGroup.appendChild(cell);
+      alphaCellElements.push(cell);
+    });
+
+    const ciSummaryCells = [];
+    for (let d = 0; d < 4; d++) {
+      const y = d * 16;
+      const cell = svgEl("rect", {
+        x: 0, y, width: 26, height: 14, rx: 2,
+        fill: "rgba(255, 165, 0, 0.16)", stroke: "var(--attention)", "stroke-width": 0.7
+      });
+      ciVectorGroup.appendChild(cell);
+      ciSummaryCells.push(cell);
+    }
+
+    const siSummaryCells = [];
+    for (let d = 0; d < siDim; d++) {
+      const y = d * 16;
+      const cell = svgEl("rect", {
+        x: 0, y, width: 26, height: 14, rx: 2,
+        fill: "rgba(176, 245, 128, 0.16)", stroke: "var(--decoder)", "stroke-width": 0.7
+      });
+      siCellsGroup.appendChild(cell);
+      siSummaryCells.push(cell);
+    }
+
+    const outputTokenElements = [];
+    outputTokens.forEach((token, i) => {
+      const y = 45 + i * 38;
+      const g = svgEl("g");
+      const r = svgEl("rect", {
+        x: 760, y, width: 85, height: 28, rx: 4,
+        fill: "rgba(0,0,0,0.3)", stroke: "var(--decoder)", "stroke-width": 1.5
+      });
+      const txt = svgEl("text", {
+        x: 802.5, y: y + 14, class: "token-text", "text-anchor": "middle", "dominant-baseline": "middle", fill: "#fff"
+      });
+      txt.textContent = token;
+      g.appendChild(r);
+      g.appendChild(txt);
+      g.setAttribute("opacity", "0");
+      decoderTokensGroup.appendChild(g);
+      outputTokenElements.push({ group: g, x: 802.5, y: y + 14 });
+    });
+
+    function createComet(startX, startY, endX, endY, color, duration = 0.3, curve = false, opts = {}) {
+      const path = svgEl("path");
+      const d = curve
+        ? `M ${startX} ${startY} C ${startX} ${startY - 60}, ${endX} ${startY - 60}, ${endX} ${endY}`
+        : `M ${startX} ${startY} L ${endX} ${endY}`;
+      path.setAttribute("d", d);
+      path.setAttribute("class", "comet");
+      path.setAttribute("stroke", color);
+      path.setAttribute("stroke-width", String(opts.width || 2.8));
+      if (typeof opts.opacity === "number") path.setAttribute("opacity", String(opts.opacity));
+      const len = path.getTotalLength();
+      path.style.strokeDasharray = `${len * 0.38} ${len}`;
+      path.style.strokeDashoffset = len;
+      viz.appendChild(path);
+      gsap.to(path.style, {
+        strokeDashoffset: -len * 0.38,
+        duration,
+        ease: "power1.inOut",
+        onComplete: () => path.remove()
+      });
+      const dot = svgEl("circle", { r: 2.5, fill: color });
+      viz.appendChild(dot);
+      const move = { t: 0 };
+      gsap.to(move, {
+        t: 1,
+        duration,
+        ease: "power1.inOut",
+        onUpdate: () => {
+          const p = path.getPointAtLength(move.t * len);
+          dot.setAttribute("cx", p.x);
+          dot.setAttribute("cy", p.y);
+        },
+        onComplete: () => dot.remove()
+      });
+    }
+
+    function resetMatrixVisuals() {
+      matrixRows.forEach((row) => {
+        gsap.set(row.cells, { fill: "rgba(62, 208, 240, 0.15)", strokeWidth: 0.5 });
+        gsap.set(row.group, { opacity: 0.08 });
+      });
+      weightedRows.forEach((row) => {
+        gsap.set(row.cells, { fill: "rgba(255, 165, 0, 0.10)", strokeWidth: 0.5 });
+        gsap.set(row.group, { opacity: 0.08, y: 0, scaleX: 1, transformOrigin: "0px 0px" });
+      });
+      gsap.set(weightedRowsGroup, { x: 0, y: 0, scaleX: 1, scaleY: 1, rotation: 0, transformOrigin: "48px 122px" });
+      gsap.set(weightedCopyGroup, { opacity: 0 });
+      gsap.set(beamElements, { opacity: 0, strokeWidth: 1 });
+      gsap.set(alphaCellElements, { opacity: 0, fill: "rgba(255, 165, 0, 0.16)" });
+      gsap.set(alphaVectorGroup, { opacity: 0 });
+      alphaVectorGroup.setAttribute("transform", alphaMidTransform);
+      gsap.set(ciSummaryCells, { fill: "rgba(255, 165, 0, 0.16)" });
+      gsap.set(siSummaryCells, { fill: "rgba(176, 245, 128, 0.16)" });
+    }
+
+    function deriveContextComponents(weights) {
+      const basis = [
+        [0.90, 0.20, 0.10, 0.35],
+        [0.75, 0.80, 0.20, 0.15],
+        [0.15, 0.85, 0.35, 0.25],
+        [0.10, 0.30, 0.90, 0.20],
+        [0.20, 0.25, 0.80, 0.75],
+        [0.15, 0.35, 0.25, 0.90],
+        [0.70, 0.20, 0.15, 0.85],
+        [0.30, 0.60, 0.20, 0.70],
+        [0.25, 0.45, 0.50, 0.95]
+      ];
+      const out = [0, 0, 0, 0];
+      weights.forEach((w, j) => {
+        for (let d = 0; d < 4; d++) out[d] += w * basis[j][d];
+      });
+      const m = Math.max(...out, 1e-6);
+      return out.map((v) => v / m);
+    }
+
+    function deriveDecoderStateComponents(stepIdx, weights) {
+      const ci = deriveContextComponents(weights);
+      const out = [];
+      for (let d = 0; d < siDim; d++) {
+        const k = d % 4;
+        const blend = 0.18 + 0.03 * (d % 5);
+        const carry = 0.10 + 0.01 * ((d + stepIdx) % 6);
+        out.push(blend * ci[k] + 0.22 * ci[(k + 1) % 4] + carry * (stepIdx + 1));
+      }
+      const m = Math.max(...out, 1e-6);
+      return out.map((v) => v / m);
+    }
+
+    function animateSiUpdate(stepIdx, weights) {
+      const si = deriveDecoderStateComponents(stepIdx, weights);
+      // Show decoder hidden-state update as a direct decoder -> s_i transition.
+      createComet(720, portY, stateSource.x, stateSource.y, "var(--decoder)", 0.2, false, { width: 2.1 });
+      gsap.to("#si-vector", { scale: 1.08, duration: 0.12, yoyo: true, repeat: 1, transformOrigin: "13px 112px" });
+      siSummaryCells.forEach((cell, d) => {
+        gsap.to(cell, {
+          fill: `rgba(176, 245, 128, ${0.15 + si[d] * 0.85})`,
+          duration: 0.18,
+          delay: d * 0.012
+        });
+      });
+    }
+
+    function showAttentionWeights(weights) {
+      gsap.to("#state-to-alpha, #feedback-loop", { opacity: 0.82, duration: 0.12 });
+      gsap.killTweensOf(weightedRowsGroup);
+      gsap.set(weightedRowsGroup, { x: 0, y: 0, scaleX: 1, scaleY: 1, rotation: 0, transformOrigin: "48px 122px" });
+      weightedRows.forEach((row) => gsap.set(row.group, { y: 0 }));
+      gsap.set(weightedCopyGroup, { opacity: 0 });
+      alphaVectorGroup.setAttribute("transform", alphaMidTransform);
+      gsap.to(alphaVectorGroup, { opacity: 1, duration: 0.14 });
+      gsap.set(alphaCellElements, { opacity: 0, fill: "rgba(255, 165, 0, 0.16)" });
+      gsap.set(beamElements, { opacity: 0, strokeWidth: 1 });
+      matrixRows.forEach((row, j) => {
+        const w = weights[j];
+        const delay = j * 55;
+        setTimeout(() => {
+          createComet(stateSource.x, stateSource.y, alphaInput.x, matrixYTop + j * 28 + 11, "#ffffff", 0.16, false, { width: 1.8 });
+          gsap.to(alphaCellElements[j], {
+            opacity: 1,
+            fill: `rgba(255, 165, 0, ${0.08 + w * 0.92})`,
+            duration: 0.14
+          });
+        }, delay);
+      });
+      gsap.to("#attention-system", { scale: 1.03, transformOrigin: "492px 167.5px", duration: 0.12, yoyo: true, repeat: 1 });
+    }
+
+    function animateStateToAlpha() {
+      gsap.to("#attention-system, #ci-to-dec", { opacity: 1, duration: 0.2 });
+      gsap.to("#si-vector", { scale: 1.04, duration: 0.12, yoyo: true, repeat: 1, transformOrigin: "13px 112px" });
+    }
+
+    function animateWeightedCopyAndSum(weights) {
+      gsap.to("#state-to-alpha, #feedback-loop", { opacity: 0, duration: 0.14 });
+      gsap.killTweensOf(weightedRowsGroup);
+      gsap.set(weightedRowsGroup, { x: 0, y: 0, scaleX: 1, scaleY: 1, rotation: 0, transformOrigin: "48px 122px" });
+      weightedRows.forEach((row) => {
+        gsap.set(row.group, { opacity: 0.08, y: 0 });
+        gsap.set(row.cells, { fill: "rgba(255, 165, 0, 0.10)", strokeWidth: 0.5 });
+      });
+      gsap.to(alphaVectorGroup, {
+        attr: { transform: alphaOverHTransform },
+        duration: 0.24,
+        ease: "power1.inOut"
+      });
+      gsap.to(alphaVectorGroup, { opacity: 0, duration: 0.18, delay: 0.24 });
+      gsap.to(weightedCopyGroup, { opacity: 1, duration: 0.16, delay: 0.46 });
+      weights.forEach((w, j) => {
+        const hRow = matrixRows[j];
+        const wRow = weightedRows[j];
+        const delay = 460 + j * 100;
+        setTimeout(() => {
+          gsap.to(alphaCellElements[j], { opacity: 1, duration: 0.1 });
+          gsap.to(hRow.cells, {
+            fill: `rgba(62, 208, 240, ${0.20 + w * 0.80})`,
+            strokeWidth: 0.6 + w * 1.6,
+            duration: 0.12
+          });
+          createComet(hRow.cx, hRow.cy, wRow.cx, wRow.cy, "var(--attention)", 0.2, false, {
+            width: 0.8 + 4.8 * w,
+            opacity: 0.25 + 0.65 * w
+          });
+          gsap.to(wRow.group, { opacity: 1, duration: 0.15 });
+          gsap.to(wRow.cells, {
+            fill: `rgba(255, 165, 0, ${0.22 + w * 0.78})`,
+            strokeWidth: 1.0,
+            duration: 0.15
+          });
+        }, delay);
+      });
+
+      const ci = deriveContextComponents(weights);
+      const foldStart = 460 + weights.length * 100 + 40;
+      const middleIdx = Math.floor(weights.length / 2);
+      const middleY = middleIdx * 28;
+      const middleCy = matrixYTop + middleY + 11;
+
+      setTimeout(() => {
+        weightedRows.forEach((row, j) => {
+          gsap.to(row.group, {
+            y: middleY - j * 28,
+            duration: 0.22,
+            ease: "power2.inOut"
+          });
+        });
+      }, foldStart - 80);
+
+      weights.forEach((w, j) => {
+        const row = weightedRows[j];
+        setTimeout(() => {
+          createComet(row.cx, middleCy, ciX, contextY, "var(--attention)", 0.24, false, {
+            width: 0.8 + 5.2 * w,
+            opacity: 0.20 + 0.75 * w
+          });
+        }, foldStart + j * 40);
+      });
+
+      setTimeout(() => {
+        ciSummaryCells.forEach((cell, d) => {
+          gsap.to(cell, { fill: `rgba(255, 165, 0, ${0.12 + ci[d] * 0.88})`, duration: 0.26 });
+        });
+        gsap.to("#ci-vector", { scale: 1.08, duration: 0.12, yoyo: true, repeat: 1, transformOrigin: "13px 28px" });
+        gsap.to(weightedCopyGroup, { opacity: 0, duration: 0.18, delay: 0.05 });
+        gsap.to(alphaCellElements, { opacity: 0, duration: 0.18, delay: 0.05 });
+        weightedRows.forEach((row) => gsap.to(row.group, { y: 0, duration: 0.01, delay: 0.12 }));
+        gsap.to(weightedRowsGroup, { x: 0, y: 0, scaleX: 1, scaleY: 1, rotation: 0, duration: 0.01, delay: 0.12, transformOrigin: "48px 122px" });
+      }, foldStart + weights.length * 40 + 40);
+    }
+
+    let currentStep = 0;
+    let isPlaying = false;
+    let timer = null;
+
+    let activeWeights = attnWeights[0];
+    const timeline = [];
+    timeline.push({
+      caption: "Bahdanau setup: a bidirectional encoder forms annotations, stored as <b>H = [h1, ... , hS]</b>."
+    });
+
+    timeline.push({
+      caption: "Bidirectional sweep over input words, then encoder annotations are written to <b>H</b> row-by-row in one pass.",
+      action: () => {
+        inputTokenElements.forEach((tok, i) => {
+          const sweepDelay = i * 45;
+          const dy = i % 2 === 0 ? -6 : 6;
+          setTimeout(() => {
+            gsap.to(tok.group, { opacity: 1, duration: 0.1 });
+            gsap.to(tok.group, { y: dy, duration: 0.12, yoyo: true, repeat: 1, ease: "power1.inOut" });
+          }, sweepDelay);
+        });
+
+        const fillStart = inputTokenElements.length * 45 + 60;
+        inputTokenElements.forEach((tok, i) => {
+          const row = matrixRows[i];
+          const writeDelay = fillStart + i * 85;
+          setTimeout(() => {
+            gsap.to(tok.rect, { strokeWidth: 1.8, duration: 0.12, yoyo: true, repeat: 1 });
+            createComet(tok.x + 37, tok.y, encoderCore.xIn, encoderCore.yMid, "var(--encoder)", 0.12);
+            setTimeout(() => {
+              createComet(encoderCore.xOut, encoderCore.yMid, row.cx, row.cy, "var(--encoder)", 0.12);
+              gsap.to(row.group, { opacity: 1, duration: 0.1 });
+              gsap.to(row.cells, { fill: "rgba(62, 208, 240, 0.88)", duration: 0.12, stagger: 0.015 });
+            }, 55);
+          }, writeDelay);
+        });
+      }
+    });
+
+    outputTokens.forEach((token, i) => {
+      timeline.push({
+        caption: i === 0
+          ? "Decoder starts with <b>&lt;sos&gt;</b> and computes alignment scores against all rows of <b>H</b>."
+          : `State <b>s${i}</b> is conditioned on previous output <b>${outputTokens[i - 1]}</b> for step ${i + 1}.`,
+        action: () => {
+          gsap.to("#si-vector", { scale: 1.08, duration: 0.12, yoyo: true, repeat: 1, transformOrigin: "13px 112px" });
+          setTimeout(animateStateToAlpha, 60);
+        }
+      });
+
+      timeline.push({
+        caption: `Attention weights <b>alpha(t,j)</b> change for "${token}": brighter/thicker beams mean larger weight.`,
+        action: () => {
+          const weights = attnWeights[i];
+          activeWeights = weights;
+          showAttentionWeights(weights);
+        }
+      });
+
+      timeline.push({
+        caption: `Create a weighted copy <b>(alpha ⊙ H)</b>, then sum its rows to form <b>c${i + 1}</b>; the weighted copy vanishes after aggregation.`,
+        action: () => {
+          const out = outputTokenElements[i];
+          animateWeightedCopyAndSum(activeWeights);
+          const aggregateDoneMs = 460 + activeWeights.length * 100 + 40 + activeWeights.length * 40 + 40;
+          setTimeout(() => createComet(ciX, contextY, 640, portY, "var(--attention)", 0.24), aggregateDoneMs + 40);
+          setTimeout(() => {
+            gsap.to(out.group, { opacity: 1, duration: 0.28 });
+            gsap.to("#decoder-block", { scale: 1.02, transformOrigin: "680px 170px", duration: 0.12, yoyo: true, repeat: 1 });
+            gsap.to(siVectorGroup, { opacity: 1, duration: 0.2 });
+            animateSiUpdate(i, activeWeights);
+          }, aggregateDoneMs + 180);
+        }
+      });
+    });
+
+    function runStep() {
+      if (currentStep >= timeline.length) {
+        if (isPlaying) {
+          clearInterval(timer);
+          isPlaying = false;
+          document.getElementById("play-pause").textContent = "Play";
+        }
+        return;
+      }
+      const step = timeline[currentStep];
+      caption.innerHTML = step.caption;
+      if (step.action) step.action();
+      currentStep += 1;
+    }
+
+    function reset() {
+      currentStep = 0;
+      isPlaying = false;
+      clearInterval(timer);
+      document.getElementById("play-pause").textContent = "Play";
+      syncStatePaths();
+      gsap.set(inputTokenElements.map((e) => e.group), { opacity: 0.45, y: 0 });
+      gsap.set(outputTokenElements.map((e) => e.group), { opacity: 0 });
+      resetMatrixVisuals();
+      gsap.set("#feedback-loop", { opacity: 0 });
+      gsap.set("#attention-system, #state-to-alpha, #ci-to-dec", { opacity: 0 });
+      gsap.set("#decoder-block, #attention-system, #ci-vector, #si-vector", { scale: 1 });
+      gsap.set("#si-vector", { opacity: 1 });
+      caption.innerHTML = "Step through to watch hidden states accumulate in <b>H</b>, attention weights <b>alpha_i</b> over source positions, and weighted-sum context <b>c_i</b> each decoding step.";
+    }
+
+    document.getElementById("step").addEventListener("click", () => {
+      if (isPlaying) {
+        clearInterval(timer);
+        isPlaying = false;
+        document.getElementById("play-pause").textContent = "Play";
+      }
+      runStep();
+    });
+
+    document.getElementById("play-pause").addEventListener("click", () => {
+      if (isPlaying) {
+        clearInterval(timer);
+        isPlaying = false;
+        document.getElementById("play-pause").textContent = "Play";
+      } else {
+        isPlaying = true;
+        document.getElementById("play-pause").textContent = "Pause";
+        runStep();
+        timer = setInterval(runStep, 1400);
+      }
+    });
+
+    document.getElementById("reset").addEventListener("click", reset);
+    syncStatePaths();
+    reset();
+  </script>
+</body>
+</html>
