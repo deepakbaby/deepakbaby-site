@@ -87,11 +87,6 @@
     .comet { stroke-linecap: round; fill: none; }
     .feedback-path { stroke: var(--line); stroke-dasharray: 4 4; fill: none; opacity: 0.3; }
     .attn-line { stroke: var(--attention); fill: none; opacity: 0; }
-    .state-node {
-      fill: rgba(255, 255, 255, 0.07);
-      stroke: rgba(255, 255, 255, 0.45);
-      stroke-width: 1.2;
-    }
   </style>
 </head>
 <body>
@@ -140,14 +135,8 @@
         <g id="encoder-tokens"></g>
         <g id="decoder-tokens"></g>
 
-        <!-- Previous decoder state into alignment model -->
-        <g id="state-node" transform="translate(680, 42)" opacity="0">
-          <circle r="16" class="state-node" />
-          <text y="4" class="math-text" fill="var(--decoder)" text-anchor="middle" font-size="13">
-            <tspan font-style="italic">s</tspan><tspan baseline-shift="sub" font-size="9">i-1</tspan>
-          </text>
-        </g>
-        <path id="state-to-alpha" d="M 664 42 Q 590 66 502 150" stroke="var(--line)" stroke-width="1.5" fill="none" marker-end="url(#arrow-head)" opacity="0" />
+        <!-- Previous decoder state source into alignment model -->
+        <path id="state-to-alpha" d="M 737 277 V 315 H 492 V 291" stroke="var(--line)" stroke-width="1.5" fill="none" marker-end="url(#arrow-head)" opacity="0" />
 
         <!-- Beams (Static container) -->
         <g id="attn-beams"></g>
@@ -159,9 +148,13 @@
 
         <!-- Paths -->
         <path id="ci-to-dec" d="M 558 167.5 L 640 167.5" stroke="var(--line)" stroke-width="2" fill="none" marker-end="url(#arrow-head)" opacity="0" />
+        <g id="si-vector" transform="translate(724, 55)" opacity="1">
+          <text x="13" y="-12" class="math-text" fill="var(--decoder)" text-anchor="middle">sᵢ</text>
+          <g id="si-cells"></g>
+        </g>
         
         <!-- Feedback Path -->
-        <path id="feedback-loop" class="feedback-path" d="M 810 75 C 810 35, 760 28, 680 42" />
+        <path id="feedback-loop" class="feedback-path" d="M 810 75 C 810 35, 788 138, 737 167.5" />
 
         <defs>
           <marker id="arrow-head" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
@@ -173,7 +166,7 @@
       <div class="caption" id="caption">
         The encoder processes input to build a **Memory Matrix (H)** of hidden states.
       </div>
-      <div class="note">Illustrative weights; mechanism follows Bahdanau attention equations.</div>
+      <div class="note">Illustrative weights and word-level labels for readability; in practice both inputs and outputs are tokenized sequences.</div>
     </div>
   </div>
 
@@ -203,6 +196,8 @@
     const alphaVectorGroup = document.getElementById("alpha-vector");
     const weightedCopyGroup = document.getElementById("weighted-copy");
     const weightedRowsGroup = document.getElementById("weighted-rows");
+    const siVectorGroup = document.getElementById("si-vector");
+    const siCellsGroup = document.getElementById("si-cells");
 
     const encoderCore = { xIn: 165, yMid: 170, xOut: 245 };
     const matrixXLeft = 280;
@@ -210,7 +205,11 @@
     const ciX = 548;
     const contextY = 167.5;
     const portY = 167.5;
-    const stateNode = { x: 680, y: 42 };
+    const stateSource = { x: 737, y: 167.5 };
+    const statePathStart = { x: 737, y: 277 };
+    const statePathLowerY = 315;
+    const alphaBottom = { x: 492, y: 291 };
+    const siDim = 14;
     const alphaInput = { x: 492, y: 167.5 };
     const alphaMidTransform = "translate(480,45)";
     const alphaOverHTransform = "translate(332,45)";
@@ -224,10 +223,8 @@
     function syncStatePaths() {
       const stateToAlpha = document.getElementById("state-to-alpha");
       const feedbackLoop = document.getElementById("feedback-loop");
-      const stateNodeEl = document.getElementById("state-node");
-      if (stateNodeEl) stateNodeEl.setAttribute("transform", `translate(${stateNode.x}, ${stateNode.y})`);
-      if (stateToAlpha) stateToAlpha.setAttribute("d", `M ${stateNode.x - 16} ${stateNode.y} Q ${stateNode.x - 90} ${stateNode.y + 24} 502 150`);
-      if (feedbackLoop) feedbackLoop.setAttribute("d", `M 810 75 C 810 35, ${stateNode.x + 80} 18, ${stateNode.x} ${stateNode.y}`);
+      if (stateToAlpha) stateToAlpha.setAttribute("d", `M ${statePathStart.x} ${statePathStart.y} V ${statePathLowerY} H ${alphaBottom.x} V ${alphaBottom.y}`);
+      if (feedbackLoop) feedbackLoop.setAttribute("d", `M 810 75 C 810 35, 788 138, ${stateSource.x} ${stateSource.y}`);
     }
 
     const inputTokenElements = [];
@@ -326,6 +323,17 @@
       ciSummaryCells.push(cell);
     }
 
+    const siSummaryCells = [];
+    for (let d = 0; d < siDim; d++) {
+      const y = d * 16;
+      const cell = svgEl("rect", {
+        x: 0, y, width: 26, height: 14, rx: 2,
+        fill: "rgba(176, 245, 128, 0.16)", stroke: "var(--decoder)", "stroke-width": 0.7
+      });
+      siCellsGroup.appendChild(cell);
+      siSummaryCells.push(cell);
+    }
+
     const outputTokenElements = [];
     outputTokens.forEach((token, i) => {
       const y = 45 + i * 38;
@@ -397,6 +405,7 @@
       gsap.set(alphaVectorGroup, { opacity: 0 });
       alphaVectorGroup.setAttribute("transform", alphaMidTransform);
       gsap.set(ciSummaryCells, { fill: "rgba(255, 165, 0, 0.16)" });
+      gsap.set(siSummaryCells, { fill: "rgba(176, 245, 128, 0.16)" });
     }
 
     function deriveContextComponents(weights) {
@@ -419,6 +428,33 @@
       return out.map((v) => v / m);
     }
 
+    function deriveDecoderStateComponents(stepIdx, weights) {
+      const ci = deriveContextComponents(weights);
+      const out = [];
+      for (let d = 0; d < siDim; d++) {
+        const k = d % 4;
+        const blend = 0.18 + 0.03 * (d % 5);
+        const carry = 0.10 + 0.01 * ((d + stepIdx) % 6);
+        out.push(blend * ci[k] + 0.22 * ci[(k + 1) % 4] + carry * (stepIdx + 1));
+      }
+      const m = Math.max(...out, 1e-6);
+      return out.map((v) => v / m);
+    }
+
+    function animateSiUpdate(stepIdx, weights) {
+      const si = deriveDecoderStateComponents(stepIdx, weights);
+      // Show decoder hidden-state update as a direct decoder -> s_i transition.
+      createComet(720, portY, stateSource.x, stateSource.y, "var(--decoder)", 0.2, false, { width: 2.1 });
+      gsap.to("#si-vector", { scale: 1.08, duration: 0.12, yoyo: true, repeat: 1, transformOrigin: "13px 112px" });
+      siSummaryCells.forEach((cell, d) => {
+        gsap.to(cell, {
+          fill: `rgba(176, 245, 128, ${0.15 + si[d] * 0.85})`,
+          duration: 0.18,
+          delay: d * 0.012
+        });
+      });
+    }
+
     function showAttentionWeights(weights) {
       gsap.to("#state-to-alpha, #feedback-loop", { opacity: 0.82, duration: 0.12 });
       gsap.killTweensOf(weightedRowsGroup);
@@ -433,7 +469,7 @@
         const w = weights[j];
         const delay = j * 55;
         setTimeout(() => {
-          createComet(stateNode.x, stateNode.y, alphaInput.x, matrixYTop + j * 28 + 11, "#ffffff", 0.16, false, { width: 1.8 });
+          createComet(stateSource.x, stateSource.y, alphaInput.x, matrixYTop + j * 28 + 11, "#ffffff", 0.16, false, { width: 1.8 });
           gsap.to(alphaCellElements[j], {
             opacity: 1,
             fill: `rgba(255, 165, 0, ${0.08 + w * 0.92})`,
@@ -445,10 +481,8 @@
     }
 
     function animateStateToAlpha() {
-      gsap.to("#state-node, #attention-system, #state-to-alpha, #ci-to-dec", { opacity: 1, duration: 0.2 });
-      gsap.to("#feedback-loop", { opacity: 0.82, duration: 0.12 });
-      createComet(stateNode.x, stateNode.y, alphaInput.x, alphaInput.y, "#ffffff", 0.2, false, { width: 2.2 });
-      gsap.to("#state-node", { scale: 1.14, duration: 0.12, yoyo: true, repeat: 1, transformOrigin: "0px 0px" });
+      gsap.to("#attention-system, #ci-to-dec", { opacity: 1, duration: 0.2 });
+      gsap.to("#si-vector", { scale: 1.04, duration: 0.12, yoyo: true, repeat: 1, transformOrigin: "13px 112px" });
     }
 
     function animateWeightedCopyAndSum(weights) {
@@ -573,7 +607,7 @@
           ? "Decoder starts with <b>&lt;sos&gt;</b> and computes alignment scores against all rows of <b>H</b>."
           : `State <b>s${i}</b> is conditioned on previous output <b>${outputTokens[i - 1]}</b> for step ${i + 1}.`,
         action: () => {
-          gsap.to("#state-node", { scale: 1.2, duration: 0.12, yoyo: true, repeat: 1, transformOrigin: "0px 0px" });
+          gsap.to("#si-vector", { scale: 1.08, duration: 0.12, yoyo: true, repeat: 1, transformOrigin: "13px 112px" });
           setTimeout(animateStateToAlpha, 60);
         }
       });
@@ -597,13 +631,9 @@
           setTimeout(() => {
             gsap.to(out.group, { opacity: 1, duration: 0.28 });
             gsap.to("#decoder-block", { scale: 1.02, transformOrigin: "680px 170px", duration: 0.12, yoyo: true, repeat: 1 });
+            gsap.to(siVectorGroup, { opacity: 1, duration: 0.2 });
+            animateSiUpdate(i, activeWeights);
           }, aggregateDoneMs + 180);
-          if (i < outputTokens.length - 1) {
-            setTimeout(() => {
-              createComet(out.x, out.y, stateNode.x, stateNode.y, "var(--decoder)", 0.34, true);
-              gsap.to("#state-node", { scale: 1.2, duration: 0.12, yoyo: true, repeat: 1, transformOrigin: "0px 0px" });
-            }, aggregateDoneMs + 340);
-          }
         }
       });
     });
@@ -633,8 +663,9 @@
       gsap.set(outputTokenElements.map((e) => e.group), { opacity: 0 });
       resetMatrixVisuals();
       gsap.set("#feedback-loop", { opacity: 0 });
-      gsap.set("#state-node, #attention-system, #state-to-alpha, #ci-to-dec", { opacity: 0 });
-      gsap.set("#decoder-block, #attention-system, #state-node, #ci-vector", { scale: 1 });
+      gsap.set("#attention-system, #state-to-alpha, #ci-to-dec", { opacity: 0 });
+      gsap.set("#decoder-block, #attention-system, #ci-vector, #si-vector", { scale: 1 });
+      gsap.set("#si-vector", { opacity: 1 });
       caption.innerHTML = "Step through to watch hidden states accumulate in <b>H</b>, attention weights <b>alpha_i</b> over source positions, and weighted-sum context <b>c_i</b> each decoding step.";
     }
 

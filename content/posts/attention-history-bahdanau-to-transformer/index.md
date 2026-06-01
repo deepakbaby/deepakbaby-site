@@ -1,6 +1,6 @@
 ---
 title: "Attention Mechanisms, Part 1: From Seq2Seq to Learned Alignment"
-date: 2026-05-09
+date: 2026-06-01
 draft: false
 hero: hero.png
 tags: ["deep learning", "attention", "sequence-to-sequence", "machine translation"]
@@ -8,13 +8,13 @@ categories: ["Machine Learning"]
 description: "Part 1 of a series on attention mechanisms: the move from fixed-vector seq2seq models to Bahdanau and Luong attention, and the rapid spread of attention across translation, captioning, speech, and QA."
 ---
 
-Most of the interesting things we ask neural networks to do look the same from a distance: take a sequence in, produce a sequence out. Translate an English sentence into French -> sequence of English words in,  a sequence of French words out. Caption an image or transcribe a recording of speech -> sequence of pixels/recording-samples to a sequence of words. Summarize a paragraph or answer a question grounded in a story -> words in, words out.
+Most of the interesting things we ask neural networks to do look the same from a distance: take a sequence in, generate a sequence out. Translate an English sentence into French -> sequence of English words in,  a sequence of French words out. Caption an image or transcribe a recording of speech -> sequence of pixels/recording-samples to a sequence of words. Summarize a paragraph or answer a question grounded in a story -> words in, words out.
 
 Researchers call this family of tasks **sequence-to-sequence** (or *seq2seq*) problems. The main challenge of solving a seq2seq problem is that the two sequences rarely match up neatly: a three-word English phrase might need seven words in French, a few seconds of audio collapse into a short sentence, and a paragraph shrinks to a one-line summary. The lengths differ, and so does the order. So the model has to figure out, on its own, which parts of the input are responsible for which parts of the output; which French word is really standing in for which English one. That correspondence between pieces of the input and pieces of the output is what we'll call **alignment**, and getting it right turns out to be the heart of the whole problem.
 
 Modern large language models sit squarely in the same frame; a prompt goes in, a continuation comes out, one token at a time. The input might be words, pixels, or audio frames; the output is almost always a sequence of tokens that has its own length, its own ordering, and only a loose, learned correspondence to the input. By the early 2010s, researchers had started asking whether one general neural architecture could learn all of these mappings end to end; without language-specific rules, hand-built pipelines, or modality-specific tricks. The answer, and the mechanism that made it work; and that still powers today's LLMs; is what this post is about: **attention**.
 
-This is the first post in a planned series on attention. It covers the 2014–2016 arc: from RNN encoder-decoder models, through learned soft alignment, to attention spreading across translation, image captioning, speech recognition, and question answering. Later posts will follow the story further as attention runs into new bottlenecks; approximate variants, IO-aware kernels, and inference-time tricks; but each post is meant to stand on its own.
+This is the first post in a planned series on attention. This post covers the 2014–2016 arc: from RNN encoder-decoder models, through learned soft alignment, to attention spreading across translation, image captioning, speech recognition, and question answering. Later posts will follow the story further as attention runs into new bottlenecks; approximate variants, IO-aware kernels, and inference-time tricks; but each post is meant to stand on its own.
 
 {{< vs 2>}}
 
@@ -30,11 +30,11 @@ This pipeline produced the dominant systems of the 2000s and early 2010s. But ea
 
 In 2014, two papers reframed translation as a single end-to-end neural problem. [Cho et al.](https://arxiv.org/abs/1406.1078) introduced the **encoder-decoder** framing using GRUs, and [Sutskever, Vinyals, and Le](https://arxiv.org/abs/1409.3215) showed it could match strong phrase-based systems on WMT'14 English-French using deep LSTMs.
 
-The recipe was strikingly simple. An encoder RNN reads the source sentence one token at a time and updates a hidden state:
+The recipe was strikingly simple. An encoder RNN reads the input sentence one token at a time and updates a hidden state:
 
 $$h_t = f_{\text{enc}}(h_{t-1}, x_t)$$
 
-After the last source token, the final hidden state $h_S$ is treated as a fixed-size **context vector** $c$ that summarizes the source. A decoder RNN then generates the target sentence one token at a time, conditioned on $c$ and its own previous outputs:
+After the last source token, the final hidden state $h_S$ is treated as a fixed-size **context vector** $c$ that summarizes the whole input sentence. A decoder RNN then generates the target sentence one token at a time, conditioned on $c$ and its own previous outputs:
 
 $$s_t = f_{\text{dec}}(s_{t-1}, y_{t-1}, c), \quad p(y_t \mid y_{<t}, x) = \text{softmax}(W s_t)$$
 
@@ -67,7 +67,11 @@ For the short sentence, a single vector can plausibly carry the core meaning. Fo
 
 Long-sentence translation errors were not just a data problem. They followed from the architecture. The decoder had no mechanism for saying, "while generating this French word, look specifically at that English phrase."
 
-[Bahdanau attention](https://arxiv.org/abs/1409.0473) fixed the bottleneck by changing the decoder's job. Instead of decoding from one source summary, the encoder produces a high-resolution **Memory Matrix ($H$)** containing context-aware vectors for every source token. The decoder then computes a fresh **context vector $c_i$** for each output step $i$ by querying this matrix.
+## Bahdanau Attention: Learned Soft Alignment
+
+[Bahdanau, Cho, and Bengio](https://arxiv.org/abs/1409.0473) is the pioneering work that introduced attention as we know it, and it remains the conceptual foundation for the attention-based models that dominate machine learning today; the same soft, learned alignment it proposed still runs at the heart of modern Transformers and large language models.
+
+Their fix attacked the bottleneck by changing the decoder's job. Instead of decoding from one source summary, the encoder produces a high-resolution **Memory Matrix ($H$)** containing context-aware vectors for every source token. The decoder then computes a fresh **context vector $c_i$** for each output step $i$ by querying this matrix.
 
 The encoder is a bidirectional GRU, so each source token gets its own annotation:
 
