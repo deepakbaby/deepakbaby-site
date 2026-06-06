@@ -1,6 +1,6 @@
 ---
 title: "AI Weekly: Anthropic Files for IPO, Gemma 4 Runs on 16GB Laptops"
-date: 2026-06-07
+date: 2026-06-06
 week_start: "2026-06-01"
 week_end: "2026-06-07"
 draft: false
