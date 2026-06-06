@@ -286,7 +286,7 @@ The pattern is already visible: Bahdanau removed the fixed-vector bottleneck but
 
 ## What Comes Next
 
-The next paper in the timeline made a stronger claim. Instead of adding a better attention module to an RNN, it removed recurrence entirely. That paper is "Attention Is All You Need"; one of the most cited papers in modern machine learning and the architecture behind nearly every large model since. It is the subject of the next post in this series.
+The next paper in the timeline made a stronger claim. Instead of adding a better attention module to an RNN, it removed recurrence entirely. That paper is "Attention Is All You Need"; one of the most cited papers in modern machine learning and the architecture behind nearly every large model since. It is the subject of [Part 2 of this series](/posts/attention-is-all-you-need/).
 
 ## References
 
