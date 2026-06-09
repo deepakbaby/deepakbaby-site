@@ -4,18 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sinusoidal positional encoding</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0a0a0a;
-      --panel: #141414;
-      --border: #2a2a2a;
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --active: #3b82f6;
-      --hot: #f59e0b;
-      --green: #10b981;
-      --purple: #a78bfa;
-      --pink: #ec4899;
+      --bg: #1c1c1c;
+      --panel: #232323;
+      --border: rgba(255,255,255,0.12);
+      --text: #ffffff;
+      --muted: #d0d0d0;
+      --active: #3ed0f0;
+      --hot: #ffa500;
+      --green: #b0f580;
+      --purple: #ff60ad;
+      --pink: #ff60ad;
     }
     * { box-sizing: border-box; }
     body {
@@ -23,67 +26,67 @@
       width: 100vw;
       height: 100vh;
       overflow: hidden;
-      background:
-        radial-gradient(circle at 12% 8%, rgba(59,130,246,0.18), transparent 30%),
-        radial-gradient(circle at 88% 12%, rgba(245,158,11,0.16), transparent 32%),
-        var(--bg);
+      background: var(--bg);
       color: var(--text);
-      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: 'Crimson Pro', serif;
     }
     .app { height: 100vh; padding: 16px; display: grid; grid-template-rows: auto auto 1fr auto; gap: 12px; }
     header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
-    h1 { margin: 0; font-size: clamp(17px, 2vw, 25px); letter-spacing: -0.03em; font-weight: 760; }
-    .subtitle { margin-top: 5px; color: var(--muted); font-size: 13px; max-width: 760px; line-height: 1.5; }
+    h1 { margin: 0; font-size: clamp(17px, 2vw, 25px); letter-spacing: -0.01em; font-weight: 700; }
+    .subtitle { margin-top: 5px; color: var(--muted); font-size: 14px; max-width: 760px; line-height: 1.5; }
     .controls { display: flex; gap: 14px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
     .ctl { display: flex; flex-direction: column; gap: 3px; }
-    .ctl label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 700; }
+    .ctl label { font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 700; }
     .ctl .val { color: var(--hot); }
     input[type=range] { width: 130px; accent-color: var(--hot); cursor: pointer; }
     button {
-      border: 1px solid rgba(255,255,255,0.14);
-      background: rgba(255,255,255,0.08);
-      color: var(--text);
-      border-radius: 999px;
-      padding: 8px 13px;
+      border: 1px solid rgba(255,255,255,0.4);
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      border-radius: 6px;
+      padding: 8px 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
       font-weight: 700;
       cursor: pointer;
+      transition: all 0.2s ease;
     }
-    button:hover { background: rgba(255,255,255,0.14); }
+    button:hover { background: rgba(255,255,255,0.25); }
 
     .stage { min-height: 0; display: grid; grid-template-columns: 1.25fr 1fr; gap: 12px; }
     .card {
-      background: linear-gradient(180deg, rgba(20,20,20,0.94), rgba(12,12,12,0.96));
+      background: var(--panel);
       border: 1px solid var(--border);
-      border-radius: 16px;
+      border-radius: 12px;
       padding: 14px;
       min-height: 0;
       display: flex;
       flex-direction: column;
       overflow: hidden;
     }
-    .card h2 { margin: 0 0 2px; font-size: 14px; letter-spacing: -0.01em; }
-    .card .hint { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+    .card h2 { margin: 0 0 2px; font-family: 'Crimson Pro', serif; font-style: italic; font-weight: 700; font-size: 17px; }
+    .card .hint { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
     .heatwrap { position: relative; flex: 1; min-height: 0; }
     canvas { display: block; width: 100%; height: 100%; border-radius: 10px; }
-    .axislabel { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .axislabel { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
 
     .right { display: grid; grid-template-rows: 1fr 1fr; gap: 12px; min-height: 0; }
     .readout { display: flex; flex-direction: column; gap: 6px; min-height: 0; }
     .readhead { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
     .chip {
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-family: 'JetBrains Mono', monospace;
       font-size: 11px; padding: 2px 8px; border-radius: 999px;
-      background: rgba(245,158,11,0.16); color: #fde68a; font-weight: 700;
+      background: rgba(255,165,0,0.16); color: #ffd591; font-weight: 700;
     }
-    .chip.blue { background: rgba(59,130,246,0.18); color: #bfdbfe; }
-    .note { font-size: 12px; color: #cbd5e1; line-height: 1.5; margin: 0; }
+    .chip.blue { background: rgba(62,208,240,0.18); color: #aeeafb; }
+    .note { font-size: 14px; color: #ececec; line-height: 1.5; margin: 0; }
     .eq {
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 11.5px; color: #fcd34d; background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 7px 9px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px; color: var(--hot); background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 7px 9px;
     }
     .minicanvas { flex: 1; min-height: 0; }
-    .legend { color: var(--muted); font-size: 12px; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+    .legend { color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
     .swatch { display: inline-flex; align-items: center; gap: 6px; }
     .box { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
 
@@ -120,10 +123,10 @@
 
     <div class="legend">
       <span class="axislabel">Value</span>
-      <span class="swatch"><span class="box" style="background:#3b82f6"></span>−1</span>
-      <span class="swatch"><span class="box" style="background:#15171c"></span>0</span>
-      <span class="swatch"><span class="box" style="background:#f59e0b"></span>+1</span>
-      <span style="color:#64748b">PE(pos, 2i) = sin(pos / 10000^(2i/d)) &nbsp;·&nbsp; PE(pos, 2i+1) = cos(pos / 10000^(2i/d))</span>
+      <span class="swatch"><span class="box" style="background:#3ed0f0"></span>−1</span>
+      <span class="swatch"><span class="box" style="background:#1c1c1c;border:1px solid rgba(255,255,255,0.2)"></span>0</span>
+      <span class="swatch"><span class="box" style="background:#ffa500"></span>+1</span>
+      <span style="color:#9a9a9a">PE(pos, 2i) = sin(pos / 10000^(2i/d)) &nbsp;·&nbsp; PE(pos, 2i+1) = cos(pos / 10000^(2i/d))</span>
     </div>
 
     <section class="stage">
@@ -157,7 +160,7 @@
       </div>
     </section>
 
-    <div class="legend" id="footnote" style="color:#64748b">
+    <div class="legend" id="footnote" style="color:#9a9a9a">
       Intuition: it is a smooth, continuous cousin of a binary counter — the low bit (dimension 0) flips every step, higher bits flip ever more slowly, so every position gets a unique, learnable-to-read code with no extra parameters.
     </div>
   </main>
@@ -195,14 +198,14 @@
       return (k % 2 === 0) ? Math.sin(ang) : Math.cos(ang);
     }
 
-    // diverging colour: blue (neg) → near-black (0) → amber (pos)
+    // diverging colour: cyan (neg) → background grey (0) → orange (pos)
     function colour(v) {
       const t = Math.max(-1, Math.min(1, v));
       const a = Math.abs(t);
       let r, g, b;
-      if (t >= 0) { r = 245; g = 158; b = 11; }       // amber
-      else { r = 59; g = 130; b = 246; }               // blue
-      const br = 18; // background grey
+      if (t >= 0) { r = 255; g = 165; b = 0; }         // orange (attention)
+      else { r = 62; g = 208; b = 240; }               // cyan (encoder)
+      const br = 28; // background grey (#1c1c1c)
       return `rgb(${Math.round(br + (r - br) * a)},${Math.round(br + (g - br) * a)},${Math.round(br + (b - br) * a)})`;
     }
 
@@ -228,9 +231,9 @@
       }
       // highlight selected column + row
       hctx.lineWidth = 2;
-      hctx.strokeStyle = 'rgba(248,250,252,0.9)';
+      hctx.strokeStyle = 'rgba(255,255,255,0.9)';
       hctx.strokeRect(selDim * cw, 0, cw, h);
-      hctx.strokeStyle = 'rgba(167,139,250,0.95)';
+      hctx.strokeStyle = 'rgba(255,96,173,0.95)';
       hctx.strokeRect(0, selPos * ch, w, ch);
     }
 
@@ -244,7 +247,7 @@
       wctx.lineWidth = 1;
       wctx.beginPath(); wctx.moveTo(pad, mid); wctx.lineTo(w - pad, mid); wctx.stroke();
       // curve across positions for selected dimension
-      wctx.strokeStyle = '#f59e0b';
+      wctx.strokeStyle = '#ffa500';
       wctx.lineWidth = 2;
       wctx.beginPath();
       for (let p = 0; p < P; p++) {
@@ -256,7 +259,7 @@
       // marker at selected position
       const mx = pad + (w - 2 * pad) * (selPos / (P - 1));
       const my = mid - pe(selPos, selDim) * (h / 2 - pad);
-      wctx.fillStyle = '#a78bfa';
+      wctx.fillStyle = '#ff60ad';
       wctx.beginPath(); wctx.arc(mx, my, 4, 0, Math.PI * 2); wctx.fill();
     }
 
@@ -272,7 +275,7 @@
         const v = pe(selPos, d);
         const x = pad + d * bw;
         const bh = v * (h / 2 - pad);
-        vctx.fillStyle = (d === selDim) ? '#f8fafc' : colour(v);
+        vctx.fillStyle = (d === selDim) ? '#ffffff' : colour(v);
         vctx.fillRect(x + 0.5, mid - Math.max(0, bh), Math.max(1, bw - 1), Math.abs(bh));
       }
     }

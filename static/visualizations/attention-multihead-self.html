@@ -4,17 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Multi-Head Self-Attention</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0a0a0a;
-      --panel: #141414;
-      --border: #2a2a2a;
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --h1: #f59e0b;
-      --h2: #8b5cf6;
-      --h3: #ec4899;
-      --h4: #06b6d4;
+      --bg: #1c1c1c;
+      --panel: #232323;
+      --border: rgba(255,255,255,0.12);
+      --text: #ffffff;
+      --muted: #d0d0d0;
+      --encoder: #3ed0f0;
+      --decoder: #b0f580;
+      --attention: #ffa500;
+      --special: #ff60ad;
     }
 
     * {
@@ -27,11 +30,8 @@
       height: 100vh;
       overflow: hidden;
       color: var(--text);
-      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background:
-        radial-gradient(circle at 16% 12%, rgba(139, 92, 246, 0.18), transparent 28%),
-        radial-gradient(circle at 84% 18%, rgba(6, 182, 212, 0.14), transparent 30%),
-        var(--bg);
+      font-family: 'Crimson Pro', serif;
+      background: var(--bg);
     }
 
     .app {
@@ -52,13 +52,14 @@
     h1 {
       margin: 0;
       font-size: clamp(18px, 2vw, 30px);
-      letter-spacing: -0.03em;
+      letter-spacing: -0.01em;
+      font-weight: 700;
     }
 
     .subtitle {
       margin-top: 5px;
       color: var(--muted);
-      font-size: 13px;
+      font-size: 14px;
       line-height: 1.4;
       max-width: 780px;
     }
@@ -73,10 +74,12 @@
     .head-btn {
       border: 1px solid rgba(255, 255, 255, 0.14);
       color: var(--text);
-      border-radius: 999px;
+      border-radius: 6px;
       padding: 8px 12px;
       cursor: pointer;
-      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
       background: rgba(255, 255, 255, 0.06);
       transition: transform 160ms ease, opacity 160ms ease;
     }
@@ -99,9 +102,8 @@
     .card {
       min-height: 0;
       border: 1px solid var(--border);
-      border-radius: 18px;
-      background: linear-gradient(180deg, rgba(20, 20, 20, 0.95), rgba(9, 9, 9, 0.96));
-      box-shadow: 0 22px 70px rgba(0, 0, 0, 0.32);
+      border-radius: 12px;
+      background: var(--panel);
       overflow: hidden;
     }
 
@@ -125,9 +127,10 @@
       color: var(--text);
       border-radius: 999px;
       padding: 7px 9px;
-      font-weight: 760;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
       cursor: pointer;
-      font-size: 12px;
+      font-size: 11px;
       transition: transform 180ms ease, background 180ms ease, border 180ms ease;
       white-space: nowrap;
       z-index: 3;
@@ -136,8 +139,8 @@
     .token:hover,
     .token.active {
       transform: translate(-50%, -50%) scale(1.06);
-      background: rgba(59, 130, 246, 0.20);
-      border-color: rgba(59, 130, 246, 0.55);
+      background: rgba(62, 208, 240, 0.20);
+      border-color: rgba(62, 208, 240, 0.55);
     }
 
     .arc {
@@ -167,8 +170,10 @@
 
     h2 {
       margin: 0;
-      font-size: 18px;
-      letter-spacing: -0.02em;
+      font-family: 'Crimson Pro', serif;
+      font-style: italic;
+      font-weight: 700;
+      font-size: 20px;
     }
 
     .selected {
@@ -284,7 +289,7 @@
         id: "positional",
         name: "Head 1",
         label: "previous token",
-        color: "#f59e0b",
+        color: "#ffa500",
         description: "A positional head: most tokens attend strongly to the token immediately before them.",
         edges: tokens.flatMap((_, index) => index > 0 ? [{ from: index, to: index - 1, weight: 0.75 }] : []),
       },
@@ -292,7 +297,7 @@
         id: "syntax",
         name: "Head 2",
         label: "syntax",
-        color: "#8b5cf6",
+        color: "#b0f580",
         description: "A syntactic-looking head: verbs and modifiers point toward likely head words.",
         edges: [
           { from: 4, to: 2, weight: 0.78 },
@@ -306,7 +311,7 @@
         id: "coreference",
         name: "Head 3",
         label: "coreference",
-        color: "#ec4899",
+        color: "#ff60ad",
         description: "A coreference head: the pronoun \"it\" attends to \"animal\" in this interpretation.",
         edges: [
           { from: 8, to: 2, weight: 0.90 },
@@ -318,7 +323,7 @@
         id: "broadcast",
         name: "Head 4",
         label: "broadcast",
-        color: "#06b6d4",
+        color: "#3ed0f0",
         description: "A broadcast head: several tokens read from a shared anchor such as [CLS].",
         edges: tokens.flatMap((_, index) => index > 0 && index % 2 === 0 ? [{ from: index, to: 0, weight: 0.46 }] : []),
       },
