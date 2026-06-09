@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quadratic Attention Scaling</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #1c1c1c;
+      --panel: #232323;
+      --border: rgba(255,255,255,0.12);
+      --text: #ffffff;
+      --muted: #d0d0d0;
+      --blue: #3ed0f0;
+      --orange: #ffa500;
+      --pink: #ff60ad;
+      --green: #b0f580;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 16% 10%, rgba(62,208,240,0.16), transparent 28%),
+        radial-gradient(circle at 82% 18%, rgba(255,165,0,0.14), transparent 30%),
+        var(--bg);
+      color: var(--text);
+      font-family: 'Crimson Pro', serif;
+    }
+    .app {
+      height: 100vh;
+      padding: 16px;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 12px;
+    }
+    header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(18px, 2vw, 28px);
+      letter-spacing: -0.01em;
+      font-weight: 700;
+    }
+    .subtitle {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+      max-width: 800px;
+    }
+    .controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-items: center;
+    }
+    .ctl {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 150px;
+    }
+    .ctl label {
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .ctl span { color: var(--orange); }
+    input[type=range] {
+      width: 160px;
+      accent-color: var(--orange);
+      cursor: pointer;
+    }
+    .preset {
+      border: 1px solid rgba(255,255,255,0.4);
+      background: rgba(255,255,255,0.13);
+      color: #fff;
+      border-radius: 6px;
+      padding: 8px 11px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 180ms ease, transform 180ms ease;
+    }
+    .preset:hover { background: rgba(255,255,255,0.23); transform: translateY(-1px); }
+    .equation {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      color: #ffd591;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.045);
+    }
+    .stage {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.75fr);
+      gap: 12px;
+    }
+    .card {
+      min-height: 0;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(35,35,35,0.92);
+      overflow: hidden;
+    }
+    .grid-card {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      padding: 14px;
+      gap: 10px;
+    }
+    .card h2 {
+      margin: 0;
+      font-style: italic;
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .hint {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .canvas-wrap {
+      position: relative;
+      min-height: 0;
+      border-radius: 12px;
+      background: #171717;
+      border: 1px solid rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+    .build-wrap {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 12px;
+    }
+    .mini-panel {
+      position: relative;
+      min-height: 0;
+      border-radius: 12px;
+      background: #171717;
+      border: 1px solid rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+    .mini-title {
+      position: absolute;
+      left: 12px;
+      top: 10px;
+      z-index: 2;
+      color: #d0d0d0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .side {
+      padding: 14px;
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      gap: 12px;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .metric {
+      padding: 10px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.055);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .metric .k {
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .metric .v {
+      margin-top: 3px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(14px, 2vw, 20px);
+      font-weight: 700;
+    }
+    .metric.hot .v { color: #ffd591; }
+    .metric.warn .v { color: #ffc0dd; }
+    .bar-area {
+      display: grid;
+      gap: 9px;
+      align-content: start;
+      min-height: 0;
+    }
+    .bar-row {
+      display: grid;
+      grid-template-columns: 72px 1fr 72px;
+      gap: 8px;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .bar-track {
+      height: 13px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.07);
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .bar {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--blue), var(--orange), var(--pink));
+      transition: width 260ms ease;
+    }
+    .note {
+      color: #ececec;
+      font-size: 15px;
+      line-height: 1.45;
+      margin: 0;
+    }
+    .legend {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+    }
+    .swatch {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .box {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      display: inline-block;
+    }
+    @media (max-width: 880px) {
+      body { overflow: auto; }
+      .app { min-height: 100vh; height: auto; padding: 12px; }
+      header { flex-direction: column; }
+      .controls { justify-content: flex-start; }
+      .stage { grid-template-columns: 1fr; }
+      .build-wrap { grid-template-columns: 1fr; }
+      .mini-panel { height: 260px; }
+      .canvas-wrap { height: 340px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <h1>Where the square comes from</h1>
+        <div class="subtitle">Each token becomes a query once. For each query, it compares against every token as a key. One query fills one row; all queries fill the full attention matrix.</div>
+      </div>
+      <div class="controls">
+        <div class="ctl">
+          <label>sequence length N = <span id="nLabel">512</span></label>
+          <input id="nSlider" type="range" min="9" max="13" step="1" value="9" aria-label="Sequence length exponent">
+        </div>
+        <button class="preset" data-n="512">512</button>
+        <button class="preset" data-n="2048">2k</button>
+        <button class="preset" data-n="8192">8k</button>
+      </div>
+    </header>
+
+    <div class="equation">
+      <span>attention scores = query tokens × key tokens</span>
+      <span id="eqCells">= 512 × 512 = 262,144</span>
+      <span>·</span>
+      <span id="eqMemory">12 layers × 12 heads × fp16 ≈ 75 MB</span>
+    </div>
+
+    <section class="stage">
+      <article class="card grid-card">
+        <div>
+          <h2>One query row at a time</h2>
+          <div class="hint">The left panel shows one token asking every token, "should I read you?" The right panel turns that same set of comparisons into one row of the attention matrix.</div>
+        </div>
+        <div class="build-wrap">
+          <div class="mini-panel">
+            <div class="mini-title">Token-to-token comparisons</div>
+            <canvas id="tokens"></canvas>
+          </div>
+          <div class="mini-panel">
+            <div class="mini-title">Rows of QKᵀ</div>
+            <canvas id="grid"></canvas>
+          </div>
+        </div>
+      </article>
+
+      <article class="card side">
+        <div>
+          <h2>Memory intuition</h2>
+          <p class="note">For the toy sentence, watch one row fill for each query token. For the real counter, replace the toy length with N: every layer and head computes N query rows, each with N key scores.</p>
+        </div>
+        <div class="metrics">
+          <div class="metric hot">
+            <div class="k">Cells / head</div>
+            <div class="v" id="cellsMetric">262k</div>
+          </div>
+          <div class="metric warn">
+            <div class="k">All heads/layers</div>
+            <div class="v" id="memoryMetric">75 MB</div>
+          </div>
+        </div>
+        <div class="bar-area" id="bars"></div>
+      </article>
+    </section>
+
+    <div class="legend">
+      <span class="swatch"><span class="box" style="background:#3ed0f0"></span>query row</span>
+      <span class="swatch"><span class="box" style="background:#ffa500"></span>computed score cells</span>
+      <span class="swatch"><span class="box" style="background:#ff60ad"></span>quadratic growth</span>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      const nSlider = document.getElementById('nSlider');
+      const nLabel = document.getElementById('nLabel');
+      const eqCells = document.getElementById('eqCells');
+      const eqMemory = document.getElementById('eqMemory');
+      const cellsMetric = document.getElementById('cellsMetric');
+      const memoryMetric = document.getElementById('memoryMetric');
+      const bars = document.getElementById('bars');
+      const gridCanvas = document.getElementById('grid');
+      const tokenCanvas = document.getElementById('tokens');
+      const gridCtx = gridCanvas.getContext('2d');
+      const tokenCtx = tokenCanvas.getContext('2d');
+      const presets = document.querySelectorAll('.preset');
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      let currentN = 512;
+      let sweep = 0;
+
+      const layers = 12;
+      const heads = 12;
+      const bytes = 2;
+      const stops = [512, 1024, 2048, 4096, 8192];
+
+      function formatCount(x) {
+        if (x >= 1e9) return (x / 1e9).toFixed(x >= 10e9 ? 0 : 1) + 'B';
+        if (x >= 1e6) return (x / 1e6).toFixed(x >= 10e6 ? 0 : 1) + 'M';
+        if (x >= 1e3) return (x / 1e3).toFixed(x >= 10e3 ? 0 : 1) + 'k';
+        return String(x);
+      }
+
+      function formatBytes(x) {
+        const gb = 1000 ** 3;
+        const mb = 1000 ** 2;
+        if (x >= gb) return (x / gb).toFixed(x >= 10 * gb ? 0 : 1) + ' GB';
+        return (x / mb).toFixed(x >= 10 * mb ? 0 : 1) + ' MB';
+      }
+
+      function memoryFor(n) {
+        return layers * heads * n * n * bytes;
+      }
+
+      function fit(canvas, ctx) {
+        const r = canvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.max(1, Math.round(r.width * dpr));
+        canvas.height = Math.max(1, Math.round(r.height * dpr));
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        return { w: r.width, h: r.height };
+      }
+
+      function toyTokenCount(n) {
+        if (n <= 512) return 6;
+        if (n <= 1024) return 7;
+        if (n <= 2048) return 8;
+        if (n <= 4096) return 9;
+        return 10;
+      }
+
+      function drawArrow(ctx, x1, y1, x2, y2, color, width, alpha) {
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const angle = Math.atan2(dy, dx);
+        const endX = x2 - Math.cos(angle) * 13;
+        const endY = y2 - Math.sin(angle) * 13;
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.lineWidth = width;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(endX, endY);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(endX, endY);
+        ctx.lineTo(endX - Math.cos(angle - 0.55) * 8, endY - Math.sin(angle - 0.55) * 8);
+        ctx.lineTo(endX - Math.cos(angle + 0.55) * 8, endY - Math.sin(angle + 0.55) * 8);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawTokens(n) {
+        const { w, h } = fit(tokenCanvas, tokenCtx);
+        const ctx = tokenCtx;
+        ctx.clearRect(0, 0, w, h);
+        const count = toyTokenCount(n);
+        const active = Math.floor((sweep * 0.42) % count);
+        const words = ['The', 'cat', 'sat', 'on', 'the', 'mat', 'and', 'looked', 'around', '.'];
+        const topY = Math.max(68, h * 0.33);
+        const bottomY = Math.min(h - 56, h * 0.72);
+        const leftPad = 34;
+        const rightPad = 34;
+        const spacing = (w - leftPad - rightPad) / Math.max(1, count - 1);
+        const points = Array.from({ length: count }, (_, i) => ({
+          x: leftPad + i * spacing,
+          y: bottomY,
+          label: words[i] || `t${i}`
+        }));
+        const q = points[active];
+
+        ctx.font = '700 11px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#d0d0d0';
+        ctx.fillText(`Query token ${active + 1}: compare to all ${count} keys`, w / 2, 36);
+
+        points.forEach((p, i) => {
+          const strength = 0.25 + 0.55 * (1 - Math.abs(i - active) / Math.max(1, count - 1));
+          drawArrow(ctx, q.x, topY, p.x, p.y, i === active ? '#3ed0f0' : '#ffa500', i === active ? 2.3 : 1.5, strength);
+        });
+
+        ctx.beginPath();
+        ctx.arc(q.x, topY, 16, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(62,208,240,0.22)';
+        ctx.fill();
+        ctx.strokeStyle = '#3ed0f0';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '700 11px JetBrains Mono, monospace';
+        ctx.fillText('Q', q.x, topY + 4);
+
+        points.forEach((p, i) => {
+          const activeKey = i === active;
+          ctx.beginPath();
+          ctx.roundRect(p.x - 24, p.y - 14, 48, 28, 12);
+          ctx.fillStyle = activeKey ? 'rgba(62,208,240,0.22)' : 'rgba(255,255,255,0.08)';
+          ctx.fill();
+          ctx.strokeStyle = activeKey ? '#3ed0f0' : 'rgba(255,255,255,0.18)';
+          ctx.lineWidth = activeKey ? 2 : 1;
+          ctx.stroke();
+          ctx.fillStyle = '#fff';
+          ctx.fillText(p.label, p.x, p.y + 4);
+        });
+      }
+
+      function drawGrid(n) {
+        const { w, h } = fit(gridCanvas, gridCtx);
+        const ctx = gridCtx;
+        ctx.clearRect(0, 0, w, h);
+        const size = Math.min(w - 52, h - 52);
+        const left = (w - size) / 2 + 10;
+        const top = (h - size) / 2 + 10;
+        const visualCells = toyTokenCount(n);
+        const cell = size / visualCells;
+        const activeRow = Math.floor((sweep * 0.42) % visualCells);
+        const rowProgress = reduce ? 1 : (sweep * 0.42) % 1;
+
+        ctx.fillStyle = 'rgba(255,255,255,0.035)';
+        ctx.fillRect(left, top, size, size);
+
+        for (let r = 0; r < visualCells; r++) {
+          const complete = r < activeRow;
+          const isActive = r === activeRow;
+          const fillCols = complete ? visualCells : (isActive ? Math.max(1, Math.ceil(rowProgress * visualCells)) : 0);
+          for (let c = 0; c < fillCols; c++) {
+            const intensity = 0.25 + 0.55 * (1 - Math.abs(c - r) / Math.max(1, visualCells - 1));
+            const hue = isActive ? `rgba(62,208,240,${0.20 + intensity * 0.34})` : `rgba(255,165,0,${0.12 + intensity * 0.25})`;
+            ctx.fillStyle = hue;
+            ctx.fillRect(left + c * cell + 1, top + r * cell + 1, cell - 2, cell - 2);
+          }
+        }
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= visualCells; i++) {
+          const p = left + i * cell;
+          ctx.beginPath(); ctx.moveTo(p, top); ctx.lineTo(p, top + size); ctx.stroke();
+          const q = top + i * cell;
+          ctx.beginPath(); ctx.moveTo(left, q); ctx.lineTo(left + size, q); ctx.stroke();
+        }
+
+        ctx.fillStyle = 'rgba(62,208,240,0.28)';
+        ctx.fillRect(left, top + activeRow * cell, size, cell);
+        ctx.strokeStyle = '#3ed0f0';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(left, top + activeRow * cell, size, cell);
+
+        ctx.strokeStyle = '#ffa500';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(left, top, size, size);
+
+        ctx.font = '700 11px JetBrains Mono, monospace';
+        ctx.fillStyle = '#d0d0d0';
+        ctx.textAlign = 'center';
+        ctx.fillText('keys: N columns', left + size / 2, top + size + 24);
+        ctx.save();
+        ctx.translate(left - 30, top + size / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillText('queries: N rows', 0, 0);
+        ctx.restore();
+
+        ctx.fillStyle = '#fff';
+        ctx.font = '700 15px JetBrains Mono, monospace';
+        ctx.fillText(`toy view: ${visualCells} queries × ${visualCells} keys`, left + size / 2, top + 24);
+        ctx.fillStyle = '#ffd591';
+        ctx.font = '700 11px JetBrains Mono, monospace';
+        ctx.fillText(`real N: ${n.toLocaleString()} × ${n.toLocaleString()} scores`, left + size / 2, top + 43);
+      }
+
+      function renderBars(n) {
+        const max = memoryFor(8192);
+        bars.innerHTML = '';
+        stops.forEach(stop => {
+          const row = document.createElement('div');
+          row.className = 'bar-row';
+          const label = document.createElement('div');
+          label.textContent = stop >= 1024 ? `${stop / 1024}k` : String(stop);
+          const track = document.createElement('div');
+          track.className = 'bar-track';
+          const bar = document.createElement('div');
+          bar.className = 'bar';
+          const val = document.createElement('div');
+          val.textContent = formatBytes(memoryFor(stop));
+          track.appendChild(bar);
+          row.append(label, track, val);
+          bars.appendChild(row);
+          const pct = 100 * memoryFor(stop) / max;
+          requestAnimationFrame(() => { bar.style.width = `${Math.max(1.5, pct)}%`; });
+          if (stop === n) {
+            row.style.color = '#fff';
+            track.style.boxShadow = '0 0 0 2px rgba(255,165,0,0.35)';
+          }
+        });
+      }
+
+      function update() {
+        currentN = 2 ** Number(nSlider.value);
+        const cells = currentN * currentN;
+        const mem = memoryFor(currentN);
+        nLabel.textContent = currentN.toLocaleString();
+        eqCells.textContent = `= ${currentN.toLocaleString()} × ${currentN.toLocaleString()} = ${cells.toLocaleString()}`;
+        eqMemory.textContent = `${layers} layers × ${heads} heads × fp16 ≈ ${formatBytes(mem)}`;
+        cellsMetric.textContent = formatCount(cells);
+        memoryMetric.textContent = formatBytes(mem);
+        drawTokens(currentN);
+        drawGrid(currentN);
+        renderBars(currentN);
+      }
+
+      nSlider.addEventListener('input', update);
+      presets.forEach(button => {
+        button.addEventListener('click', () => {
+          nSlider.value = String(Math.round(Math.log2(Number(button.dataset.n))));
+          update();
+        });
+      });
+      window.addEventListener('resize', update);
+
+      function animate() {
+        if (!reduce) sweep += 0.025;
+        drawTokens(currentN);
+        drawGrid(currentN);
+        requestAnimationFrame(animate);
+      }
+
+      update();
+      animate();
+    })();
+  </script>
+</body>
+</html>
