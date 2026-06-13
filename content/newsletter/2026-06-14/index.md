@@ -1,6 +1,6 @@
 ---
 title: "AI Weekly: US Gov Pulls Fable 5, Anthropic's Biggest Launch Yet"
-date: 2026-06-14
+date: 2026-06-13
 week_start: "2026-06-08"
 week_end: "2026-06-14"
 draft: false
