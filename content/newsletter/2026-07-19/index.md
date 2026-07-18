@@ -1,6 +1,6 @@
 ---
 title: "AI Weekly: Kimi K3 Designs Its Own Chip, Grok Build's Secret Uploads Exposed"
-date: 2026-07-19
+date: 2026-07-18
 week_start: "2026-07-13"
 week_end: "2026-07-19"
 draft: false
