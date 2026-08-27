@@ -368,17 +368,22 @@
                 likeBtn.classList.add('liked');
             }
 
-            // Fetch current count
+            // Fetch current count (no-store: always get the true server value,
+            // never a browser-cached response)
             fetch(SUPABASE_URL + '/rest/v1/page_likes?page_path=eq.' + encodeURIComponent(PAGE_PATH) + '&select=like_count', {
-                headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+                headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY },
+                cache: 'no-store'
             })
-            .then(function (r) { return r.json(); })
+            .then(function (r) {
+                if (!r.ok) { throw new Error('fetch like_count failed: ' + r.status); }
+                return r.json();
+            })
             .then(function (data) {
                 if (data.length > 0 && data[0].like_count > 0) {
                     countEl.textContent = data[0].like_count;
                 }
             })
-            .catch(function () {});
+            .catch(function (err) { console.error('Fetching like count failed', err); });
 
             // Handle click
             likeBtn.addEventListener('click', function () {
@@ -401,11 +406,20 @@
                     },
                     body: JSON.stringify({ p_path: PAGE_PATH })
                 })
-                .then(function (r) { return r.json(); })
+                .then(function (r) {
+                    if (!r.ok) { throw new Error('increment_like failed: ' + r.status); }
+                    return r.json();
+                })
                 .then(function (newCount) {
                     countEl.textContent = newCount;
                 })
-                .catch(function () {});
+                .catch(function (err) {
+                    // Log only — the optimistic UI (heart filled, count bumped,
+                    // localStorage flag) stays as-is so the click still feels
+                    // like it worked. This is purely for diagnosing the sync
+                    // issue via the console; it doesn't change what users see.
+                    console.error('Like sync failed', err);
+                });
             });
         }
 
