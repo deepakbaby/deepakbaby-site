@@ -244,6 +244,45 @@ Now the agent pulls from 8 RSS feeds on Friday:
 - <span style="color: #3b82f6; font-weight: 600;">Community</span>: r/LocalLLaMA, r/MachineLearning, r/artificial, r/singularity (top posts, extracting the linked article URL, not the Reddit discussion URL)
 
 These candidates get saved to `candidates.jsonl` and merged with manual items at publish time. Manual items always take priority — if I shared something, it's in the newsletter regardless of what RSS found.
+## Migrating from WhatsApp to Telegram
+
+*Update, August 27, 2026:* A few months in, I switched the messaging channel from WhatsApp to Telegram. The WhatsApp setup above worked, but it had a few drawbacks worth explaining.
+
+### Why Telegram
+
+WhatsApp integration uses QR/linked-device pairing — OpenClaw runs as my own account on a linked device. This has a couple of consequences:
+
+- <span style="color: #3b82f6; font-weight: 600;">Always online</span>: my account showed as permanently online, since the linked session doesn't go idle
+- <span style="color: #3b82f6; font-weight: 600;">Notifications rerouted</span>: my phone stopped getting WhatsApp notifications — the linked session absorbed them instead of mirroring
+- <span style="color: #3b82f6; font-weight: 600;">Pairing breaks on reinstall</span>: reinstalling WhatsApp on my phone broke the link, requiring a fresh QR scan and the `selfChatMode` setup again
+
+Telegram bots are a different model: each bot is its own identity with a token from BotFather, separate from my personal account. That avoids the online-status and notification issues above, and the token-based auth survives an app reinstall since it's not tied to my phone at all. It's also the supported way to automate Telegram, rather than a workaround. And it's free.
+
+### The Migration
+
+1. **Create the bot**: message [@BotFather](https://t.me/BotFather) on Telegram, run `/newbot`, and note the bot token it returns
+2. **Get your chat ID**: message [@userinfobot](https://t.me/userinfobot) on Telegram and press start — it replies with your numeric chat ID
+3. **Edit the config**: SSH into the Lightsail instance and edit `~/.openclaw/openclaw.json`. It's plain JSON (no comments). Remove the `whatsapp` channel block and add a `telegram` block:
+
+```json
+"telegram": {
+  "enabled": true,
+  "botToken": "<bot-token-from-botfather>",
+  "dmPolicy": "allowlist",
+  "allowFrom": ["<your-numeric-chat-id>"]
+}
+```
+
+4. **Restart the gateway**: `openclaw gateway --force`. There's no `openclaw restart` command.
+
+**Gotcha**: the WhatsApp schema rejects an `enabled` key, so you can't disable it by setting `enabled: false` — you have to delete the block, or config validation fails.
+
+### The Bedrock IAM Aside
+
+Separately, around the same time: after a Lightsail stop/start, Bedrock calls started failing with an IAM authorization error. Fix was to (re-)bind the blueprint's `LightsailRoleFor-<instance-id>` instance profile via the CloudShell setup script from the Getting Started tab, then do a cold stop/start of the instance — a reboot alone doesn't apply it.
+
+Now I interact with OpenClaw through the bot I created, just like opening a new chat window.
+
 ## Things I Learned
 <div class="blog-card-grid">
   <div class="blog-card">
@@ -281,16 +320,23 @@ These candidates get saved to `candidates.jsonl` and merged with manual items at
     </div>
     <p class="blog-card__text">The most effective version is the simplest: share in, web search gap-fill, and markdown out. Complexity can wait for future iterations.</p>
   </div>
+  <div class="blog-card">
+    <div class="blog-card__header">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 8h18"/><circle cx="8" cy="14" r="1.5"/><circle cx="16" cy="14" r="1.5"/></svg>
+      <span class="blog-card__title">Bot Identity, Not Linked Device</span>
+    </div>
+    <p class="blog-card__text">Picking a messaging channel matters beyond the API. WhatsApp's linked-device model ties the agent to your personal account; a Telegram bot has its own identity and token. Prefer channels with first-class bot support over ones that piggyback on a personal login.</p>
+  </div>
 </div>
 
 ## What's Next
 
 - ~~<span style="color: #22c55e; font-weight: 600;">RSS feed integration</span>~~: Done. Friday staging scan pulls from 8 feeds automatically
 - ~~<span style="color: #22c55e; font-weight: 600;">Full automation</span>~~: Done. Switching from sandbox to host execution resolved the git push friction
+- ~~<span style="color: #22c55e; font-weight: 600;">Separate messaging identity</span>~~: Done. Migrated from WhatsApp's linked-device pairing to a dedicated Telegram bot
 - <span style="color: #3b82f6; font-weight: 600;">Automated publish scheduling</span>: use OpenClaw's cron to trigger the full publish pipeline every Saturday evening, so I just review the PR on Monday
-- <span style="color: #3b82f6; font-weight: 600;">Separate WhatsApp number</span>: cleaner separation from personal chats
 - <span style="color: #3b82f6; font-weight: 600;">Newsletter-specific RSS</span>: subscribe to curated newsletters (The Batch, Import AI, etc.) and auto-extract stories
 
-The flow is now mostly automated. About 2 minutes during the week dropping items into WhatsApp, a Friday staging summary I glance at, and 5 minutes on Saturday reviewing and saying "publish." Good trade for a polished weekly newsletter.
+The flow is now mostly automated. About 2 minutes during the week dropping items into Telegram, a Friday staging summary I glance at, and 5 minutes on Saturday reviewing and saying "publish." Good trade for a polished weekly newsletter.
 
 You can see the result at [deepakbaby.in/newsletter](https://deepakbaby.in/newsletter).
