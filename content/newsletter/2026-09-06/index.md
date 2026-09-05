@@ -1,6 +1,6 @@
 ---
 title: "AI Weekly: Claude Proves Fermat's Last Theorem, GPT-6 Astra Hits Critical"
-date: 2026-09-06
+date: 2026-09-05
 week_start: "2026-08-31"
 week_end: "2026-09-06"
 draft: false
