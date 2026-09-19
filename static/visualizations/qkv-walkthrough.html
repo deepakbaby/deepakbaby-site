@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>QKV walkthrough</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -68,6 +69,7 @@
       letter-spacing: 0.04em;
       cursor: pointer;
       text-align: left;
+      transition: background 200ms ease, border-color 200ms ease, color 200ms ease;
     }
     .stepbtn .num { color: var(--attention); margin-right: 6px; }
     .stepbtn.active {
@@ -91,10 +93,22 @@
       display: flex;
       flex-direction: column;
     }
+    #matrix-card { position: relative; }
+    #comet-overlay {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: visible;
+      z-index: 5;
+    }
     .matrix {
       display: grid;
       gap: 12px;
       margin-bottom: 12px;
+      position: relative;
+      z-index: 1;
     }
     .mat-block {
       display: flex;
@@ -135,14 +149,14 @@
       font-size: 11px;
       background: rgba(255,255,255,0.06);
       color: var(--text);
-      transition: background 240ms ease, transform 220ms ease;
+      transition: background 240ms ease;
     }
     .cell.q { background: rgba(62,208,240,0.16); color: #aeeafb; }
     .cell.k { background: rgba(255,165,0,0.16); color: #ffd591; }
     .cell.v { background: rgba(199,146,234,0.18); color: #e6d2f7; }
     .cell.score { background: rgba(255,96,173,0.16); color: #ffc0dd; }
     .cell.weight { background: rgba(176,245,128,0.2); color: #d3f7ad; font-weight: 700; }
-    .cell.focus { transform: scale(1.05); box-shadow: 0 0 0 2px rgba(255,165,0,0.6); }
+    .cell.focus { box-shadow: 0 0 0 2px rgba(255,165,0,0.6); }
     .info h2 { margin: 0 0 6px; font-family: 'Crimson Pro', serif; font-style: italic; font-size: 20px; font-weight: 700; }
     .info p { font-size: 15px; line-height: 1.5; color: #ececec; margin: 6px 0; }
     .equation {
@@ -181,8 +195,9 @@
     <div class="stepbar" id="stepbar"></div>
 
     <section class="stage">
-      <article class="card">
+      <article class="card" id="matrix-card">
         <div class="matrix" id="matrix"></div>
+        <svg id="comet-overlay"></svg>
       </article>
       <article class="card info">
         <h2 id="title"></h2>
@@ -195,6 +210,8 @@
   </main>
 
   <script>
+    const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
     const tokens = ["the", "cat", "sat", "down"];
     // tiny d=4 embeddings hand-tuned so the result is interesting
     const X = [
@@ -277,9 +294,12 @@
     ];
 
     let idx = 0;
+    let displayedIdx = null;
     let timer = null;
     const stepbar = document.getElementById("stepbar");
     const matrixEl = document.getElementById("matrix");
+    const matrixCard = document.getElementById("matrix-card");
+    const overlay = document.getElementById("comet-overlay");
     const titleEl = document.getElementById("title");
     const eqEl = document.getElementById("eq");
     const bodyEl = document.getElementById("body");
@@ -293,25 +313,144 @@
       stepbar.appendChild(b);
     });
 
-    function renderMat(label, data, klass, cols, focusRowIdx) {
+    // ---- comet helpers (matches the 3b1b-style path+dot used in attention-bahdanau-alignment.html) ----
+
+    function svgEl(tag, attrs) {
+      const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+      if (attrs) Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+      return el;
+    }
+
+    function localPoint(el) {
+      const r = el.getBoundingClientRect();
+      const or = overlay.getBoundingClientRect();
+      return { x: r.left + r.width / 2 - or.left, y: r.top + r.height / 2 - or.top };
+    }
+
+    function resolvePoint(v) {
+      return v && v.nodeType === 1 ? localPoint(v) : v;
+    }
+
+    function createComet(from, to, color, duration = 0.28, opts = {}) {
+      if (reduceMotion || typeof gsap === "undefined") return;
+      const a = resolvePoint(from);
+      const b = resolvePoint(to);
+      if (!a || !b) return;
+      const path = svgEl("path", {
+        d: `M ${a.x} ${a.y} L ${b.x} ${b.y}`,
+        fill: "none",
+        stroke: color,
+        "stroke-width": String(opts.width || 2),
+        "stroke-linecap": "round"
+      });
+      overlay.appendChild(path);
+      const len = path.getTotalLength();
+      path.style.strokeDasharray = `${len * 0.35} ${len}`;
+      path.style.strokeDashoffset = String(len);
+      path.style.opacity = opts.opacity != null ? String(opts.opacity) : "0.85";
+      gsap.to(path.style, {
+        strokeDashoffset: -len * 0.35,
+        duration,
+        ease: "power1.inOut",
+        onComplete: () => path.remove()
+      });
+      const dot = svgEl("circle", { r: String(opts.r || 3), fill: color });
+      overlay.appendChild(dot);
+      const move = { t: 0 };
+      gsap.to(move, {
+        t: 1,
+        duration,
+        ease: "power1.inOut",
+        onUpdate: () => {
+          const p = path.getPointAtLength(move.t * len);
+          dot.setAttribute("cx", p.x);
+          dot.setAttribute("cy", p.y);
+        },
+        onComplete: () => dot.remove()
+      });
+    }
+
+    function captureRowPoints(mats) {
+      const map = {};
+      mats.forEach(mat => {
+        matrixEl.querySelectorAll(`.mat-row[data-mat="${mat}"]`).forEach(rowEl => {
+          map[`${mat}-${rowEl.dataset.row}`] = localPoint(rowEl);
+        });
+      });
+      return map;
+    }
+
+    // ---- matrix rendering, now returning row/cell refs so we can animate them ----
+
+    function renderMat(label, data, klass, cols, matKey, focusRowIdx) {
       const wrap = document.createElement("div");
       wrap.className = "mat-block";
-      wrap.innerHTML = `<div class="label">${label}</div>`;
+      wrap.dataset.mat = matKey;
+      const labelDiv = document.createElement("div");
+      labelDiv.className = "label";
+      labelDiv.textContent = label;
+      wrap.appendChild(labelDiv);
+
       const t = document.createElement("div");
       t.className = "mat-table";
+      const rows = [];
       data.forEach((row, i) => {
         const r = document.createElement("div");
         r.className = "mat-row";
         r.style.setProperty("--cols", cols);
-        r.innerHTML = `<div class="token">${tokens[i] || ""}</div>` + row.map(v => {
+        r.dataset.mat = matKey;
+        r.dataset.row = String(i);
+
+        const tokenDiv = document.createElement("div");
+        tokenDiv.className = "token";
+        tokenDiv.textContent = tokens[i] || "";
+        r.appendChild(tokenDiv);
+
+        const cells = [];
+        row.forEach(v => {
           const txt = typeof v === "number" ? (Math.abs(v) >= 10 ? v.toFixed(1) : v.toFixed(2)) : v;
           const focus = focusRowIdx === i;
-          return `<div class="cell ${klass} ${focus ? "focus" : ""}">${txt}</div>`;
-        }).join("");
+          const cell = document.createElement("div");
+          cell.className = `cell ${klass} ${focus ? "focus" : ""}`;
+          cell.textContent = txt;
+          r.appendChild(cell);
+          cells.push(cell);
+        });
         t.appendChild(r);
+        rows.push({ el: r, token: tokenDiv, cells });
       });
       wrap.appendChild(t);
       matrixEl.appendChild(wrap);
+      return { wrap, rows };
+    }
+
+    function revealRows(rows, opts = {}) {
+      if (reduceMotion || typeof gsap === "undefined") {
+        rows.forEach(row => { row.cells.forEach(c => { c.style.opacity = "1"; }); });
+        return 0;
+      }
+      const stagger = opts.stagger != null ? opts.stagger : 0.03;
+      const rowStagger = opts.rowStagger != null ? opts.rowStagger : 0.09;
+      const baseDelay = opts.delay || 0;
+      let maxEnd = 0;
+      rows.forEach((row, ri) => {
+        gsap.set(row.cells, { opacity: 0, y: 6, scale: 0.94 });
+        const rowDelay = baseDelay + ri * rowStagger;
+        gsap.to(row.cells, {
+          opacity: 1, y: 0, scale: 1,
+          duration: 0.26,
+          ease: "power2.out",
+          stagger,
+          delay: rowDelay
+        });
+        maxEnd = Math.max(maxEnd, rowDelay + row.cells.length * stagger + 0.26);
+      });
+      return maxEnd;
+    }
+
+    function pulseRow(row, delay) {
+      if (reduceMotion || typeof gsap === "undefined" || !row) return;
+      gsap.to(row.cells, { scale: 1.06, duration: 0.14, yoyo: true, repeat: 1, delay, transformOrigin: "50% 50%" });
     }
 
     function render() {
@@ -321,21 +460,73 @@
       eqEl.textContent = s.eq;
       bodyEl.textContent = s.body;
 
+      const fromIdx = displayedIdx;
+
+      // Capture source anchor points before we wipe the DOM, for transitions
+      // whose source matrix will no longer be on screen in the next step.
+      let prevXPoints = null;
+      if (fromIdx === 0 && idx === 1) {
+        prevXPoints = captureRowPoints(["X"]);
+      }
+
+      overlay.querySelectorAll("path, circle").forEach(el => el.remove());
       matrixEl.innerHTML = "";
+      const built = {};
+
       s.show.forEach(key => {
-        if (key === "X") renderMat("X · input embeddings", X, "", 4);
-        if (key === "Q") renderMat("Q · queries (rows)", Q, "q", 4, focusRow);
-        if (key === "K") renderMat("K · keys (rows)", K, "k", 4);
-        if (key === "V") renderMat("V · values (rows)", V, "v", 4);
-        if (key === "S") renderMat("S = Q · Kᵀ · raw scores", S, "score", 4, focusRow);
-        if (key === "S2") renderMat("S / √d_k · scaled scores", Sscaled, "score", 4, focusRow);
-        if (key === "P") renderMat("α · softmax(scores) — rows sum to 1", P, "weight", 4, focusRow);
+        if (key === "X") built.X = renderMat("X · input embeddings", X, "", 4, "X");
+        if (key === "Q") built.Q = renderMat("Q · queries (rows)", Q, "q", 4, "Q", focusRow);
+        if (key === "K") built.K = renderMat("K · keys (rows)", K, "k", 4, "K");
+        if (key === "V") built.V = renderMat("V · values (rows)", V, "v", 4, "V");
+        if (key === "S") built.S = renderMat("S = Q · Kᵀ · raw scores", S, "score", 4, "S", focusRow);
+        if (key === "S2") built.S2 = renderMat("S / √d_k · scaled scores", Sscaled, "score", 4, "S2", focusRow);
+        if (key === "P") built.P = renderMat("α · softmax(scores) — rows sum to 1", P, "weight", 4, "P", focusRow);
         if (key === "O") {
-          renderMat("α · attention weights", P, "weight", 4, focusRow);
-          renderMat("V · values", V, "v", 4);
-          renderMat("O = α · V · new representations", O, "q", 4, focusRow);
+          built.P2 = renderMat("α · attention weights", P, "weight", 4, "Pshown", focusRow);
+          built.V2 = renderMat("V · values", V, "v", 4, "Vshown");
+          built.O = renderMat("O = α · V · new representations", O, "q", 4, "O", focusRow);
         }
       });
+
+      // Generic staggered reveal for every matrix shown this step, cascaded
+      // left-to-right / top-to-bottom in reading order.
+      let cascade = 0;
+      Object.values(built).forEach(mat => {
+        revealRows(mat.rows, { delay: cascade });
+        cascade += 0.05;
+      });
+
+      // Pulse the "cat" row once it has appeared, so the focus point reads clearly.
+      Object.values(built).forEach(mat => {
+        const focusRowObj = mat.rows[focusRow];
+        if (focusRowObj) pulseRow(focusRowObj, 0.4);
+      });
+
+      // Special-case data-flow comets for the two steps where values visibly
+      // move from one matrix into another.
+      if (prevXPoints && built.Q && built.K && built.V) {
+        [["Q", built.Q, "var(--encoder)"], ["K", built.K, "var(--attention)"], ["V", built.V, "var(--value)"]]
+          .forEach(([name, mat, color], di) => {
+            mat.rows.forEach((row, ri) => {
+              const from = prevXPoints[`X-${ri}`];
+              if (!from) return;
+              setTimeout(() => createComet(from, row.el, color, 0.3, { width: 2 }), ri * 70 + di * 40);
+            });
+          });
+      }
+
+      if (fromIdx === 4 && idx === 5 && built.P2 && built.V2 && built.O) {
+        built.O.rows.forEach((row, ri) => {
+          const pRow = built.P2.rows[ri];
+          const vRow = built.V2.rows[ri];
+          setTimeout(() => {
+            if (pRow) createComet(pRow.el, row.el, "var(--attention)", 0.32, { width: 2.2 });
+            if (vRow) createComet(vRow.el, row.el, "var(--value)", 0.32, { width: 2.2, opacity: 0.7 });
+          }, ri * 90);
+        });
+      }
+
+      displayedIdx = idx;
     }
 
     document.getElementById("next").addEventListener("click", () => { idx = (idx + 1) % steps.length; render(); });

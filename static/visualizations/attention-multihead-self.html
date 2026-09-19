@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Multi-Head Self-Attention</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -119,9 +120,16 @@
       overflow: visible;
     }
 
-    .token {
+    /* Position/centering lives on the wrapper (untouched by GSAP);
+       GSAP only ever tweens `scale` on the inner button, so the two
+       never fight over the `transform` property. */
+    .token-wrap {
       position: absolute;
       transform: translate(-50%, -50%);
+      z-index: 3;
+    }
+
+    .token {
       border: 1px solid rgba(255, 255, 255, 0.16);
       background: rgba(255, 255, 255, 0.08);
       color: var(--text);
@@ -131,14 +139,14 @@
       font-weight: 700;
       cursor: pointer;
       font-size: 11px;
-      transition: transform 180ms ease, background 180ms ease, border 180ms ease;
+      transition: background 180ms ease, border 180ms ease, scale 180ms ease;
       white-space: nowrap;
-      z-index: 3;
+      display: block;
     }
 
     .token:hover,
     .token.active {
-      transform: translate(-50%, -50%) scale(1.06);
+      scale: 1.06;
       background: rgba(62, 208, 240, 0.20);
       border-color: rgba(62, 208, 240, 0.55);
     }
@@ -146,12 +154,12 @@
     .arc {
       fill: none;
       stroke-linecap: round;
-      opacity: 0.72;
-      transition: opacity 180ms ease, stroke-width 180ms ease;
+      opacity: 0;
     }
 
-    .arc.dim {
-      opacity: 0.08;
+    .comet {
+      stroke-linecap: round;
+      fill: none;
     }
 
     .side {
@@ -195,6 +203,7 @@
       border-radius: 14px;
       padding: 10px;
       background: rgba(255, 255, 255, 0.045);
+      transition: opacity 180ms ease;
     }
 
     .legend-head {
@@ -338,6 +347,9 @@
     const legend = document.getElementById("legend");
     const selectedText = document.getElementById("selectedText");
 
+    const reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const SVG_NS = "http://www.w3.org/2000/svg";
+
     function positions() {
       const width = 820;
       const start = 28;
@@ -354,6 +366,68 @@
       return `M ${a.x} ${a.y - 18} Q ${midX} ${top} ${b.x} ${b.y - 18}`;
     }
 
+    // Traveling "comet" along an arbitrary SVG path: a short dash animates
+    // its offset while a small dot rides the same parametrization, then
+    // both remove themselves. Mirrors the createComet() pattern used in
+    // attention-bahdanau-alignment.html so the two visualizations feel
+    // like the same visual language.
+    function createComet(d, color, duration = 0.22, opts = {}) {
+      const path = document.createElementNS(SVG_NS, "path");
+      path.setAttribute("d", d);
+      path.setAttribute("class", "comet");
+      path.setAttribute("stroke", color);
+      path.setAttribute("stroke-width", String(opts.width || 2));
+      path.setAttribute("opacity", String(opts.opacity ?? 0.9));
+      svg.appendChild(path);
+      const len = path.getTotalLength();
+      path.style.strokeDasharray = `${len * 0.32} ${len}`;
+      path.style.strokeDashoffset = len;
+      gsap.to(path.style, {
+        strokeDashoffset: -len * 0.32,
+        duration,
+        ease: "power1.inOut",
+        onComplete: () => path.remove()
+      });
+      const dot = document.createElementNS(SVG_NS, "circle");
+      dot.setAttribute("r", "2.4");
+      dot.setAttribute("fill", color);
+      svg.appendChild(dot);
+      const move = { t: 0 };
+      gsap.to(move, {
+        t: 1,
+        duration,
+        ease: "power1.inOut",
+        onUpdate: () => {
+          const p = path.getPointAtLength(move.t * len);
+          dot.setAttribute("cx", p.x);
+          dot.setAttribute("cy", p.y);
+        },
+        onComplete: () => dot.remove()
+      });
+    }
+
+    let arcData = [];
+    let tokenElements = [];
+
+    function buildArcs(pos) {
+      svg.innerHTML = "";
+      arcData = [];
+      heads.forEach((head, headIndex) => {
+        head.edges.forEach(edge => {
+          const distance = Math.abs(edge.from - edge.to);
+          const d = arcPath(pos[edge.from], pos[edge.to], 80 + distance * 16 + headIndex * 13);
+          const path = document.createElementNS(SVG_NS, "path");
+          path.setAttribute("d", d);
+          path.setAttribute("class", "arc");
+          path.setAttribute("stroke", head.color);
+          path.setAttribute("stroke-width", String(1.5 + edge.weight * 5));
+          path.style.opacity = 0;
+          svg.appendChild(path);
+          arcData.push({ head, edge, path, d, headIndex });
+        });
+      });
+    }
+
     function renderButtons() {
       headButtons.innerHTML = heads.map(head => `
         <button class="head-btn ${active.has(head.id) ? "" : "off"}" data-head="${head.id}" style="border-color:${head.color}; box-shadow: inset 0 0 0 1px ${head.color}33">
@@ -364,9 +438,12 @@
       headButtons.querySelectorAll("button").forEach(button => {
         button.addEventListener("click", () => {
           const id = button.dataset.head;
+          const turningOn = !active.has(id);
           if (active.has(id)) active.delete(id);
           else active.add(id);
-          render();
+          renderButtons();
+          renderLegend();
+          updateArcs({ toggledHeadId: id, turnedOn: turningOn });
         });
       });
     }
@@ -381,53 +458,91 @@
     }
 
     function renderTokens(pos) {
-      canvas.querySelectorAll(".token").forEach(node => node.remove());
+      canvas.querySelectorAll(".token-wrap").forEach(node => node.remove());
+      tokenElements = [];
       tokens.forEach((token, index) => {
+        const wrap = document.createElement("div");
+        wrap.className = "token-wrap";
+        wrap.style.left = `${(pos[index].x / 900) * 100}%`;
+        wrap.style.top = `${(pos[index].y / 460) * 100}%`;
+
         const button = document.createElement("button");
         button.className = `token${selectedToken === index ? " active" : ""}`;
         button.textContent = token;
-        button.style.left = `${(pos[index].x / 900) * 100}%`;
-        button.style.top = `${(pos[index].y / 460) * 100}%`;
         button.addEventListener("click", () => {
           selectedToken = selectedToken === index ? null : index;
-          render();
+          pulseToken(button);
+          updateTokenStates();
+          updateArcs();
         });
-        canvas.appendChild(button);
+
+        wrap.appendChild(button);
+        canvas.appendChild(wrap);
+        tokenElements[index] = button;
       });
     }
 
-    function renderArcs(pos) {
-      const arcs = [];
-      heads.forEach((head, headIndex) => {
-        if (!active.has(head.id)) return;
-        head.edges.forEach(edge => {
-          const dim = selectedToken !== null && edge.from !== selectedToken;
-          const distance = Math.abs(edge.from - edge.to);
-          arcs.push(`
-            <path
-              class="arc ${dim ? "dim" : ""}"
-              d="${arcPath(pos[edge.from], pos[edge.to], 80 + distance * 16 + headIndex * 13)}"
-              stroke="${head.color}"
-              stroke-width="${1.5 + edge.weight * 5}"
-            />
-          `);
-        });
+    function updateTokenStates() {
+      tokenElements.forEach((el, index) => {
+        el.classList.toggle("active", selectedToken === index);
       });
-      svg.innerHTML = arcs.join("");
     }
 
-    function render() {
-      const pos = positions();
-      renderButtons();
-      renderLegend();
-      renderArcs(pos);
-      renderTokens(pos);
+    // Small click feedback: GSAP tweens the `scale` CSS property directly
+    // (not `transform`, which the .token-wrap uses for centering), so the
+    // pulse and the fixed positioning never contend for the same property.
+    function pulseToken(el) {
+      if (reducedMotion) return;
+      gsap.fromTo(el, { scale: 1 }, {
+        scale: 1.22,
+        duration: 0.12,
+        yoyo: true,
+        repeat: 1,
+        ease: "power1.inOut",
+        onComplete: () => gsap.set(el, { clearProps: "scale" })
+      });
+    }
+
+    function updateSelectedText() {
       selectedText.textContent = selectedToken === null
         ? "Click a token to isolate its outgoing attention."
         : `Showing outgoing attention from "${tokens[selectedToken]}".`;
     }
 
-    render();
+    function updateArcs({ toggledHeadId = null, turnedOn = false, silent = false } = {}) {
+      arcData.forEach(({ head, edge, path }) => {
+        const isActive = active.has(head.id);
+        const dim = selectedToken !== null && edge.from !== selectedToken;
+        const targetOpacity = isActive ? (dim ? 0.08 : 0.72) : 0;
+        if (reducedMotion || silent) {
+          gsap.set(path, { opacity: targetOpacity });
+        } else {
+          gsap.to(path, { opacity: targetOpacity, duration: 0.22, ease: "power1.inOut" });
+        }
+      });
+
+      if (!reducedMotion && !silent && toggledHeadId && turnedOn) {
+        const headEdges = arcData.filter(a => a.head.id === toggledHeadId);
+        headEdges.forEach((a, i) => {
+          setTimeout(() => {
+            createComet(a.d, a.head.color, 0.22, { width: 1.4 + a.edge.weight * 3, opacity: 0.95 });
+          }, i * 45);
+        });
+      }
+
+      updateSelectedText();
+    }
+
+    function init() {
+      const pos = positions();
+      buildArcs(pos);
+      renderButtons();
+      renderLegend();
+      renderTokens(pos);
+      updateArcs({ silent: true });
+    }
+
+    init();
   </script>
 </body>
 </html>

@@ -14,17 +14,13 @@ That was already most of the Transformer hiding in plain sight. The remaining qu
 
 In 2017, [Vaswani et al.](https://arxiv.org/abs/1706.03762) took the next step: remove recurrence and make attention the main computation.
 
-I assume the basics (vectors, matrix multiply, softmax) but not deep familiarity with Transformers. If attention itself is new to you, read [Part 1](/posts/attention-history-bahdanau-to-transformer/) first.
-
 {{< vs 2>}}
 
 <iframe src="/visualizations/attention-history-timeline-simple.html" loading="lazy" frameborder="0" scrolling="no" title="Attention timeline (2014–2017)" style="width: 100%; border: none; background: transparent; display: block; height: 220px; margin: 1.5rem 0;"></iframe>
 
 ## From Bahdanau Attention to Self-Attention
 
-Start with Bahdanau attention. The decoder has a state $s_i$, and that state asks: "which source words matter for the next output word?" The encoder provides one vector per source token, attention scores those vectors, and the decoder receives a weighted sum.
-
-Now remove the RNN and ask what is left. We still need tokens to ask questions, and we still need a memory to answer from. The Transformer makes each token do both jobs. Every token produces a query, a key, and a value. Its query asks what it needs; other tokens' keys say what they offer; their values carry the information to be mixed in.
+Bahdanau attention still wrapped a recurrent network: the decoder state $s_i$ queried the encoder's per-token vectors and got back a weighted sum. So remove the RNN and ask what is left. We still need tokens to ask questions, and we still need a memory to answer from. The Transformer makes each token do both jobs. Every token produces a query, a key, and a value. Its query asks what it needs; other tokens' keys say what they offer; their values carry the information to be mixed in.
 
 That turns attention from a decoder reading the source into tokens reading each other. A recurrent model passes information along a chain. Self-attention builds the pairwise token relationships directly, so token 50 can look at token 1 in one attention step.
 
@@ -52,13 +48,7 @@ In Bahdanau attention, the decoder state played the role of the query and the en
 - **Key**: what do I contain?
 - **Value**: what information should I pass along if someone attends to me?
 
-The attention equation is just this lookup operation in matrix form. Compare all queries with all keys, turn the scores into weights, then use those weights to mix the values. This is the same softmax-weighted sum from Part 1. The difference is that now the tokens attend to each other inside the same sequence, which is why it is called **self-attention**.
-
-| Term | Role | Loose analogy |
-|---|---|---|
-| Query $Q$ | what this token is looking for | the search box you type into |
-| Key $K$ | what each token advertises | the title/tag a document is indexed under |
-| Value $V$ | the content that actually gets mixed in | the document body you retrieve |
+The equation is that lookup in matrix form, and it is the same softmax-weighted sum from Part 1. The difference is that the tokens now attend to each other inside one sequence, which is why it is called **self-attention**.
 
 Concretely, let $X$ be the input matrix. It has shape `[N, d_model]`: one row per token. Three learned projections produce:
 
@@ -74,7 +64,7 @@ Then the attention step is just three operations:
 
 ### Why Divide by the Square Root of the Head Dimension?
 
-The division by $\sqrt{d_k}$ is easy to miss, but it matters. A dot product adds up $d_k$ numbers. When $d_k$ gets larger, the dot products naturally get larger too. Large scores make softmax too sharp: one token gets almost all the weight, and the others get almost none. Dividing by $\sqrt{d_k}$ keeps the scores in a reasonable range:
+The division by $\sqrt{d_k}$ is easy to miss, but it matters. Assume query and key components are independent with mean 0 and variance 1; then their dot product has mean 0 and variance $d_k$. Scores therefore grow with head width, and large scores push softmax toward one-hot, into the region where its gradients nearly vanish. Dividing by $\sqrt{d_k}$ restores unit variance:
 
 | Head dimension $d_k$ | Raw dot-product std. dev. ($\sqrt{d_k}$) | After dividing by $\sqrt{d_k}$ |
 |---:|---:|---:|
@@ -82,11 +72,9 @@ The division by $\sqrt{d_k}$ is easy to miss, but it matters. A dot product adds
 | 64 | 8.0 | 1.0 |
 | 512 | 22.6 | 1.0 |
 
-> **Why this matters.** Softmax works best when the scores are not too huge. Scaling prevents attention from becoming almost one-hot too early in training.
-
 ### A Tiny Numerical Trace
 
-Concrete numbers make it click. Suppose one query produces these raw scores against four tokens:
+Suppose one query produces these raw scores against four tokens:
 
 $$[2.0,\ 8.0,\ 1.0,\ 3.0]$$
 
@@ -94,7 +82,7 @@ Here $d_k = 64$, so $\sqrt{d_k}=8$. After dividing by 8, the scores become:
 
 $$[0.25,\ 1.0,\ 0.125,\ 0.375]$$
 
-Softmax now gives a useful spread: roughly $[0.17,\ 0.37,\ 0.15,\ 0.20]$. The second token gets the most attention, but the others still matter. Without scaling, softmax gives roughly $[0.0024,\ 0.985,\ 0.0009,\ 0.018]$. Almost everything goes to the second token, so the model has a much weaker learning signal for the rest.
+Softmax now gives a useful spread: roughly $[0.19,\ 0.41,\ 0.17,\ 0.22]$. The second token gets the most attention, but the others still matter. Without scaling, softmax gives roughly $[0.002,\ 0.990,\ 0.001,\ 0.007]$. Almost everything goes to the second token, so the model has a much weaker learning signal for the rest.
 
 Here is the readable reference implementation — no fused kernels, just the math (Part 3 of this series will show why this exact loop is slow on real hardware):
 
@@ -250,7 +238,7 @@ The natural fix is not to make one attention map more complicated. It is to give
 
 A **head** is one complete self-attention operation with its own learned $W^Q$, $W^K$, and $W^V$ matrices. So head 1 does not use the same queries, keys, and values as head 2. They both see the same input tokens, but they project those tokens into different spaces before computing attention. That is how two heads can look at the same sentence and produce different attention patterns.
 
-For example, one head might learn projections that make nearby-position relationships easy to score. Another might learn projections that make pronoun-noun relationships easy to score. This is not manually assigned; the projections are learned from the training objective. But the architecture gives the model room for those different patterns to emerge.
+Nothing assigns a head its specialty. The projections are learned from the training objective; the architecture simply leaves room for different patterns to emerge.
 
 Mathematically, each head is:
 
@@ -258,9 +246,9 @@ $$\text{head}_i=\text{Attention}(XW_i^Q,\, XW_i^K,\, XW_i^V)$$
 
 $$\text{MultiHead}(X)=\text{Concat}(\text{head}_1,\ldots,\text{head}_h)\,W^O$$
 
-The base Transformer uses $d_{\text{model}}=512$ and $h=8$ heads, so each head works in 64 dimensions. The eight outputs are concatenated back to 512 dimensions, then mixed with one final projection. This is why multi-head attention is such a clever design choice: it gives the model multiple views without simply multiplying the model width by eight. Real heads are not always clean and human-readable, but many do learn recognizable patterns such as previous-token links, delimiter tokens, syntax, or coreference.
+The base Transformer uses $d_{\text{model}}=512$ and $h=8$ heads, so each head works in 64 dimensions. The eight outputs are concatenated back to 512 dimensions, then mixed with one final projection. That is the clever part: the model gets multiple views without multiplying its width by eight. Real heads are not always clean or human-readable, but many do learn recognizable roles: previous-token links, delimiters, syntax, coreference.
 
-There is a tradeoff in the number of heads. With too few heads, the model has only a few ways to look at the sentence, so different relationships have to compete for the same attention pattern. With too many heads at a fixed $d_{\text{model}}$, each head becomes very narrow. For example, if $d_{\text{model}}=512$, then 8 heads gives 64 dimensions per head, but 32 heads gives only 16. Very small heads may not have enough room to form useful queries and keys, and some heads can become redundant. In practice, the head count is chosen so each head is small enough to specialize but wide enough to carry a useful signal.
+Head count is a tradeoff at fixed $d_{\text{model}}$. Too few, and different relationships compete for the same attention pattern. Too many, and each head gets too narrow to form useful queries and keys — 512 dimensions split 32 ways leaves only 16 each — with some heads going redundant.
 
 The visualization below shows four heads over one sentence; toggle heads and click a token to isolate its outgoing attention.
 
@@ -293,17 +281,13 @@ The **mask** is what keeps generation honest. During training, we feed the targe
 
 ## Positional Encoding: Telling Tokens Where They Are
 
-Self-attention has one strange weakness: by itself, it does not know word order. The attention equation compares rows of a matrix. If you shuffle the input rows, the output rows shuffle in the same way. The computation still works, but it has no built-in sense that one token came before another.
-
-So without position information, "dog bites man" and "man bites dog" are just the same token vectors in a different order. An RNN got order for free because it read tokens one at a time. A Transformer has to be told where each token sits. The original Transformer does this by **adding** a position vector to each token embedding before the first layer.
+Self-attention is permutation-equivariant: shuffle the input rows and the output rows shuffle the same way, with nothing to signal that one token came before another. Without position information, "dog bites man" and "man bites dog" are the same vectors in a different order. An RNN got order for free by reading tokens one at a time; a Transformer has to be told. The original does this by **adding** a position vector to each token embedding before the first layer.
 
 The paper used fixed sine and cosine waves:
 
 $$PE(pos, 2i) = \sin\!\left(\frac{pos}{10000^{\,2i/d_{\text{model}}}}\right), \qquad PE(pos, 2i+1) = \cos\!\left(\frac{pos}{10000^{\,2i/d_{\text{model}}}}\right)$$
 
 Think of each dimension as a wave. Some waves change quickly, so they help tell nearby positions apart. Other waves change slowly, so they help track broader position. Together, the waves form a fingerprint for each position. A useful analogy is a binary counter: low bits change fast, high bits change slowly. Positional encoding does something similar, but with smooth waves instead of bits.
-
-This also gives the model clues about relative distance. If two positions are close, their slow waves look similar. If they are far apart, more of the waves differ.
 
 Explore it below: hover the heatmap to pick a **dimension** (a column → see its wave across positions) or a **position** (a row → see the full vector that gets added to that token).
 
@@ -340,15 +324,6 @@ Every sub-layer also has a residual connection and layer normalization. In the o
 $$\text{LayerNorm}(x + \text{Sublayer}(x))$$
 
 Many later LLMs move layer norm before the sub-layer, but the 2017 Transformer used the form above.
-
-| Component | What it contributes |
-|---|---|
-| Multi-head self-attention | mixes information *between* tokens |
-| Feed-forward network ($d_{ff}=2048$) | per-token nonlinear "thinking" after the mix |
-| Residual connections | give gradients and signal a clean path through deep stacks |
-| Layer normalization | keeps activations well-scaled and training stable |
-| Masked decoder attention | prevents a token from seeing its own future during training |
-| Positional encoding | restores the order information attention is blind to |
 
 A useful way to read the block is:
 
@@ -398,25 +373,23 @@ Training used Adam, 4000 warmup steps, label smoothing, byte-pair encoding, and 
 | Compute / memory per layer | $O(N)$ | $O(N^2)$ in sequence length |
 | Where attention lives | bolted onto the decoder | the entire mechanism, in every layer |
 
-The Transformer fixes two big RNN pain points: training and prompt prefill can process tokens in parallel, and distant tokens can connect in one attention hop. It does not make autoregressive decoding parallel; both RNNs and Transformers still generate one new token at a time. But it pays a new cost: the attention table is $N \times N$. In 2017, with sequences of a few hundred tokens, that was a good trade.
+The wins are parallel training and one-hop long-range connections. The cost is the $N \times N$ attention table. In 2017, with sequences of a few hundred tokens, that was a good trade.
 
 ## Why Quadratic Attention Was Fine — Until It Wasn't
 
-Self-attention builds a square table. If the sequence has $N$ tokens, the table has $N$ rows and $N$ columns. That means $N^2$ entries per head.
-
-This is the whole problem:
+Self-attention builds a square table: $N^2$ entries per head. This is the whole problem:
 
 > Double the context length, and the attention table gets four times larger.
 
-For a BERT-base-like setup (12 layers, 12 heads) at $N=512$, the attention probabilities in fp16 come to roughly
+For a BERT-base-like setup (12 layers, 12 heads) at $N=512$, the attention probabilities for one sequence in fp16 come to roughly
 
-$$12 \times 12 \times 512^2 \times 2\,\text{bytes} \approx 75\,\text{MB},$$
+$$12 \times 12 \times 512^2 \times 2\,\text{bytes} \approx 75\,\text{MB}.$$
 
 That is manageable. But push the context to 8k tokens and the same expression becomes:
 
 $$12 \times 12 \times 8192^2 \times 2\,\text{bytes} \approx 19\,\text{GB}$$
 
-And that is only the attention matrix term. It does not include model weights, optimizer state, other activations, gradients, or batch size. So the Transformer traded one bottleneck for another. It removed the RNN's sequential bottleneck by making all token-token interactions explicit. That created the next bottleneck: quadratic attention.
+And that is only the attention matrix term — it excludes model weights, optimizer state, other activations, gradients, and batch size. Making every token-token interaction explicit is what removed the RNN's sequential bottleneck, and it is exactly what created the quadratic one.
 
 The visualization below builds the square from the mechanism itself: one query token compares against all keys, which fills one row of $QK^\top$; repeat that for every query token, and the full $N \times N$ table appears.
 

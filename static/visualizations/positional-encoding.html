@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sinusoidal positional encoding</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -49,7 +50,7 @@
       font-size: 11px;
       font-weight: 700;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: background 0.2s ease, transform 0.2s ease;
     }
     button:hover { background: rgba(255,255,255,0.25); }
 
@@ -63,6 +64,7 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      transition: border-color 0.2s ease;
     }
     .card h2 { margin: 0 0 2px; font-family: 'Crimson Pro', serif; font-style: italic; font-weight: 700; font-size: 17px; }
     .card .hint { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
@@ -77,6 +79,7 @@
       font-family: 'JetBrains Mono', monospace;
       font-size: 11px; padding: 2px 8px; border-radius: 999px;
       background: rgba(255,165,0,0.16); color: #ffd591; font-weight: 700;
+      display: inline-block;
     }
     .chip.blue { background: rgba(62,208,240,0.18); color: #aeeafb; }
     .note { font-size: 14px; color: #ececec; line-height: 1.5; margin: 0; }
@@ -130,7 +133,7 @@
     </div>
 
     <section class="stage">
-      <article class="card">
+      <article class="card" id="heatCard">
         <h2>The encoding matrix</h2>
         <div class="hint">Rows = token positions (0 at top). Columns = embedding dimensions (fast → slow, left → right).</div>
         <div class="heatwrap">
@@ -218,26 +221,45 @@
       return { w: r.width, h: r.height, k };
     }
 
-    function drawHeat() {
+    // ---- reveal / pulse state driven by GSAP tweens ----
+    const heatReveal = { rows: 0 };       // rows of the heatmap painted in, top to bottom
+    const waveReveal = { t: 1 };          // 0..1 fraction of the wave curve drawn
+    const vecReveal = { t: 1 };           // 0..1 scale applied to the vector bars
+    const marker = { r: 4 };              // pulse radius for the dot on the wave chart
+    let heatTween = null, waveTween = null, vecTween = null, markerTween = null;
+
+    function drawHeat(revealRows) {
+      const rows = (typeof revealRows === 'number') ? revealRows : P;
       const { w, h, k } = fit(heat);
       hctx.setTransform(k, 0, 0, k, 0, 0);
       hctx.clearRect(0, 0, w, h);
       const cw = w / D, ch = h / P;
+      const full = Math.floor(rows);
+      const partial = rows - full;
       for (let p = 0; p < P; p++) {
         for (let d = 0; d < D; d++) {
+          let alpha = 1;
+          if (p > full) alpha = 0;
+          else if (p === full) alpha = partial;
+          if (alpha <= 0) continue;
+          hctx.globalAlpha = alpha;
           hctx.fillStyle = colour(pe(p, d));
           hctx.fillRect(d * cw, p * ch, cw + 0.6, ch + 0.6);
         }
       }
-      // highlight selected column + row
-      hctx.lineWidth = 2;
-      hctx.strokeStyle = 'rgba(255,255,255,0.9)';
-      hctx.strokeRect(selDim * cw, 0, cw, h);
-      hctx.strokeStyle = 'rgba(255,96,173,0.95)';
-      hctx.strokeRect(0, selPos * ch, w, ch);
+      hctx.globalAlpha = 1;
+      // highlight selected column + row (only once the sweep has reached them)
+      if (rows >= P) {
+        hctx.lineWidth = 2;
+        hctx.strokeStyle = 'rgba(255,255,255,0.9)';
+        hctx.strokeRect(selDim * cw, 0, cw, h);
+        hctx.strokeStyle = 'rgba(255,96,173,0.95)';
+        hctx.strokeRect(0, selPos * ch, w, ch);
+      }
     }
 
-    function drawWave() {
+    function drawWave(revealT) {
+      const t = (typeof revealT === 'number') ? revealT : 1;
       const { w, h, k } = fit(wave);
       wctx.setTransform(k, 0, 0, k, 0, 0);
       wctx.clearRect(0, 0, w, h);
@@ -246,24 +268,46 @@
       wctx.strokeStyle = 'rgba(255,255,255,0.12)';
       wctx.lineWidth = 1;
       wctx.beginPath(); wctx.moveTo(pad, mid); wctx.lineTo(w - pad, mid); wctx.stroke();
-      // curve across positions for selected dimension
+
+      // curve across positions for selected dimension, drawn in up to fraction t
+      const shownSpan = (P - 1) * Math.max(0, Math.min(1, t));
       wctx.strokeStyle = '#ffa500';
       wctx.lineWidth = 2;
       wctx.beginPath();
-      for (let p = 0; p < P; p++) {
+      let last = null;
+      for (let p = 0; p <= shownSpan; p++) {
         const x = pad + (w - 2 * pad) * (p / (P - 1));
         const y = mid - pe(p, selDim) * (h / 2 - pad);
         p === 0 ? wctx.moveTo(x, y) : wctx.lineTo(x, y);
+        last = { x, y };
+      }
+      // draw the fractional last segment so the tip isn't jagged
+      if (shownSpan < P - 1 && last) {
+        const pFrac = shownSpan;
+        const x = pad + (w - 2 * pad) * (pFrac / (P - 1));
+        const y = mid - pe(pFrac, selDim) * (h / 2 - pad);
+        wctx.lineTo(x, y);
+        last = { x, y };
       }
       wctx.stroke();
-      // marker at selected position
-      const mx = pad + (w - 2 * pad) * (selPos / (P - 1));
-      const my = mid - pe(selPos, selDim) * (h / 2 - pad);
-      wctx.fillStyle = '#ff60ad';
-      wctx.beginPath(); wctx.arc(mx, my, 4, 0, Math.PI * 2); wctx.fill();
+
+      // leading dot at the tip of the drawn curve while revealing
+      if (last && t < 1) {
+        wctx.fillStyle = '#fff';
+        wctx.beginPath(); wctx.arc(last.x, last.y, 3, 0, Math.PI * 2); wctx.fill();
+      }
+
+      // marker at selected position (only meaningful once curve is fully drawn, or always if not animating in)
+      if (t >= 1) {
+        const mx = pad + (w - 2 * pad) * (selPos / (P - 1));
+        const my = mid - pe(selPos, selDim) * (h / 2 - pad);
+        wctx.fillStyle = '#ff60ad';
+        wctx.beginPath(); wctx.arc(mx, my, marker.r, 0, Math.PI * 2); wctx.fill();
+      }
     }
 
-    function drawVec() {
+    function drawVec(revealT) {
+      const t = (typeof revealT === 'number') ? revealT : 1;
       const { w, h, k } = fit(vec);
       vctx.setTransform(k, 0, 0, k, 0, 0);
       vctx.clearRect(0, 0, w, h);
@@ -274,7 +318,7 @@
       for (let d = 0; d < D; d++) {
         const v = pe(selPos, d);
         const x = pad + d * bw;
-        const bh = v * (h / 2 - pad);
+        const bh = v * (h / 2 - pad) * Math.max(0, Math.min(1, t));
         vctx.fillStyle = (d === selDim) ? '#ffffff' : colour(v);
         vctx.fillRect(x + 0.5, mid - Math.max(0, bh), Math.max(1, bw - 1), Math.abs(bh));
       }
@@ -290,16 +334,60 @@
       posChip.textContent = `pos = ${selPos}`;
     }
 
-    function redraw() { drawHeat(); drawWave(); drawVec(); updateReadouts(); }
+    function pulseChip(el) {
+      if (reduce || !window.gsap) return;
+      gsap.killTweensOf(el);
+      gsap.fromTo(el, { scale: 1.18 }, { scale: 1, duration: 0.22, ease: 'power2.out', transformOrigin: '50% 50%' });
+    }
+
+    function animateWaveReveal() {
+      if (reduce || !window.gsap) { drawWave(1); return; }
+      if (waveTween) waveTween.kill();
+      waveReveal.t = 0;
+      waveTween = gsap.to(waveReveal, { t: 1, duration: 0.55, ease: 'power1.inOut', onUpdate: () => drawWave(waveReveal.t) });
+    }
+
+    function animateVecReveal() {
+      if (reduce || !window.gsap) { drawVec(1); return; }
+      if (vecTween) vecTween.kill();
+      vecReveal.t = 0;
+      vecTween = gsap.to(vecReveal, { t: 1, duration: 0.4, ease: 'power2.out', onUpdate: () => drawVec(vecReveal.t) });
+    }
+
+    function pulseMarker() {
+      if (reduce || !window.gsap) return;
+      if (markerTween) markerTween.kill();
+      marker.r = 7;
+      markerTween = gsap.to(marker, { r: 4, duration: 0.3, ease: 'power2.out', onUpdate: () => drawWave(1) });
+    }
+
+    function redraw() { drawHeat(P); drawWave(1); drawVec(1); updateReadouts(); }
 
     // pointer interaction on heatmap
+    let lastDim = selDim;
     function pickFromHeat(ev) {
       const r = heat.getBoundingClientRect();
       const x = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left;
       const y = (ev.touches ? ev.touches[0].clientY : ev.clientY) - r.top;
-      selDim = Math.max(0, Math.min(D - 1, Math.floor(x / (r.width / D))));
-      selPos = Math.max(0, Math.min(P - 1, Math.floor(y / (r.height / P))));
-      redraw();
+      const newDim = Math.max(0, Math.min(D - 1, Math.floor(x / (r.width / D))));
+      const newPos = Math.max(0, Math.min(P - 1, Math.floor(y / (r.height / P))));
+      const dimChanged = newDim !== selDim;
+      const posChanged = newPos !== selPos;
+      selDim = newDim;
+      selPos = newPos;
+      if (!dimChanged && !posChanged) return;
+      drawHeat(P);
+      updateReadouts();
+      if (dimChanged) {
+        animateWaveReveal();
+        pulseChip(dimChip);
+        pulseChip(waveChip);
+      } else {
+        drawWave(1);
+        pulseMarker();
+      }
+      animateVecReveal();
+      pulseChip(posChip);
     }
     heat.addEventListener('mousemove', e => { if (!timer) pickFromHeat(e); });
     heat.addEventListener('click', pickFromHeat);
@@ -319,12 +407,56 @@
       playBtn.textContent = 'Stop';
       timer = setInterval(() => {
         selPos = (selPos + 1) % P;
-        redraw();
+        drawHeat(P);
+        drawWave(1);
+        animateVecReveal();
+        pulseMarker();
+        updateReadouts();
       }, reduce ? 600 : 280);
     });
 
     window.addEventListener('resize', redraw);
-    redraw();
+
+    // ---- entrance choreography: heatmap paints in, then two illustrative
+    // dimensions (a fast one, a slow one) draw themselves before settling on
+    // the default selection. Gives the page life before any interaction. ----
+    function playIntro() {
+      updateReadouts();
+      if (reduce || !window.gsap) { redraw(); return; }
+
+      drawWave(0);
+      drawVec(0);
+
+      if (heatTween) heatTween.kill();
+      heatReveal.rows = 0;
+      heatTween = gsap.to(heatReveal, {
+        rows: P,
+        duration: 0.9,
+        ease: 'power1.out',
+        onUpdate: () => drawHeat(heatReveal.rows),
+        onComplete: () => {
+          drawHeat(P);
+          const tl = gsap.timeline();
+          // illustrative fast wave first
+          tl.call(() => { selDim = 0; updateReadouts(); drawHeat(P); animateWaveReveal(); animateVecReveal(); })
+            .to({}, { duration: 0.9 })
+            // then an illustrative slow wave
+            .call(() => { selDim = Math.min(D - 1, D - 2); updateReadouts(); drawHeat(P); animateWaveReveal(); animateVecReveal(); })
+            .to({}, { duration: 0.9 })
+            // settle on the default pedagogical example
+            .call(() => {
+              selDim = 8 % D;
+              selPos = 5 % P;
+              updateReadouts();
+              drawHeat(P);
+              animateWaveReveal();
+              animateVecReveal();
+            });
+        }
+      });
+    }
+
+    playIntro();
   })();
   </script>
 </body>
