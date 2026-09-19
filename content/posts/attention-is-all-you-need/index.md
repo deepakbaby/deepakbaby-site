@@ -84,7 +84,7 @@ $$[0.25,\ 1.0,\ 0.125,\ 0.375]$$
 
 Softmax now gives a useful spread: roughly $[0.19,\ 0.41,\ 0.17,\ 0.22]$. The second token gets the most attention, but the others still matter. Without scaling, softmax gives roughly $[0.002,\ 0.990,\ 0.001,\ 0.007]$. Almost everything goes to the second token, so the model has a much weaker learning signal for the rest.
 
-Here is the readable reference implementation — no fused kernels, just the math (Part 4 of this series will show why this exact loop is slow on real hardware):
+Here is the readable reference implementation — no fused kernels, just the math (a later post will show why this exact loop is slow on real hardware):
 
 ```python
 import math
@@ -308,7 +308,7 @@ Explore it below: hover the heatmap to pick a **dimension** (a column → see it
 
 > **A 2-position worked example.** In the fastest wave pair, position 0 gives $(\sin 0, \cos 0) = (0, 1)$ and position 1 gives $(\sin 1, \cos 1) \approx (0.84, 0.54)$. That changes a lot. In a slower pair with divisor 100, position 1 gives $(\sin 0.01, \cos 0.01) \approx (0.01, 1.0)$. That barely changes. Nearby tokens differ mostly in fast waves and agree mostly in slow waves.
 
-Modern models often use learned or rotary position embeddings instead. We will meet RoPE in Part 5. The job is the same: give attention a sense of order.
+Modern models often use learned or rotary position embeddings instead. We will meet RoPE in a later post. The job is the same: give attention a sense of order.
 
 ## Putting It Together: The Transformer Block
 
@@ -408,7 +408,7 @@ The visualization below builds the square from the mechanism itself: one query t
   <iframe src="/visualizations/attention-quadratic-scaling.html" loading="lazy" allowfullscreen frameborder="0" scrolling="no" title="Quadratic attention scaling visualization"></iframe>
 </div>
 
-The rest of the series is about fighting that square table. Part 3 covers the sparse, low-rank, and kernel approximations that tried to avoid building it at all. Part 4 turns to FlashAttention, which keeps attention exact and instead changes how it moves through memory. Part 5 moves to inference, where the bottleneck shifts again: this time to the KV cache.
+The rest of the series is about fighting that square table. The next post covers the sparse, low-rank, and kernel approximations that tried to avoid building it at all. After that comes FlashAttention, which keeps attention exact and instead changes how it moves through memory. Later still, the series turns to inference, where the bottleneck shifts again: this time to the KV cache.
 
 ## References
 

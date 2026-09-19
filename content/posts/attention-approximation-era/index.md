@@ -172,7 +172,7 @@ The turn arrives in a paper that proposes no new architecture at all.
 
 The paper landed with less noise than the architectures above, because it offered no new modelling capability. What it offered was a reframing: the problem was never the arithmetic, it was the decision to write the intermediate matrix to memory.
 
-That reframing is the subject of Part 4, where FlashAttention takes the same insight, asks what it costs to move bytes between HBM and on-chip SRAM, and makes exact attention both faster and memory-linear — ending this era by making it unnecessary.
+That reframing is the subject of the next post, where FlashAttention takes the same insight, asks what it costs to move bytes between HBM and on-chip SRAM, and makes exact attention both faster and memory-linear — ending this era by making it unnecessary.
 
 ## References
 
