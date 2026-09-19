@@ -1,6 +1,6 @@
 ---
 title: "AI Weekly: OpenAI Discloses Misalignment Incidents, Gemini 3.8 Live Launches"
-date: 2026-09-20
+date: 2026-09-19
 week_start: "2026-09-14"
 week_end: "2026-09-20"
 draft: false
