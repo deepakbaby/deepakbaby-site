@@ -1,6 +1,6 @@
 ---
 title: "AI Weekly: Frontier Models Now Trained Offline, AI Discovers New Enzyme"
-date: 2026-10-25
+date: 2026-10-24
 week_start: "2026-10-19"
 week_end: "2026-10-25"
 draft: false
