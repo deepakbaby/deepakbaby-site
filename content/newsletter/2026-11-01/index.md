@@ -1,6 +1,6 @@
 ---
 title: "AI Weekly: Qwen Models Phone Home, Altman Says Local AI is Wasteful"
-date: 2026-11-01
+date: 2026-10-31
 week_start: "2026-10-26"
 week_end: "2026-11-01"
 draft: false
