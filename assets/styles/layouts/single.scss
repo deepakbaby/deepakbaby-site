@@ -633,3 +633,69 @@ html[data-theme='dark'] {
     }
   }
 }
+
+// Quiet ambient decoration for the wide margins around blog articles.
+.type-posts .modern-post-wrapper {
+  .post-content-container {
+    position: relative;
+    isolation: isolate;
+    overflow: clip;
+
+    &::before,
+    &::after {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      content: '';
+      pointer-events: none;
+    }
+
+    &::before {
+      background:
+        radial-gradient(circle at 4% 10%, rgba(124, 140, 255, 0.16) 0 28px, rgba(124, 140, 255, 0.045) 29px 68px, transparent 69px),
+        radial-gradient(circle at 97% 27%, rgba(244, 114, 182, 0.11) 0 42px, transparent 43px),
+        radial-gradient(circle at 2% 58%, transparent 0 44px, rgba(52, 211, 153, 0.11) 45px 47px, transparent 48px),
+        radial-gradient(circle at 98% 78%, rgba(251, 191, 36, 0.1) 0 22px, rgba(251, 191, 36, 0.035) 23px 56px, transparent 57px);
+    }
+
+    &::after {
+      background-image: radial-gradient(circle, rgba(124, 140, 255, 0.22) 1px, transparent 1.25px);
+      background-position: 0 8px;
+      background-size: 24px 24px;
+      opacity: 0.55;
+      -webkit-mask-image: linear-gradient(to right, #000 0%, #000 11%, transparent 28%, transparent 72%, #000 89%, #000 100%);
+      mask-image: linear-gradient(to right, #000 0%, #000 11%, transparent 28%, transparent 72%, #000 89%, #000 100%);
+    }
+  }
+
+  .post-content-grid {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+[data-theme='light'] .type-posts .modern-post-wrapper .post-content-container {
+  &::before {
+    background:
+      radial-gradient(circle at 4% 10%, rgba(79, 70, 229, 0.11) 0 28px, rgba(79, 70, 229, 0.03) 29px 68px, transparent 69px),
+      radial-gradient(circle at 97% 27%, rgba(219, 39, 119, 0.075) 0 42px, transparent 43px),
+      radial-gradient(circle at 2% 58%, transparent 0 44px, rgba(5, 150, 105, 0.08) 45px 47px, transparent 48px),
+      radial-gradient(circle at 98% 78%, rgba(217, 119, 6, 0.07) 0 22px, rgba(217, 119, 6, 0.025) 23px 56px, transparent 57px);
+  }
+
+  &::after {
+    background-image: radial-gradient(circle, rgba(79, 70, 229, 0.17) 1px, transparent 1.25px);
+  }
+}
+
+@media (max-width: 768px) {
+  .type-posts .modern-post-wrapper .post-content-container {
+    &::before {
+      opacity: 0.45;
+    }
+
+    &::after {
+      display: none;
+    }
+  }
+}
