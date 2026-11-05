@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attention computation in 3D</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Sans+3:wght@400;600&family=STIX+Two+Text:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0e1018;
+      --panel: #0e1018;
+      --line: rgba(255, 255, 255, 0.12);
+      --line-strong: rgba(255, 255, 255, 0.28);
+      --text: #f5f5f5;
+      --muted: #b8b8b8;
+      --q: #58c4dd;
+      --k: #ffff00;
+      --v: #9a72ac;
+      --prob: #83c167;
+      --score: #d147bd;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    body {
+      font-family: "Source Sans 3", sans-serif;
+      background:
+        radial-gradient(circle at 50% 46%, rgba(88,196,221,.035), transparent 38%),
+        var(--bg);
+    }
+
+    button, input { font: inherit; }
+
+    .app {
+      width: 100%;
+      height: 100%;
+      padding: 14px;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      gap: 10px;
+    }
+
+    header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 22px;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: "STIX Two Text", serif;
+      font-size: clamp(18px, 2.25vw, 28px);
+      letter-spacing: -.02em;
+      line-height: 1.05;
+    }
+
+    .subtitle {
+      max-width: 720px;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .legend {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      font: 500 10px/1.2 "IBM Plex Mono", monospace;
+      color: var(--muted);
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend i {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--c);
+      box-shadow: 0 0 12px color-mix(in srgb, var(--c) 65%, transparent);
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      background: transparent;
+    }
+
+    .step {
+      position: relative;
+      min-width: 0;
+      padding: 8px 9px;
+      border: 0;
+      border-right: 0;
+      background: transparent;
+      color: #718093;
+      cursor: pointer;
+      text-align: left;
+      font: 500 10px/1.25 "IBM Plex Mono", monospace;
+      transition: color .18s ease, background .18s ease;
+    }
+
+    .step:last-child { border-right: 0; }
+    .step:hover { color: #d8e1ec; background: rgba(255,255,255,.025); }
+    .step.active { color: var(--text); background: transparent; }
+    .step.active::after {
+      content: "";
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      bottom: -1px;
+      height: 2px;
+      background: var(--q);
+      box-shadow: 0 0 12px rgba(66,215,255,.65);
+    }
+
+    .stage {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      border: 0;
+      background: transparent;
+      overflow: hidden;
+    }
+
+    .viewport {
+      position: relative;
+      grid-row: 2;
+      min-height: 0;
+      border-top: 0;
+      overflow: hidden;
+    }
+
+    #scene {
+      display: block;
+      width: 100%;
+      height: 100%;
+      outline: none;
+    }
+
+    .scene-caption {
+      position: absolute;
+      left: 12px;
+      bottom: 10px;
+      color: #728196;
+      font: 400 10px/1.35 "IBM Plex Mono", monospace;
+      pointer-events: none;
+    }
+
+    .focus-readout {
+      position: absolute;
+      top: 10px;
+      left: 12px;
+      max-width: min(390px, calc(100% - 24px));
+      padding: 7px 9px;
+      border-left: 2px solid var(--score);
+      background: rgba(8,11,16,.82);
+      color: #dce5ef;
+      font: 500 11px/1.45 "IBM Plex Mono", monospace;
+      backdrop-filter: blur(8px);
+    }
+
+    .explain {
+      grid-row: 1;
+      min-height: 0;
+      padding: 11px 15px;
+      display: grid;
+      grid-template-columns: minmax(180px, .8fr) minmax(260px, 1.3fr) minmax(220px, 1fr);
+      grid-template-rows: auto auto;
+      column-gap: 22px;
+      align-items: center;
+      overflow: hidden;
+      border-bottom: 1px solid var(--line);
+      background: transparent;
+    }
+
+    .eyebrow {
+      grid-column: 1;
+      grid-row: 1;
+      color: var(--q);
+      font: 600 10px/1.2 "IBM Plex Mono", monospace;
+    }
+
+    .explain h2 {
+      grid-column: 1;
+      grid-row: 2;
+      margin: 3px 0 0;
+      font-family: "STIX Two Text", serif;
+      font-size: clamp(16px, 1.65vw, 22px);
+      line-height: 1.12;
+      letter-spacing: -.025em;
+    }
+
+    .explain p {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      margin: 0;
+      color: #d0d0d0;
+      font-size: 12px;
+      line-height: 1.48;
+    }
+
+    .equation {
+      grid-column: 3;
+      grid-row: 1;
+      margin: 0;
+      padding: 0 0 6px;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      color: #f4f7fb;
+      font: 600 14px/1.5 "STIX Two Text", serif;
+      overflow-wrap: anywhere;
+    }
+
+    .detail {
+      grid-column: 3;
+      grid-row: 2;
+      margin-top: 5px;
+      color: #7f8ea2;
+      font: 400 10px/1.5 "IBM Plex Mono", monospace;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .control {
+      min-width: 64px;
+      padding: 7px 10px;
+      border: 1px solid var(--line-strong);
+      border-radius: 2px;
+      background: rgba(255,255,255,.035);
+      color: #dce4ed;
+      cursor: pointer;
+      font: 600 10px/1 "IBM Plex Mono", monospace;
+      transition: border-color .18s ease, background .18s ease;
+    }
+
+    .control:hover { border-color: rgba(66,215,255,.55); background: rgba(66,215,255,.07); }
+    .control.primary { color: #061016; background: var(--q); border-color: var(--q); }
+
+    .progress {
+      flex: 1;
+      height: 2px;
+      margin-left: 4px;
+      background: rgba(255,255,255,.08);
+      overflow: hidden;
+    }
+
+    .progress span {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--q), var(--v));
+      transition: width .3s ease;
+    }
+
+    .fallback {
+      position: absolute;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 30px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 13px;
+    }
+
+    @media (max-width: 760px) {
+      html, body { height: 100%; overflow: hidden; }
+      .app {
+        min-height: 0;
+        height: 100vh;
+        padding: 7px;
+        gap: 5px;
+        grid-template-rows: auto auto minmax(0, 1fr) auto;
+      }
+      header { display: block; }
+      h1 { font-size: 16px; }
+      .subtitle, .legend { display: none; }
+      .timeline {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        overflow: hidden;
+      }
+      .step {
+        min-width: 0;
+        padding: 5px 2px;
+        border-bottom: 0 !important;
+        font-size: 6.5px;
+        letter-spacing: -.03em;
+        white-space: nowrap;
+        text-align: center;
+      }
+      .stage { grid-template-rows: 94px minmax(0, 1fr); }
+      .viewport { grid-row: 2; border-top: 1px solid var(--line); border-bottom: 0; }
+      .scene-caption { display: none; }
+      .focus-readout { top: 6px; left: 7px; padding: 4px 6px; font-size: 8px; }
+      .explain {
+        grid-row: 1;
+        min-height: 0;
+        padding: 7px 9px;
+        display: grid;
+        grid-template-columns: minmax(100px, .75fr) minmax(170px, 1.25fr);
+        grid-template-rows: auto auto;
+        column-gap: 10px;
+        overflow: auto;
+      }
+      .eyebrow { grid-column: 1; grid-row: 1; font-size: 7px; }
+      .explain h2 { grid-column: 1; grid-row: 2; margin: 2px 0 0; font-size: 12px; }
+      .explain p { grid-column: 2; grid-row: 1 / span 2; font-size: 8px; line-height: 1.32; }
+      .equation, .detail { display: none; }
+      .controls { gap: 4px; }
+      .control { min-width: 0; padding: 5px 7px; font-size: 8px; }
+      .progress { min-width: 26px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <h1>Build one attention head</h1>
+        <div class="subtitle">Follow four tokens through projection, query–key scoring, softmax, and value mixing. Every number comes from the same tiny 4 × 4 example.</div>
+      </div>
+      <div class="legend" aria-label="Color legend">
+        <span><i style="--c:var(--q)"></i>query</span>
+        <span><i style="--c:var(--k)"></i>key</span>
+        <span><i style="--c:var(--v)"></i>value</span>
+        <span><i style="--c:var(--prob)"></i>probability</span>
+      </div>
+    </header>
+
+    <nav class="timeline" id="timeline" aria-label="Attention computation steps"></nav>
+
+    <section class="stage">
+      <div class="viewport">
+        <canvas id="scene" aria-label="Interactive three-dimensional visualization of attention matrix computation"></canvas>
+        <div class="focus-readout" id="focus"></div>
+        <div class="scene-caption">Drag to inspect · scroll to zoom · guided camera resets on every step</div>
+        <div class="fallback" id="fallback">WebGL is unavailable. The equations and explanation remain readable in the panel beside this message.</div>
+      </div>
+
+      <aside class="explain" aria-live="polite">
+        <div class="eyebrow" id="eyebrow"></div>
+        <h2 id="title"></h2>
+        <p id="copy"></p>
+        <div class="equation" id="equation"></div>
+        <div class="detail" id="detail"></div>
+      </aside>
+    </section>
+
+    <div class="controls">
+      <button class="control" id="prev">Previous</button>
+      <button class="control primary" id="play">Play</button>
+      <button class="control" id="next">Next</button>
+      <button class="control" id="reset">Reset view</button>
+      <div class="progress" aria-hidden="true"><span id="progress"></span></div>
+    </div>
+  </main>
+
+  <script>
+  (() => {
+    "use strict";
+
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const colors = {
+      neutral: 0x64748b,
+      x: 0x88a0b8,
+      q: 0x58c4dd,
+      k: 0xffff00,
+      v: 0x9a72ac,
+      score: 0xd147bd,
+      probability: 0x83c167,
+      output: 0xf1f5f9
+    };
+
+    const tokens = ["the", "cat", "sat", "down"];
+    const X = [
+      [1.0, 0.1, 0.0, 0.2],
+      [0.2, 1.2, 0.3, 0.1],
+      [0.1, 0.4, 1.1, 0.2],
+      [0.0, 0.2, 0.5, 1.0]
+    ];
+    const WQ = [[0.8,0,0,0.2],[0,0.9,0.1,0],[0,0.1,0.9,0],[0.1,0,0,0.9]];
+    const WK = [[0.9,0.1,0,0],[0.1,0.8,0,0.1],[0,0,1.0,0],[0,0,0.1,0.9]];
+    const WV = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
+
+    function matmul(a, b) {
+      return a.map(row => b[0].map((_, j) => row.reduce((sum, value, k) => sum + value * b[k][j], 0)));
+    }
+    function transpose(a) { return a[0].map((_, j) => a.map(row => row[j])); }
+    function softmax(row) {
+      const max = Math.max(...row);
+      const exps = row.map(v => Math.exp(v - max));
+      const sum = exps.reduce((a, b) => a + b, 0);
+      return exps.map(v => v / sum);
+    }
+    function fmt(v) { return Math.abs(v) >= 10 ? v.toFixed(1) : v.toFixed(2); }
+
+    const Q = matmul(X, WQ);
+    const K = matmul(X, WK);
+    const V = matmul(X, WV);
+    const KT = transpose(K);
+    const S = matmul(Q, KT);
+    const scaled = S.map(row => row.map(v => v / 2));
+    const A = scaled.map(softmax);
+    const O = matmul(A, V);
+
+    const steps = [
+      {
+        short: "Input",
+        eyebrow: "The starting point",
+        title: "Four tokens, four vectors",
+        copy: "The sentence begins as a matrix X. Each row belongs to one token; each column is one learned feature. Attention will transform these rows without processing them one at a time.",
+        equation: "X ∈ ℝ⁴ˣ⁴",
+        detail: "Rows: tokens · columns: embedding features",
+        focus: "X carries all four token vectors into the layer together.",
+        duration: 3200,
+        camera: [6.8, 5.4, 7.4],
+        build: buildInput
+      },
+      {
+        short: "Project",
+        eyebrow: "Learn three views",
+        title: "The same input becomes Q, K, and V",
+        copy: "The three rows show the actual matrix equations. X is multiplied by a different learned weight matrix each time: W<sub>Q</sub> shapes what a token searches for, W<sub>K</sub> what it advertises, and W<sub>V</sub> the content it can contribute.",
+        equation: "Q = XW<sub>Q</sub> &nbsp;·&nbsp; K = XW<sub>K</sub> &nbsp;·&nbsp; V = XW<sub>V</sub>",
+        detail: "Same X · different learned projections · different roles",
+        focus: "Each branch multiplies X by its own learned weights.",
+        duration: 5200,
+        camera: [0, 1.2, 14.5],
+        build: buildProjection
+      },
+      {
+        short: "Score",
+        eyebrow: "Queries meet keys",
+        title: "One dot product lights one score",
+        copy: "A row of Q meets a column of Kᵀ along the shared head dimension. Multiply matching components, add them, and one cell of QKᵀ appears. Repeating this for every query–key pair fills the square.",
+        equation: "Sᵢⱼ = Qᵢ · Kⱼ",
+        detail: "4 queries × 4 keys = 16 compatibility scores",
+        focus: "",
+        duration: 6200,
+        camera: [0, 1.1, 12.5],
+        build: buildScores
+      },
+      {
+        short: "Normalize",
+        eyebrow: "Scores become choices",
+        title: "Scale first, then softmax each row",
+        copy: "Dividing by √d<sub>k</sub> keeps wide heads from producing extreme logits. Softmax then turns each query row into a distribution over keys: positive weights that add to one.",
+        equation: "A = softmax(S / √d<sub>k</sub>)",
+        detail: "Here d<sub>k</sub> = 4, so every score is divided by 2",
+        focus: "Each green row sums to 1.00.",
+        duration: 4200,
+        camera: [0, 1.1, 13.5],
+        build: buildSoftmax
+      },
+      {
+        short: "Mix values",
+        eyebrow: "Attention carries content",
+        title: "Weights decide how much value to read",
+        copy: "The attention matrix does not contain the content. It contains routing weights. Multiplying A by V blends value rows into a new representation for every token.",
+        equation: "O = AV   ·   Oᵢ = Σⱼ AᵢⱼVⱼ",
+        detail: "The highlighted row of A and column of V produce one output cell",
+        focus: "",
+        duration: 6200,
+        camera: [0, 1.1, 12.5],
+        build: buildOutput
+      },
+      {
+        short: "One head",
+        eyebrow: "The completed circuit",
+        title: "One head is one complete attention path",
+        copy: "A head owns its Q, K, and V projections, creates one attention map, and returns one set of contextualized token vectors. Other heads repeat this circuit with different learned projections.",
+        equation: "head = softmax((XW<sub>Q</sub>)(XW<sub>K</sub>)ᵀ / √d<sub>k</sub>) · XW<sub>V</sub>",
+        detail: "Multi-head attention runs several such circuits in parallel",
+        focus: "The whole path is differentiable and learned end to end.",
+        duration: 4600,
+        camera: [10.5, 6.5, 11.5],
+        build: buildCircuit
+      }
+    ];
+
+    const canvas = document.getElementById("scene");
+    const focusEl = document.getElementById("focus");
+    const titleEl = document.getElementById("title");
+    const eyebrowEl = document.getElementById("eyebrow");
+    const copyEl = document.getElementById("copy");
+    const equationEl = document.getElementById("equation");
+    const detailEl = document.getElementById("detail");
+    const progressEl = document.getElementById("progress");
+    const timelineEl = document.getElementById("timeline");
+    const playBtn = document.getElementById("play");
+
+    if (!window.THREE) {
+      document.getElementById("fallback").style.display = "grid";
+      return;
+    }
+
+    let renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    } catch (_) {
+      document.getElementById("fallback").style.display = "grid";
+      return;
+    }
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setClearColor(0x000000, 0);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.1;
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x0e1018, .024);
+    const camera = new THREE.PerspectiveCamera(34, 1, .1, 100);
+    const root = new THREE.Group();
+    scene.add(root);
+
+    scene.add(new THREE.AmbientLight(0xb9d5ff, 1.35));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 2.3);
+    keyLight.position.set(5, 8, 10);
+    scene.add(keyLight);
+    const rimLight = new THREE.PointLight(0x58c4dd, 24, 25);
+    rimLight.position.set(-5, 1, 5);
+    scene.add(rimLight);
+    const warmLight = new THREE.PointLight(0xffff00, 12, 22);
+    warmLight.position.set(5, -2, 3);
+    scene.add(warmLight);
+
+    const floor = new THREE.GridHelper(22, 22, 0x273343, 0x1a202b);
+    floor.position.y = -3.35;
+    floor.material.transparent = true;
+    floor.material.opacity = .07;
+    scene.add(floor);
+
+    const haloCanvas = document.createElement("canvas");
+    haloCanvas.width = haloCanvas.height = 128;
+    const haloContext = haloCanvas.getContext("2d");
+    const haloGradient = haloContext.createRadialGradient(64, 64, 2, 64, 64, 62);
+    haloGradient.addColorStop(0, "rgba(255,255,255,0.95)");
+    haloGradient.addColorStop(.2, "rgba(255,255,255,0.45)");
+    haloGradient.addColorStop(1, "rgba(255,255,255,0)");
+    haloContext.fillStyle = haloGradient;
+    haloContext.fillRect(0, 0, 128, 128);
+    const haloTexture = new THREE.CanvasTexture(haloCanvas);
+
+    const pointer = { down: false, x: 0, y: 0 };
+    let rotationTarget = { x: 0, y: 0 };
+    let cameraDistance = 1;
+    let index = 0;
+    let timer = null;
+    let isPlaying = false;
+    let stepTimeline = null;
+    let activeFlow = [];
+
+    function makeTextSprite(text, color = "#dce5ef", size = 34, scale = 1) {
+      const c = document.createElement("canvas");
+      const cx = c.getContext("2d");
+      const subscript = text.match(/^(.+)_([A-Za-z]+)$/);
+      cx.font = `600 ${size}px IBM Plex Mono`;
+      const baseWidth = subscript ? cx.measureText(subscript[1]).width : cx.measureText(text).width;
+      if (subscript) cx.font = `600 ${size * .68}px IBM Plex Mono`;
+      const suffixWidth = subscript ? cx.measureText(subscript[2]).width : 0;
+      const width = Math.ceil(baseWidth + suffixWidth + 28);
+      c.width = width;
+      c.height = Math.ceil(size * 1.65);
+      cx.fillStyle = color;
+      cx.textBaseline = "middle";
+      if (subscript) {
+        const start = (c.width - baseWidth - suffixWidth) / 2;
+        cx.textAlign = "left";
+        cx.font = `600 ${size}px IBM Plex Mono`;
+        cx.fillText(subscript[1], start, c.height / 2);
+        cx.font = `600 ${size * .68}px IBM Plex Mono`;
+        cx.fillText(subscript[2], start + baseWidth, c.height / 2 + size * .24);
+      } else {
+        cx.textAlign = "center";
+        cx.font = `600 ${size}px IBM Plex Mono`;
+        cx.fillText(text, c.width / 2, c.height / 2);
+      }
+      const texture = new THREE.CanvasTexture(c);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
+      const sprite = new THREE.Sprite(material);
+      sprite.scale.set((width / c.height) * scale, scale, 1);
+      sprite.userData.disposable = [texture, material];
+      return sprite;
+    }
+
+    function matrixGroup(data, options = {}) {
+      const {
+        color = colors.neutral,
+        label = "",
+        position = [0,0,0],
+        rotation = [0,0,0],
+        cell = .58,
+        gap = .07,
+        opacity = .92,
+        labels = false,
+        showValues = false
+      } = options;
+      const rows = data.length;
+      const cols = data[0].length;
+      const group = new THREE.Group();
+      group.position.set(...position);
+      group.rotation.set(...rotation);
+      group.userData.cells = [];
+
+      const max = Math.max(...data.flat().map(v => Math.abs(v)), .001);
+      const plate = new THREE.Mesh(
+        new THREE.BoxGeometry(cols * (cell + gap) + .18, rows * (cell + gap) + .18, .07),
+        new THREE.MeshStandardMaterial({ color: 0x101a26, transparent: true, opacity: .8, roughness: .68, metalness: .18 })
+      );
+      plate.position.z = -.09;
+      group.add(plate);
+      const plateEdges = new THREE.LineSegments(
+        new THREE.EdgesGeometry(plate.geometry),
+        new THREE.LineBasicMaterial({ color, transparent: true, opacity: .28 })
+      );
+      plateEdges.position.copy(plate.position);
+      group.add(plateEdges);
+
+      data.forEach((row, r) => {
+        const cellRow = [];
+        row.forEach((value, c) => {
+          const strength = .20 + .8 * Math.min(1, Math.abs(value) / max);
+          const base = new THREE.Color(color);
+          const shaded = base.clone().multiplyScalar(.32 + strength * .75);
+          const material = new THREE.MeshStandardMaterial({
+            color: shaded,
+            emissive: base,
+            emissiveIntensity: .08 + strength * .19,
+            transparent: true,
+            opacity,
+            roughness: .5,
+            metalness: .16
+          });
+          const mesh = new THREE.Mesh(new THREE.BoxGeometry(cell, cell, .12 + strength * .07), material);
+          mesh.position.set(
+            (c - (cols - 1) / 2) * (cell + gap),
+            ((rows - 1) / 2 - r) * (cell + gap),
+            0
+          );
+          mesh.userData = { r, c, value, baseColor: shaded.clone(), baseEmissive: .08 + strength * .19 };
+          group.add(mesh);
+          const edges = new THREE.LineSegments(
+            new THREE.EdgesGeometry(mesh.geometry),
+            new THREE.LineBasicMaterial({ color: base, transparent: true, opacity: .22 + strength * .22 })
+          );
+          mesh.add(edges);
+          if (showValues) {
+            const valueLabel = makeTextSprite(fmt(value), "#f5f5f5", 25, Math.max(.14, cell * .34));
+            valueLabel.position.set(mesh.position.x, mesh.position.y, .16);
+            group.add(valueLabel);
+          }
+          cellRow.push(mesh);
+        });
+        group.userData.cells.push(cellRow);
+      });
+
+      if (label) {
+        const labelScale = Math.max(.25, Math.min(.40, 5.5 / label.length));
+        const sprite = makeTextSprite(label, new THREE.Color(color).getStyle(), 30, labelScale);
+        sprite.position.set(0, rows * (cell + gap) / 2 + .42, .05);
+        group.add(sprite);
+      }
+
+      if (labels && rows === tokens.length) {
+        tokens.forEach((token, r) => {
+          const sprite = makeTextSprite(token, "#aebdcd", 26, .32);
+          sprite.position.set(-(cols * (cell + gap) / 2 + .48), ((rows - 1) / 2 - r) * (cell + gap), .03);
+          group.add(sprite);
+        });
+      }
+
+      root.add(group);
+      return group;
+    }
+
+    function connector(from, to, color, opacity = .62) {
+      const curve = new THREE.LineCurve3(from.clone(), to.clone());
+      const geometry = new THREE.TubeGeometry(curve, 1, .032, 8, false);
+      const material = new THREE.MeshBasicMaterial({
+        color,
+        transparent: true,
+        opacity,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+      const beam = new THREE.Mesh(geometry, material);
+      root.add(beam);
+      return beam;
+    }
+
+    function arrow(from, to, color) {
+      const direction = to.clone().sub(from);
+      const length = direction.length();
+      const helper = new THREE.ArrowHelper(direction.normalize(), from, length, color, .25, .13);
+      root.add(helper);
+      return helper;
+    }
+
+    function flowDot(from, to, color, speed = .5, size = .13, offset = 0) {
+      const material = new THREE.MeshBasicMaterial({ color, transparent: true });
+      const sphere = new THREE.Mesh(new THREE.SphereGeometry(size, 16, 16), material);
+      const glowMaterial = new THREE.SpriteMaterial({
+        map: haloTexture,
+        color,
+        transparent: true,
+        opacity: .58,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+      glowMaterial.userData.sharedMap = true;
+      const glow = new THREE.Sprite(glowMaterial);
+      glow.scale.set(size * 9, size * 9, 1);
+      sphere.add(glow);
+      sphere.userData.glow = glow;
+      root.add(sphere);
+      activeFlow.push({ mesh: sphere, from: from.clone(), to: to.clone(), speed, offset });
+      return sphere;
+    }
+
+    function worldCell(group, r, c) {
+      group.updateMatrixWorld(true);
+      return group.userData.cells[r][c].getWorldPosition(new THREE.Vector3());
+    }
+
+    function worldRowCenter(group, r) {
+      const cells = group.userData.cells[r];
+      const sum = cells.reduce((v, mesh) => v.add(mesh.getWorldPosition(new THREE.Vector3())), new THREE.Vector3());
+      return sum.multiplyScalar(1 / cells.length);
+    }
+
+    function worldColumnCenter(group, c) {
+      const cells = group.userData.cells.map(row => row[c]);
+      const sum = cells.reduce((v, mesh) => v.add(mesh.getWorldPosition(new THREE.Vector3())), new THREE.Vector3());
+      return sum.multiplyScalar(1 / cells.length);
+    }
+
+    function highlightCell(mesh, color, amount = 1.1) {
+      mesh.material.color.set(color);
+      mesh.material.emissive.set(color);
+      mesh.material.emissiveIntensity = amount;
+      mesh.scale.setScalar(1.08);
+    }
+
+    function resetHighlights(group) {
+      group.userData.cells.flat().forEach(mesh => {
+        mesh.material.color.copy(mesh.userData.baseColor);
+        mesh.material.emissiveIntensity = mesh.userData.baseEmissive;
+        mesh.scale.setScalar(1);
+      });
+    }
+
+    function stageLabel(text, position, color = "#dce5ef", scale = .52) {
+      const label = makeTextSprite(text, color, 30, scale);
+      label.position.set(...position);
+      root.add(label);
+      return label;
+    }
+
+    function animatedValueCell(source, color, size = .38) {
+      const group = new THREE.Group();
+      source.updateMatrixWorld(true);
+      group.position.copy(root.worldToLocal(source.getWorldPosition(new THREE.Vector3())));
+      const base = new THREE.Color(color);
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(size, size, .1),
+        new THREE.MeshStandardMaterial({
+          color: base.clone().multiplyScalar(.72),
+          emissive: base,
+          emissiveIntensity: .42,
+          roughness: .72,
+          metalness: 0
+        })
+      );
+      group.add(mesh);
+      const label = makeTextSprite(fmt(source.userData.value), "#ffffff", 25, size * .72);
+      label.position.z = .09;
+      group.add(label);
+      root.add(group);
+      return group;
+    }
+
+    function productValueCell(value, color, position, size = .42) {
+      const group = new THREE.Group();
+      group.position.copy(position);
+      const base = new THREE.Color(color);
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(size, size, .12),
+        new THREE.MeshStandardMaterial({
+          color: base.clone().multiplyScalar(.72),
+          emissive: base,
+          emissiveIntensity: .58,
+          roughness: .7,
+          metalness: 0
+        })
+      );
+      group.add(mesh);
+      const label = makeTextSprite(fmt(value), "#ffffff", 25, size * .72);
+      label.position.z = .1;
+      group.add(label);
+      group.scale.setScalar(.001);
+      root.add(group);
+      return group;
+    }
+
+    function animateElementwiseDot(config) {
+      const {
+        left, leftRow, right, rightColumn, result, resultRow, resultColumn,
+        leftColor, rightColor, productColor, leftValues, rightValues, resultValue
+      } = config;
+      const resultCell = result.userData.cells[resultRow][resultColumn];
+      const resultPosition = root.worldToLocal(worldCell(result, resultRow, resultColumn));
+      const leftCopies = [];
+      const rightCopies = [];
+      const products = [];
+      const targets = [];
+
+      for (let k = 0; k < leftValues.length; k++) {
+        const target = new THREE.Vector3(.35 + k * .62, 0, .35);
+        targets.push(target);
+        leftCopies.push(animatedValueCell(left.userData.cells[leftRow][k], leftColor));
+        rightCopies.push(animatedValueCell(right.userData.cells[k][rightColumn], rightColor));
+        products.push(productValueCell(leftValues[k] * rightValues[k], productColor, target));
+      }
+
+      focusEl.style.display = "block";
+      if (reduceMotion || !window.gsap) {
+        products.forEach(product => product.scale.setScalar(1));
+        highlightCell(resultCell, productColor, 1.3);
+        focusEl.textContent = `${leftValues.map((value, k) => fmt(value * rightValues[k])).join(" + ")} = ${fmt(resultValue)}`;
+        return;
+      }
+
+      stepTimeline = gsap.timeline({ delay: .75 });
+      stepTimeline.call(() => {
+        focusEl.textContent = "Extract one row and one column.";
+      });
+
+      leftCopies.forEach((copy, k) => {
+        stepTimeline.to(copy.position, {
+          x: targets[k].x, y: .38, z: targets[k].z,
+          duration: .68, ease: "power2.inOut"
+        }, k * .11);
+        stepTimeline.to(rightCopies[k].position, {
+          x: targets[k].x, y: -.38, z: targets[k].z,
+          duration: .68, ease: "power2.inOut"
+        }, k * .11);
+      });
+
+      stepTimeline.call(() => {
+        focusEl.textContent = "Multiply corresponding elements.";
+      }, null, 1.28);
+
+      leftCopies.forEach((copy, k) => {
+        stepTimeline.to(copy.position, { y: 0, duration: .42, ease: "power2.in" }, 1.34 + k * .07);
+        stepTimeline.to(rightCopies[k].position, { y: 0, duration: .42, ease: "power2.in" }, 1.34 + k * .07);
+        stepTimeline.to([copy.scale, rightCopies[k].scale], {
+          x: .001, y: .001, z: .001, duration: .25
+        }, 1.70 + k * .07);
+        stepTimeline.to(products[k].scale, {
+          x: 1, y: 1, z: 1, duration: .32, ease: "back.out(1.8)"
+        }, 1.70 + k * .07);
+      });
+
+      stepTimeline.call(() => {
+        focusEl.textContent = `${leftValues.map((value, k) => fmt(value * rightValues[k])).join(" + ")} = ${fmt(resultValue)}`;
+      }, null, 2.22);
+
+      products.forEach((product, k) => {
+        stepTimeline.to(product.position, {
+          x: resultPosition.x, y: resultPosition.y, z: resultPosition.z,
+          duration: .86, ease: "power2.inOut"
+        }, 3.20 + k * .09);
+        stepTimeline.to(product.scale, {
+          x: .001, y: .001, z: .001, duration: .24
+        }, 4.00 + k * .09);
+      });
+      stepTimeline.to(resultCell.scale, {
+        x: 1.18, y: 1.18, z: 1.18, duration: .18, yoyo: true, repeat: 1
+      }, 4.30);
+      stepTimeline.call(() => highlightCell(resultCell, productColor, 1.3), null, 4.30);
+    }
+
+    function buildInput() {
+      matrixGroup(X, { color: colors.x, label: "X · token embeddings", position: [0,0,0], cell: .78, gap: .1, labels: true, showValues: true });
+      stageLabel("4 tokens", [-3.35, 1.55, .1], "#9fb0c2", .37);
+      stageLabel("4 features", [0, -2.25, .1], "#9fb0c2", .37);
+    }
+
+    function buildProjection() {
+      const equations = [
+        { w: WQ, out: Q, color: colors.q, name: "Q", y: 2.35 },
+        { w: WK, out: K, color: colors.k, name: "K", y: 0 },
+        { w: WV, out: V, color: colors.v, name: "V", y: -2.35 }
+      ];
+      equations.forEach((branch, i) => {
+        matrixGroup(X, { color: colors.x, label: "X", position: [-4.45, branch.y, 0], cell: .31, gap: .04 });
+        matrixGroup(branch.w, { color: branch.color, label: `W_${branch.name}`, position: [-1.15, branch.y, 0], cell: .31, gap: .04 });
+        matrixGroup(branch.out, { color: branch.color, label: branch.name, position: [3.15, branch.y, 0], cell: .31, gap: .04 });
+        stageLabel("×", [-2.78, branch.y, .12], "#d7e1ec", .38);
+        stageLabel("=", [1.05, branch.y, .12], new THREE.Color(branch.color).getStyle(), .38);
+        const from = new THREE.Vector3(-.15, branch.y, .12);
+        const to = new THREE.Vector3(2.25, branch.y, .12);
+        connector(from, to, branch.color, .28);
+        flowDot(from, to, branch.color, .34, .14, i * .27);
+      });
+    }
+
+    function buildScores() {
+      const q = matrixGroup(Q, {
+        color: colors.q, label: "Q · query rows",
+        position: [-4.55,0,0], cell: .43, gap: .055, showValues: true
+      });
+      const kt = matrixGroup(KT, {
+        color: colors.k, label: "Kᵀ · key columns",
+        position: [-1.65,0,0], cell: .43, gap: .055, showValues: true
+      });
+      const score = matrixGroup(S, {
+        color: colors.score, label: "QKᵀ · scores",
+        position: [4.65,0,0], cell: .43, gap: .055, showValues: true
+      });
+      stageLabel("×", [-3.10, 0, .18], "#f5f5f5", .44);
+      stageLabel("elementwise products", [1.25, .82, .1], "#d147bd", .30);
+      stageLabel("Σ", [3.08, 0, .18], "#d147bd", .44);
+      const i = 1;
+      const j = 2;
+      for (let k = 0; k < 4; k++) {
+        highlightCell(q.userData.cells[i][k], colors.q, .75);
+        highlightCell(kt.userData.cells[k][j], colors.k, .75);
+      }
+      animateElementwiseDot({
+        left: q,
+        leftRow: i,
+        right: kt,
+        rightColumn: j,
+        result: score,
+        resultRow: i,
+        resultColumn: j,
+        leftColor: colors.q,
+        rightColor: colors.k,
+        productColor: colors.score,
+        leftValues: Q[i],
+        rightValues: KT.map(row => row[j]),
+        resultValue: S[i][j]
+      });
+    }
+
+    function buildSoftmax() {
+      matrixGroup(S, { color: colors.score, label: "raw scores", position: [-3.55,0,0], cell: .46, gap: .06 });
+      matrixGroup(scaled, { color: colors.k, label: "÷ √4", position: [0,0,0], cell: .46, gap: .06 });
+      const probabilities = matrixGroup(A, { color: colors.probability, label: "softmax · A", position: [3.55,0,0], cell: .46, gap: .06 });
+      arrow(new THREE.Vector3(-2.3,0,0), new THREE.Vector3(-1.25,0,0), colors.k);
+      arrow(new THREE.Vector3(1.25,0,0), new THREE.Vector3(2.3,0,0), colors.probability);
+      A.forEach((row, r) => {
+        const label = makeTextSprite(`Σ ${row.reduce((a,b) => a+b, 0).toFixed(2)}`, "#bff295", 26, .3);
+        label.position.set(5.25, ((A.length - 1) / 2 - r) * .52, .1);
+        root.add(label);
+      });
+      probabilities.rotation.y = -.06;
+    }
+
+    function buildOutput() {
+      const attention = matrixGroup(A, {
+        color: colors.probability, label: "A · routing weights",
+        position: [-4.55,0,0], cell: .43, gap: .055, showValues: true
+      });
+      const values = matrixGroup(V, {
+        color: colors.v, label: "V · content",
+        position: [-1.65,0,0], cell: .43, gap: .055, showValues: true
+      });
+      const output = matrixGroup(O, {
+        color: colors.output, label: "O · contextualized tokens",
+        position: [4.65,0,0], cell: .43, gap: .055, showValues: true
+      });
+      stageLabel("×", [-3.10, 0, .18], "#f5f5f5", .44);
+      stageLabel("elementwise products", [1.25, .82, .1], "#9a72ac", .30);
+      stageLabel("Σ", [3.08, 0, .18], "#f5f5f5", .44);
+      const row = 1;
+      const column = 2;
+      attention.userData.cells[row].forEach((mesh, j) => highlightCell(mesh, colors.probability, .45 + A[row][j]));
+      values.userData.cells.forEach(cells => highlightCell(cells[column], colors.v, .72));
+      animateElementwiseDot({
+        left: attention,
+        leftRow: row,
+        right: values,
+        rightColumn: column,
+        result: output,
+        resultRow: row,
+        resultColumn: column,
+        leftColor: colors.probability,
+        rightColor: colors.v,
+        productColor: colors.output,
+        leftValues: A[row],
+        rightValues: V.map(valueRow => valueRow[column]),
+        resultValue: O[row][column]
+      });
+    }
+
+    function buildCircuit() {
+      matrixGroup(X, { color: colors.x, label: "X", position: [-5.55,0,0], cell: .31, gap: .04 });
+      matrixGroup(Q, { color: colors.q, label: "Q", position: [-2.85,1.55,0], cell: .22, gap: .035 });
+      matrixGroup(K, { color: colors.k, label: "K", position: [-2.85,0,0], cell: .22, gap: .035 });
+      matrixGroup(V, { color: colors.v, label: "V", position: [-2.85,-1.55,0], cell: .22, gap: .035 });
+      matrixGroup(S, { color: colors.score, label: "QKᵀ", position: [.15,.72,0], cell: .31, gap: .04 });
+      matrixGroup(A, { color: colors.probability, label: "softmax", position: [2.85,.72,0], cell: .31, gap: .04 });
+      matrixGroup(O, { color: colors.output, label: "AV", position: [5.55,0,0], cell: .31, gap: .04 });
+
+      const xOut = new THREE.Vector3(-4.65, 0, .1);
+      [
+        { to: new THREE.Vector3(-3.55, 1.55, .1), color: colors.q, offset: 0 },
+        { to: new THREE.Vector3(-3.55, 0, .1), color: colors.k, offset: .2 },
+        { to: new THREE.Vector3(-3.55, -1.55, .1), color: colors.v, offset: .4 }
+      ].forEach(branch => {
+        connector(xOut, branch.to, branch.color, .42);
+        flowDot(xOut, branch.to, branch.color, .36, .11, branch.offset);
+      });
+
+      const qToScore = new THREE.Vector3(-2.15, 1.55, .1);
+      const kToScore = new THREE.Vector3(-2.15, 0, .1);
+      const scoreIn = new THREE.Vector3(-.75, .72, .1);
+      connector(qToScore, scoreIn, colors.q, .42);
+      connector(kToScore, scoreIn, colors.k, .42);
+      flowDot(qToScore, scoreIn, colors.q, .4, .11, 0);
+      flowDot(kToScore, scoreIn, colors.k, .4, .11, .5);
+
+      const scoreOut = new THREE.Vector3(1.05, .72, .1);
+      const softmaxIn = new THREE.Vector3(1.95, .72, .1);
+      arrow(scoreOut, softmaxIn, colors.probability);
+      flowDot(scoreOut, softmaxIn, colors.probability, .42, .11, .2);
+
+      const attentionOut = new THREE.Vector3(3.75, .72, .1);
+      const valueOut = new THREE.Vector3(-2.15, -1.55, .1);
+      const outputIn = new THREE.Vector3(4.65, 0, .1);
+      connector(attentionOut, outputIn, colors.probability, .45);
+      connector(valueOut, outputIn, colors.v, .32);
+      flowDot(attentionOut, outputIn, colors.probability, .38, .11, 0);
+      flowDot(valueOut, outputIn, colors.v, .38, .11, .5);
+      stageLabel("one attention head", [0, -2.15, 0], "#c9d5e2", .52);
+    }
+
+    function disposeObject(object) {
+      object.traverse(child => {
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) {
+          const materials = Array.isArray(child.material) ? child.material : [child.material];
+          materials.forEach(material => {
+            if (material.map && !material.userData.sharedMap) material.map.dispose();
+            material.dispose();
+          });
+        }
+        if (child.userData && child.userData.disposable) {
+          child.userData.disposable.forEach(item => item.dispose && item.dispose());
+        }
+      });
+    }
+
+    function clearRoot() {
+      if (stepTimeline) {
+        stepTimeline.kill();
+        stepTimeline = null;
+      }
+      while (root.children.length) {
+        const child = root.children.pop();
+        if (window.gsap) {
+          child.traverse(object => {
+            gsap.killTweensOf(object.position);
+            gsap.killTweensOf(object.scale);
+            if (object.material) gsap.killTweensOf(object.material);
+          });
+        }
+        disposeObject(child);
+      }
+      activeFlow = [];
+    }
+
+    function animateEntrance() {
+      if (reduceMotion || !window.gsap) return;
+      root.children.forEach((child, i) => {
+        const target = child.scale.clone();
+        child.scale.setScalar(.001);
+        gsap.to(child.scale, {
+          x: target.x, y: target.y, z: target.z,
+          duration: .5,
+          delay: Math.min(i * .025, .25),
+          ease: "back.out(1.4)"
+        });
+      });
+    }
+
+    function resetCamera(animated = true) {
+      const target = steps[index].camera;
+      cameraDistance = 1;
+      rotationTarget = { x: 0, y: 0 };
+      if (animated && !reduceMotion && window.gsap) {
+        gsap.to(camera.position, { x: target[0], y: target[1], z: target[2], duration: .75, ease: "power3.out" });
+      } else {
+        camera.position.set(...target);
+      }
+      camera.lookAt(0,0,0);
+    }
+
+    function renderStep(nextIndex, animated = true) {
+      index = (nextIndex + steps.length) % steps.length;
+      clearRoot();
+      const step = steps[index];
+      step.build();
+      eyebrowEl.textContent = `${index + 1} / ${steps.length} · ${step.eyebrow}`;
+      titleEl.textContent = step.title;
+      copyEl.innerHTML = step.copy;
+      equationEl.innerHTML = step.equation;
+      detailEl.innerHTML = step.detail;
+      focusEl.textContent = step.focus;
+      focusEl.style.display = step.focus ? "block" : "none";
+      [...timelineEl.children].forEach((button, i) => button.classList.toggle("active", i === index));
+      progressEl.style.width = `${((index + 1) / steps.length) * 100}%`;
+      resetCamera(animated);
+      animateEntrance();
+    }
+
+    steps.forEach((step, i) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "step";
+      button.textContent = `${i + 1}. ${step.short}`;
+      button.addEventListener("click", () => {
+        stopPlayback();
+        renderStep(i);
+      });
+      timelineEl.appendChild(button);
+    });
+
+    function stopPlayback() {
+      if (timer) clearTimeout(timer);
+      timer = null;
+      isPlaying = false;
+      playBtn.textContent = "Play";
+    }
+
+    function scheduleNextStep() {
+      if (!isPlaying) return;
+      timer = setTimeout(() => {
+        if (!isPlaying) return;
+        renderStep(index + 1);
+        scheduleNextStep();
+      }, steps[index].duration);
+    }
+
+    playBtn.addEventListener("click", () => {
+      if (isPlaying) {
+        stopPlayback();
+        return;
+      }
+      isPlaying = true;
+      playBtn.textContent = "Pause";
+      renderStep(index);
+      scheduleNextStep();
+    });
+    document.getElementById("prev").addEventListener("click", () => { stopPlayback(); renderStep(index - 1); });
+    document.getElementById("next").addEventListener("click", () => { stopPlayback(); renderStep(index + 1); });
+    document.getElementById("reset").addEventListener("click", () => resetCamera());
+
+    canvas.addEventListener("pointerdown", event => {
+      pointer.down = true;
+      pointer.x = event.clientX;
+      pointer.y = event.clientY;
+      canvas.setPointerCapture(event.pointerId);
+    });
+    canvas.addEventListener("pointermove", event => {
+      if (!pointer.down) return;
+      rotationTarget.y += (event.clientX - pointer.x) * .005;
+      rotationTarget.x += (event.clientY - pointer.y) * .004;
+      rotationTarget.x = Math.max(-.55, Math.min(.55, rotationTarget.x));
+      pointer.x = event.clientX;
+      pointer.y = event.clientY;
+    });
+    canvas.addEventListener("pointerup", () => { pointer.down = false; });
+    canvas.addEventListener("wheel", event => {
+      event.preventDefault();
+      cameraDistance = Math.max(.72, Math.min(1.55, cameraDistance + event.deltaY * .0008));
+    }, { passive: false });
+
+    function resize() {
+      const rect = canvas.getBoundingClientRect();
+      renderer.setSize(rect.width, rect.height, false);
+      camera.aspect = rect.width / Math.max(1, rect.height);
+      camera.updateProjectionMatrix();
+    }
+    window.addEventListener("resize", resize);
+
+    const clock = new THREE.Clock();
+    function frame(now) {
+      const elapsed = clock.getElapsedTime();
+      root.rotation.x += (rotationTarget.x - root.rotation.x) * .08;
+      root.rotation.y += (rotationTarget.y - root.rotation.y) * .08;
+
+      const base = steps[index].camera;
+      const desiredLength = new THREE.Vector3(...base).length() * cameraDistance;
+      camera.position.setLength(camera.position.length() + (desiredLength - camera.position.length()) * .08);
+      camera.lookAt(0,0,0);
+
+      activeFlow.forEach(flow => {
+        const t = (elapsed * flow.speed + flow.offset) % 1;
+        flow.mesh.position.lerpVectors(flow.from, flow.to, t);
+        const opacity = Math.sin(Math.PI * t);
+        flow.mesh.material.opacity = opacity;
+        if (flow.mesh.userData.glow) flow.mesh.userData.glow.material.opacity = opacity * .7;
+        flow.mesh.material.transparent = true;
+      });
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(frame);
+    }
+
+    resize();
+    renderStep(0, false);
+    requestAnimationFrame(frame);
+  })();
+  </script>
+</body>
+</html>

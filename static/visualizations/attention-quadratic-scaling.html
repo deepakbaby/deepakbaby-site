@@ -3,282 +3,307 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quadratic Attention Scaling</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <title>Why attention scales quadratically</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Sans+3:wght@400;600&family=STIX+Two+Text:wght@500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #1c1c1c;
-      --panel: #232323;
-      --border: rgba(255,255,255,0.12);
-      --text: #ffffff;
-      --muted: #d0d0d0;
-      --blue: #3ed0f0;
-      --orange: #ffa500;
-      --pink: #ff60ad;
-      --green: #b0f580;
+      --bg: #0e1018;
+      --line: rgba(255, 255, 255, .12);
+      --line-strong: rgba(255, 255, 255, .28);
+      --text: #f5f5f5;
+      --muted: #aab4c2;
+      --q: #58c4dd;
+      --k: #ffff00;
+      --score: #d147bd;
+      --probability: #83c167;
     }
+
     * { box-sizing: border-box; }
-    body {
+
+    html, body {
+      width: 100%;
+      height: 100%;
       margin: 0;
-      width: 100vw;
-      height: 100vh;
       overflow: hidden;
-      background:
-        radial-gradient(circle at 16% 10%, rgba(62,208,240,0.16), transparent 28%),
-        radial-gradient(circle at 82% 18%, rgba(255,165,0,0.14), transparent 30%),
-        var(--bg);
+      background: var(--bg);
       color: var(--text);
-      font-family: 'Crimson Pro', serif;
     }
+
+    body {
+      font-family: "Source Sans 3", sans-serif;
+      background:
+        radial-gradient(circle at 58% 48%, rgba(88, 196, 221, .035), transparent 40%),
+        var(--bg);
+    }
+
+    button, input { font: inherit; }
+
     .app {
-      height: 100vh;
-      padding: 16px;
+      width: 100%;
+      height: 100%;
+      padding: 14px;
       display: grid;
-      grid-template-rows: auto auto 1fr auto;
-      gap: 12px;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      gap: 10px;
     }
+
     header {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      gap: 18px;
+      gap: 20px;
     }
+
     h1 {
       margin: 0;
-      font-size: clamp(18px, 2vw, 28px);
-      letter-spacing: -0.01em;
-      font-weight: 700;
+      font-family: "STIX Two Text", serif;
+      font-size: clamp(19px, 2.3vw, 29px);
+      line-height: 1.05;
+      letter-spacing: -.025em;
     }
+
     .subtitle {
+      max-width: 690px;
       margin-top: 5px;
       color: var(--muted);
-      font-size: 14px;
-      line-height: 1.45;
-      max-width: 800px;
-    }
-    .controls {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-      align-items: center;
-    }
-    .ctl {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      min-width: 150px;
-    }
-    .ctl label {
-      color: var(--muted);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-    .ctl span { color: var(--orange); }
-    input[type=range] {
-      width: 160px;
-      accent-color: var(--orange);
-      cursor: pointer;
-    }
-    .preset {
-      border: 1px solid rgba(255,255,255,0.4);
-      background: rgba(255,255,255,0.13);
-      color: #fff;
-      border-radius: 6px;
-      padding: 8px 11px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background 180ms ease, transform 180ms ease;
-    }
-    .preset:hover { background: rgba(255,255,255,0.23); transform: translateY(-1px); }
-    .equation {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-      color: #ffd591;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      padding: 10px 12px;
-      border: 1px solid rgba(255,255,255,0.10);
-      border-radius: 12px;
-      background: rgba(255,255,255,0.045);
-    }
-    .stage {
-      min-height: 0;
-      display: grid;
-      grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.75fr);
-      gap: 12px;
-    }
-    .card {
-      min-height: 0;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      background: rgba(35,35,35,0.92);
-      overflow: hidden;
-    }
-    .grid-card {
-      display: grid;
-      grid-template-rows: auto 1fr;
-      padding: 14px;
-      gap: 10px;
-    }
-    .card h2 {
-      margin: 0;
-      font-style: italic;
-      font-size: 20px;
-      font-weight: 700;
-    }
-    .hint {
-      margin-top: 3px;
-      color: var(--muted);
       font-size: 13px;
-      line-height: 1.4;
+      line-height: 1.42;
     }
-    .canvas-wrap {
-      position: relative;
-      min-height: 0;
-      border-radius: 12px;
-      background: #171717;
-      border: 1px solid rgba(255,255,255,0.08);
-      overflow: hidden;
+
+    .sequence-controls {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 7px;
+      flex-wrap: wrap;
+      font: 500 10px/1 "IBM Plex Mono", monospace;
     }
-    .build-wrap {
-      min-height: 0;
+
+    .slider-wrap {
       display: grid;
-      grid-template-columns: 0.95fr 1.05fr;
-      gap: 12px;
+      grid-template-columns: auto 118px;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      white-space: nowrap;
     }
-    .mini-panel {
+
+    #nValue { color: var(--q); }
+
+    input[type="range"] {
+      width: 118px;
+      accent-color: var(--q);
+      cursor: pointer;
+    }
+
+    .preset, .control {
+      border: 1px solid var(--line-strong);
+      border-radius: 2px;
+      background: rgba(255, 255, 255, .035);
+      color: #dce4ed;
+      cursor: pointer;
+      font: 600 10px/1 "IBM Plex Mono", monospace;
+      transition: border-color .18s ease, background .18s ease;
+    }
+
+    .preset { padding: 6px 8px; }
+    .preset:hover, .control:hover {
+      border-color: rgba(88, 196, 221, .62);
+      background: rgba(88, 196, 221, .07);
+    }
+    .preset.active { color: #071116; background: var(--q); border-color: var(--q); }
+
+    .explain {
+      padding: 10px 0;
+      display: grid;
+      grid-template-columns: minmax(170px, .72fr) minmax(260px, 1.2fr) minmax(290px, 1.3fr);
+      gap: 22px;
+      align-items: center;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .eyebrow {
+      color: var(--q);
+      font: 600 9px/1.2 "IBM Plex Mono", monospace;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .explain h2 {
+      margin: 3px 0 0;
+      font-family: "STIX Two Text", serif;
+      font-size: clamp(15px, 1.55vw, 21px);
+      line-height: 1.1;
+      letter-spacing: -.02em;
+    }
+
+    .explain p {
+      margin: 0;
+      color: #ced5de;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .memory-note {
+      padding-left: 14px;
+      border-left: 2px solid var(--score);
+      color: #aeb9c8;
+      font: 400 9.5px/1.5 "IBM Plex Mono", monospace;
+    }
+
+    .memory-note strong {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .stage {
       position: relative;
       min-height: 0;
-      border-radius: 12px;
-      background: #171717;
-      border: 1px solid rgba(255,255,255,0.08);
       overflow: hidden;
     }
-    .mini-title {
-      position: absolute;
-      left: 12px;
-      top: 10px;
-      z-index: 2;
-      color: #d0d0d0;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-    canvas {
+
+    #scene {
+      display: block;
       width: 100%;
       height: 100%;
-      display: block;
+      outline: none;
     }
-    .side {
-      padding: 14px;
-      display: grid;
-      grid-template-rows: auto auto 1fr;
-      gap: 12px;
+
+    .readout {
+      position: absolute;
+      top: 9px;
+      left: 10px;
+      max-width: calc(100% - 20px);
+      padding: 6px 8px;
+      border-left: 2px solid var(--score);
+      background: rgba(8, 11, 16, .82);
+      color: #dde5ee;
+      font: 500 10px/1.35 "IBM Plex Mono", monospace;
+      pointer-events: none;
+      backdrop-filter: blur(6px);
     }
-    .metrics {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-    .metric {
-      padding: 10px;
-      border-radius: 12px;
-      background: rgba(255,255,255,0.055);
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-    .metric .k {
-      color: var(--muted);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-    .metric .v {
-      margin-top: 3px;
-      color: var(--text);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: clamp(14px, 2vw, 20px);
-      font-weight: 700;
-    }
-    .metric.hot .v { color: #ffd591; }
-    .metric.warn .v { color: #ffc0dd; }
-    .bar-area {
-      display: grid;
-      gap: 9px;
-      align-content: start;
-      min-height: 0;
-    }
-    .bar-row {
-      display: grid;
-      grid-template-columns: 72px 1fr 72px;
-      gap: 8px;
-      align-items: center;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      color: var(--muted);
-    }
-    .bar-track {
-      height: 13px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.07);
-      overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-    .bar {
-      height: 100%;
-      width: 0%;
-      border-radius: 999px;
-      background: linear-gradient(90deg, var(--blue), var(--orange), var(--pink));
-      transition: width 260ms ease;
-    }
-    .note {
-      color: #ececec;
-      font-size: 15px;
-      line-height: 1.45;
-      margin: 0;
-    }
-    .legend {
+
+    .stats {
+      position: absolute;
+      right: 10px;
+      top: 9px;
       display: flex;
       gap: 14px;
-      flex-wrap: wrap;
-      color: var(--muted);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
+      color: #8f9daf;
+      font: 500 9px/1.35 "IBM Plex Mono", monospace;
+      pointer-events: none;
     }
-    .swatch {
-      display: inline-flex;
+
+    .stats strong {
+      display: block;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .legend {
+      position: absolute;
+      right: 10px;
+      bottom: 8px;
+      display: flex;
+      gap: 11px;
+      color: #8f9daf;
+      font: 500 9px/1.2 "IBM Plex Mono", monospace;
+      pointer-events: none;
+    }
+
+    .legend span { display: inline-flex; align-items: center; gap: 5px; }
+    .legend i {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--c);
+      box-shadow: 0 0 10px color-mix(in srgb, var(--c) 58%, transparent);
+    }
+
+    .bottom-controls {
+      display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 7px;
+      padding-top: 1px;
     }
-    .box {
-      width: 12px;
-      height: 12px;
-      border-radius: 3px;
-      display: inline-block;
+
+    .control { min-width: 62px; padding: 7px 10px; }
+    .control.primary { color: #071116; background: var(--q); border-color: var(--q); }
+    .control:disabled { opacity: .48; cursor: default; }
+
+    .progress {
+      flex: 1;
+      height: 2px;
+      margin-left: 4px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, .08);
     }
-    @media (max-width: 880px) {
-      body { overflow: auto; }
-      .app { min-height: 100vh; height: auto; padding: 12px; }
-      header { flex-direction: column; }
-      .controls { justify-content: flex-start; }
-      .stage { grid-template-columns: 1fr; }
-      .build-wrap { grid-template-columns: 1fr; }
-      .mini-panel { height: 260px; }
-      .canvas-wrap { height: 340px; }
+
+    .progress span {
+      display: block;
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, var(--q), var(--score), var(--probability));
+    }
+
+    .status {
+      min-width: 112px;
+      color: #8290a2;
+      text-align: right;
+      font: 500 9px/1 "IBM Plex Mono", monospace;
+    }
+
+    @media (max-width: 760px) {
+      .app {
+        height: 100dvh;
+        padding: 7px;
+        gap: 5px;
+      }
+      header { align-items: center; }
+      h1 { font-size: 15px; }
+      .subtitle { display: none; }
+      .slider-wrap { grid-template-columns: auto 82px; }
+      input[type="range"] { width: 82px; }
+      .preset { padding: 5px 6px; font-size: 8px; }
+      .explain {
+        padding: 6px 0;
+        grid-template-columns: minmax(100px, .68fr) minmax(190px, 1.32fr);
+        gap: 9px;
+      }
+      .eyebrow { font-size: 7px; }
+      .explain h2 { font-size: 11px; }
+      .explain p { font-size: 8px; line-height: 1.32; }
+      .memory-note { display: none; }
+      .readout { top: 5px; left: 5px; padding: 4px 6px; font-size: 7px; }
+      .stats { top: 5px; right: 5px; gap: 8px; font-size: 7px; }
+      .stats strong { font-size: 9px; }
+      .legend { right: 5px; bottom: 4px; gap: 6px; font-size: 7px; }
+      .control { min-width: 0; padding: 5px 7px; font-size: 8px; }
+      .status { min-width: 76px; font-size: 7px; }
+    }
+
+    @media (max-width: 520px) {
+      header { gap: 7px; }
+      .sequence-controls { gap: 3px; }
+      .slider-wrap { grid-template-columns: auto 64px; gap: 4px; font-size: 7px; }
+      input[type="range"] { width: 64px; }
+      .preset[data-n="1024"], .preset[data-n="4096"] { display: none; }
+      .legend { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
+      }
     }
   </style>
 </head>
@@ -286,369 +311,330 @@
   <main class="app">
     <header>
       <div>
-        <h1>Where the square comes from</h1>
-        <div class="subtitle">Each token becomes a query once. For each query, it compares against every token as a key. One query fills one row; all queries fill the full attention matrix.</div>
+        <h1>Where attention’s square comes from</h1>
+        <div class="subtitle">One query compares with every key to make one row. Repeating that for every query fills an N × N attention matrix.</div>
       </div>
-      <div class="controls">
-        <div class="ctl">
-          <label>sequence length N = <span id="nLabel">512</span></label>
-          <input id="nSlider" type="range" min="9" max="13" step="1" value="9" aria-label="Sequence length exponent">
-        </div>
-        <button class="preset" data-n="512">512</button>
-        <button class="preset" data-n="2048">2k</button>
-        <button class="preset" data-n="8192">8k</button>
+      <div class="sequence-controls" aria-label="Sequence length controls">
+        <label class="slider-wrap">
+          <span>sequence N = <b id="nValue">512</b></span>
+          <input id="nSlider" type="range" min="9" max="13" step="1" value="9" aria-label="Sequence length, powers of two from 512 to 8192">
+        </label>
+        <button class="preset active" type="button" data-n="512">512</button>
+        <button class="preset" type="button" data-n="1024">1k</button>
+        <button class="preset" type="button" data-n="2048">2k</button>
+        <button class="preset" type="button" data-n="4096">4k</button>
+        <button class="preset" type="button" data-n="8192">8k</button>
       </div>
     </header>
 
-    <div class="equation">
-      <span>attention scores = query tokens × key tokens</span>
-      <span id="eqCells">= 512 × 512 = 262,144</span>
-      <span>·</span>
-      <span id="eqMemory">12 layers × 12 heads × fp16 ≈ 75 MB</span>
-    </div>
-
-    <section class="stage">
-      <article class="card grid-card">
-        <div>
-          <h2>One query row at a time</h2>
-          <div class="hint">The left panel shows one token asking every token, "should I read you?" The right panel turns that same set of comparisons into one row of the attention matrix.</div>
-        </div>
-        <div class="build-wrap">
-          <div class="mini-panel">
-            <div class="mini-title">Token-to-token comparisons</div>
-            <canvas id="tokens"></canvas>
-          </div>
-          <div class="mini-panel">
-            <div class="mini-title">Rows of QKᵀ</div>
-            <canvas id="grid"></canvas>
-          </div>
-        </div>
-      </article>
-
-      <article class="card side">
-        <div>
-          <h2>Memory intuition</h2>
-          <p class="note">For the toy sentence, watch one row fill for each query token. For the real counter, replace the toy length with N: every layer and head computes N query rows, each with N key scores.</p>
-        </div>
-        <div class="metrics">
-          <div class="metric hot">
-            <div class="k">Cells / head</div>
-            <div class="v" id="cellsMetric">262k</div>
-          </div>
-          <div class="metric warn">
-            <div class="k">All heads/layers</div>
-            <div class="v" id="memoryMetric">75 MB</div>
-          </div>
-        </div>
-        <div class="bar-area" id="bars"></div>
-      </article>
+    <section class="explain" aria-label="Attention scaling explanation">
+      <div>
+        <div class="eyebrow">One row, then N rows</div>
+        <h2>N queries × N keys = N² pairwise scores</h2>
+      </div>
+      <p>Follow the blue query as it meets every yellow key. Each magenta score completes one cell in its row; row-wise softmax turns that row into green probabilities. Then the next query repeats the same work.</p>
+      <div class="memory-note">
+        <strong id="memoryHeadline">512² cells · 75.5 MB (72 MiB)</strong>
+        Naively materialized fp16 score <em>or</em> probability tensor, batch size 1, across 12 layers × 12 heads. Excludes gradients and all other activations. Standard materialized attention stores N²; FlashAttention is exact and still quadratic in arithmetic, but avoids materializing the full N × N matrix in HBM.
+      </div>
     </section>
 
-    <div class="legend">
-      <span class="swatch"><span class="box" style="background:#3ed0f0"></span>query row</span>
-      <span class="swatch"><span class="box" style="background:#ffa500"></span>computed score cells</span>
-      <span class="swatch"><span class="box" style="background:#ff60ad"></span>quadratic growth</span>
+    <section class="stage">
+      <canvas id="scene" role="img" aria-label="Animation of each query comparing with every key to build the rows of an attention matrix"></canvas>
+      <div class="readout" id="readout" aria-live="polite">Query 1 compares with key 1 → score cell (1, 1)</div>
+      <div class="stats" aria-hidden="true">
+        <div><strong id="cellCount">262,144</strong>cells / head</div>
+        <div><strong id="memoryCount">75.5 MB</strong>fp16 × 12 × 12</div>
+      </div>
+      <div class="legend" aria-label="Color legend">
+        <span><i style="--c:var(--q)"></i>query</span>
+        <span><i style="--c:var(--k)"></i>key</span>
+        <span><i style="--c:var(--score)"></i>score</span>
+        <span><i style="--c:var(--probability)"></i>probability</span>
+      </div>
+    </section>
+
+    <div class="bottom-controls">
+      <button class="control primary" id="play" type="button">Play</button>
+      <button class="control" id="reset" type="button">Reset</button>
+      <div class="progress" aria-hidden="true"><span id="progress"></span></div>
+      <div class="status" id="status">ready · 0 / 64 cells</div>
     </div>
   </main>
 
   <script>
-    (function () {
-      const nSlider = document.getElementById('nSlider');
-      const nLabel = document.getElementById('nLabel');
-      const eqCells = document.getElementById('eqCells');
-      const eqMemory = document.getElementById('eqMemory');
-      const cellsMetric = document.getElementById('cellsMetric');
-      const memoryMetric = document.getElementById('memoryMetric');
-      const bars = document.getElementById('bars');
-      const gridCanvas = document.getElementById('grid');
-      const tokenCanvas = document.getElementById('tokens');
-      const gridCtx = gridCanvas.getContext('2d');
-      const tokenCtx = tokenCanvas.getContext('2d');
-      const presets = document.querySelectorAll('.preset');
-      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      let currentN = 512;
-      const sweepState = { t: 0 };
-      const pulseState = { s: 1 };
-      let sweepTween = null;
-      let lastActiveIdx = -1;
+    (() => {
+      "use strict";
 
-      const layers = 12;
-      const heads = 12;
-      const bytes = 2;
-      const stops = [512, 1024, 2048, 4096, 8192];
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const canvas = document.getElementById("scene");
+      const ctx = canvas.getContext("2d");
+      const slider = document.getElementById("nSlider");
+      const nValue = document.getElementById("nValue");
+      const cellCount = document.getElementById("cellCount");
+      const memoryCount = document.getElementById("memoryCount");
+      const memoryHeadline = document.getElementById("memoryHeadline");
+      const readout = document.getElementById("readout");
+      const status = document.getElementById("status");
+      const progressBar = document.getElementById("progress");
+      const playButton = document.getElementById("play");
+      const resetButton = document.getElementById("reset");
+      const presets = [...document.querySelectorAll(".preset")];
 
-      function formatCount(x) {
-        if (x >= 1e9) return (x / 1e9).toFixed(x >= 10e9 ? 0 : 1) + 'B';
-        if (x >= 1e6) return (x / 1e6).toFixed(x >= 10e6 ? 0 : 1) + 'M';
-        if (x >= 1e3) return (x / 1e3).toFixed(x >= 10e3 ? 0 : 1) + 'k';
-        return String(x);
+      const colors = {
+        text: "#f5f5f5",
+        muted: "#8290a2",
+        line: "rgba(255,255,255,.13)",
+        q: "#58c4dd",
+        k: "#ffff00",
+        score: "#d147bd",
+        probability: "#83c167"
+      };
+      const visualN = 8;
+      const totalCells = visualN * visualN;
+      const totalDuration = 9600;
+      let sequenceLength = 512;
+      let elapsed = reduceMotion ? totalDuration : 0;
+      let previousTime = 0;
+      let frameId = 0;
+      let playing = false;
+
+      function formatBytes(bytes) {
+        const decimal = bytes / 1e6;
+        const binary = bytes / (1024 ** 2);
+        const decimalText = decimal >= 1000
+          ? `${(decimal / 1000).toFixed(decimal >= 10000 ? 1 : 2)} GB`
+          : `${decimal.toFixed(decimal >= 100 ? 0 : 1)} MB`;
+        const binaryText = binary >= 1024
+          ? `${(binary / 1024).toFixed(binary >= 10240 ? 1 : 2)} GiB`
+          : `${binary.toFixed(binary >= 100 ? 0 : 1)} MiB`;
+        return { decimalText, binaryText };
       }
 
-      function formatBytes(x) {
-        const gb = 1000 ** 3;
-        const mb = 1000 ** 2;
-        if (x >= gb) return (x / gb).toFixed(x >= 10 * gb ? 0 : 1) + ' GB';
-        return (x / mb).toFixed(x >= 10 * mb ? 0 : 1) + ' MB';
+      function updateSequence() {
+        sequenceLength = 2 ** Number(slider.value);
+        const cells = sequenceLength ** 2;
+        const bytes = cells * 12 * 12 * 2;
+        const formatted = formatBytes(bytes);
+        nValue.textContent = sequenceLength.toLocaleString();
+        cellCount.textContent = cells.toLocaleString();
+        memoryCount.textContent = formatted.decimalText;
+        memoryHeadline.textContent = `${sequenceLength.toLocaleString()}² = ${cells.toLocaleString()} cells · ${formatted.decimalText} (${formatted.binaryText})`;
+        presets.forEach(button => {
+          button.classList.toggle("active", Number(button.dataset.n) === sequenceLength);
+        });
+        draw();
       }
 
-      function memoryFor(n) {
-        return layers * heads * n * n * bytes;
-      }
-
-      function fit(canvas, ctx) {
-        const r = canvas.getBoundingClientRect();
-        const dpr = window.devicePixelRatio || 1;
-        canvas.width = Math.max(1, Math.round(r.width * dpr));
-        canvas.height = Math.max(1, Math.round(r.height * dpr));
+      function fitCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const width = Math.max(1, Math.round(rect.width * dpr));
+        const height = Math.max(1, Math.round(rect.height * dpr));
+        if (canvas.width !== width || canvas.height !== height) {
+          canvas.width = width;
+          canvas.height = height;
+        }
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        return { w: r.width, h: r.height };
+        return { width: rect.width, height: rect.height };
       }
 
-      function getProgress(count) {
-        if (reduce) return { active: count - 1, rowProgress: 1 };
-        const t = sweepState.t % count;
-        const active = Math.min(count - 1, Math.floor(t));
-        return { active, rowProgress: t - active };
+      function roundedRect(x, y, width, height, radius) {
+        ctx.beginPath();
+        ctx.roundRect(x, y, width, height, Math.min(radius, width / 2, height / 2));
       }
 
-      function toyTokenCount(n) {
-        if (n <= 512) return 6;
-        if (n <= 1024) return 7;
-        if (n <= 2048) return 8;
-        if (n <= 4096) return 9;
-        return 10;
-      }
-
-      function drawArrow(ctx, x1, y1, x2, y2, color, width, alpha) {
-        const dx = x2 - x1;
-        const dy = y2 - y1;
-        const angle = Math.atan2(dy, dx);
-        const endX = x2 - Math.cos(angle) * 13;
-        const endY = y2 - Math.sin(angle) * 13;
+      function line(x1, y1, x2, y2, color, width = 1, alpha = 1) {
         ctx.save();
         ctx.globalAlpha = alpha;
         ctx.strokeStyle = color;
-        ctx.fillStyle = color;
         ctx.lineWidth = width;
-        ctx.lineCap = 'round';
         ctx.beginPath();
         ctx.moveTo(x1, y1);
-        ctx.lineTo(endX, endY);
+        ctx.lineTo(x2, y2);
         ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(endX, endY);
-        ctx.lineTo(endX - Math.cos(angle - 0.55) * 8, endY - Math.sin(angle - 0.55) * 8);
-        ctx.lineTo(endX - Math.cos(angle + 0.55) * 8, endY - Math.sin(angle + 0.55) * 8);
-        ctx.closePath();
-        ctx.fill();
         ctx.restore();
       }
 
-      function drawTokens(n) {
-        const { w, h } = fit(tokenCanvas, tokenCtx);
-        const ctx = tokenCtx;
-        ctx.clearRect(0, 0, w, h);
-        const count = toyTokenCount(n);
-        const { active } = getProgress(count);
-        const words = ['The', 'cat', 'sat', 'on', 'the', 'mat', 'and', 'looked', 'around', '.'];
-        const topY = Math.max(68, h * 0.33);
-        const bottomY = Math.min(h - 56, h * 0.72);
-        const leftPad = 34;
-        const rightPad = 34;
-        const spacing = (w - leftPad - rightPad) / Math.max(1, count - 1);
-        const points = Array.from({ length: count }, (_, i) => ({
-          x: leftPad + i * spacing,
-          y: bottomY,
-          label: words[i] || `t${i}`
-        }));
-        const q = points[active];
+      function draw() {
+        const { width, height } = fitCanvas();
+        ctx.clearRect(0, 0, width, height);
 
-        ctx.font = '700 11px JetBrains Mono, monospace';
-        ctx.textAlign = 'center';
-        ctx.fillStyle = '#d0d0d0';
-        ctx.fillText(`Query token ${active + 1}: compare to all ${count} keys`, w / 2, 36);
+        const compact = width < 620 || height < 270;
+        const padX = compact ? 18 : 38;
+        const top = compact ? 38 : 48;
+        const bottom = compact ? 20 : 30;
+        const availableHeight = Math.max(90, height - top - bottom);
+        const matrixSize = Math.min(availableHeight, width * (compact ? .52 : .43));
+        const queryGap = compact ? Math.min(96, width * .25) : Math.min(180, width * .2);
+        const groupWidth = matrixSize + queryGap;
+        const groupLeft = Math.max(padX, (width - groupWidth) / 2);
+        const matrixLeft = groupLeft + queryGap;
+        const matrixTop = top + (availableHeight - matrixSize) / 2;
+        const cell = matrixSize / visualN;
+        const queryX = groupLeft + (compact ? 8 : 12);
+        const keyY = Math.max(23, matrixTop - (compact ? 14 : 22));
 
-        points.forEach((p, i) => {
-          const strength = 0.25 + 0.55 * (1 - Math.abs(i - active) / Math.max(1, count - 1));
-          drawArrow(ctx, q.x, topY, p.x, p.y, i === active ? '#3ed0f0' : '#ffa500', i === active ? 2.3 : 1.5, strength);
-        });
+        const normalized = Math.min(1, elapsed / totalDuration);
+        const rawCell = normalized * totalCells;
+        const completeCells = Math.min(totalCells, Math.floor(rawCell));
+        const activeCell = Math.min(totalCells - 1, completeCells);
+        const local = rawCell - completeCells;
+        const activeRow = Math.floor(activeCell / visualN);
+        const activeColumn = activeCell % visualN;
+        const finished = completeCells >= totalCells;
+        const shownRow = finished ? visualN - 1 : activeRow;
+        const queryY = matrixTop + (shownRow + .5) * cell;
+        const keyX = matrixLeft + (activeColumn + .5) * cell;
 
-        const qRadius = 16 * (reduce ? 1 : pulseState.s);
-        ctx.beginPath();
-        ctx.arc(q.x, topY, qRadius, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(62,208,240,0.22)';
-        ctx.fill();
-        ctx.strokeStyle = '#3ed0f0';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '700 11px JetBrains Mono, monospace';
-        ctx.fillText('Q', q.x, topY + 4);
-
-        points.forEach((p, i) => {
-          const activeKey = i === active;
-          ctx.beginPath();
-          ctx.roundRect(p.x - 24, p.y - 14, 48, 28, 12);
-          ctx.fillStyle = activeKey ? 'rgba(62,208,240,0.22)' : 'rgba(255,255,255,0.08)';
-          ctx.fill();
-          ctx.strokeStyle = activeKey ? '#3ed0f0' : 'rgba(255,255,255,0.18)';
-          ctx.lineWidth = activeKey ? 2 : 1;
-          ctx.stroke();
-          ctx.fillStyle = '#fff';
-          ctx.fillText(p.label, p.x, p.y + 4);
-        });
-      }
-
-      function drawGrid(n) {
-        const { w, h } = fit(gridCanvas, gridCtx);
-        const ctx = gridCtx;
-        ctx.clearRect(0, 0, w, h);
-        const size = Math.min(w - 52, h - 52);
-        const left = (w - size) / 2 + 10;
-        const top = (h - size) / 2 + 10;
-        const visualCells = toyTokenCount(n);
-        const cell = size / visualCells;
-        const { active: activeRow, rowProgress } = getProgress(visualCells);
-
-        ctx.fillStyle = 'rgba(255,255,255,0.035)';
-        ctx.fillRect(left, top, size, size);
-
-        for (let r = 0; r < visualCells; r++) {
-          const complete = r < activeRow;
-          const isActive = r === activeRow;
-          const fillCols = complete ? visualCells : (isActive ? Math.max(1, Math.ceil(rowProgress * visualCells)) : 0);
-          for (let c = 0; c < fillCols; c++) {
-            const intensity = 0.25 + 0.55 * (1 - Math.abs(c - r) / Math.max(1, visualCells - 1));
-            const hue = isActive ? `rgba(62,208,240,${0.20 + intensity * 0.34})` : `rgba(255,165,0,${0.12 + intensity * 0.25})`;
-            ctx.fillStyle = hue;
-            ctx.fillRect(left + c * cell + 1, top + r * cell + 1, cell - 2, cell - 2);
-          }
+        ctx.font = `${compact ? 8 : 10}px "IBM Plex Mono", monospace`;
+        ctx.fillStyle = colors.muted;
+        ctx.textAlign = "center";
+        if (!compact) {
+          ctx.fillText("KEYS · N COLUMNS", matrixLeft + matrixSize / 2, Math.max(10, keyY - 10));
         }
-
-        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-        ctx.lineWidth = 1;
-        for (let i = 0; i <= visualCells; i++) {
-          const p = left + i * cell;
-          ctx.beginPath(); ctx.moveTo(p, top); ctx.lineTo(p, top + size); ctx.stroke();
-          const q = top + i * cell;
-          ctx.beginPath(); ctx.moveTo(left, q); ctx.lineTo(left + size, q); ctx.stroke();
-        }
-
-        ctx.fillStyle = 'rgba(62,208,240,0.28)';
-        ctx.fillRect(left, top + activeRow * cell, size, cell);
-        ctx.strokeStyle = '#3ed0f0';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(left, top + activeRow * cell, size, cell);
-
-        ctx.strokeStyle = '#ffa500';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(left, top, size, size);
-
-        ctx.font = '700 11px JetBrains Mono, monospace';
-        ctx.fillStyle = '#d0d0d0';
-        ctx.textAlign = 'center';
-        ctx.fillText('keys: N columns', left + size / 2, top + size + 24);
         ctx.save();
-        ctx.translate(left - 30, top + size / 2);
+        ctx.translate(matrixLeft - (compact ? 10 : 17), matrixTop + matrixSize / 2);
         ctx.rotate(-Math.PI / 2);
-        ctx.fillText('queries: N rows', 0, 0);
+        ctx.fillText("QUERIES · N ROWS", 0, 0);
         ctx.restore();
 
-        ctx.fillStyle = '#fff';
-        ctx.font = '700 15px JetBrains Mono, monospace';
-        ctx.fillText(`toy view: ${visualCells} queries × ${visualCells} keys`, left + size / 2, top + 24);
-        ctx.fillStyle = '#ffd591';
-        ctx.font = '700 11px JetBrains Mono, monospace';
-        ctx.fillText(`real N: ${n.toLocaleString()} × ${n.toLocaleString()} scores`, left + size / 2, top + 43);
-      }
+        for (let column = 0; column < visualN; column += 1) {
+          const x = matrixLeft + (column + .5) * cell;
+          const selected = !finished && column === activeColumn;
+          ctx.beginPath();
+          ctx.arc(x, keyY, Math.max(3, Math.min(6, cell * .14)), 0, Math.PI * 2);
+          ctx.fillStyle = selected ? colors.k : "rgba(255,255,0,.32)";
+          ctx.fill();
+        }
 
-      function renderBars(n) {
-        const max = memoryFor(8192);
-        bars.innerHTML = '';
-        stops.forEach(stop => {
-          const row = document.createElement('div');
-          row.className = 'bar-row';
-          const label = document.createElement('div');
-          label.textContent = stop >= 1024 ? `${stop / 1024}k` : String(stop);
-          const track = document.createElement('div');
-          track.className = 'bar-track';
-          const bar = document.createElement('div');
-          bar.className = 'bar';
-          const val = document.createElement('div');
-          val.textContent = formatBytes(memoryFor(stop));
-          track.appendChild(bar);
-          row.append(label, track, val);
-          bars.appendChild(row);
-          const pct = Math.max(1.5, 100 * memoryFor(stop) / max);
-          if (reduce) {
-            bar.style.width = `${pct}%`;
-          } else {
-            gsap.fromTo(bar, { width: '0%' }, { width: `${pct}%`, duration: 0.5, ease: 'power2.out', delay: 0.05 });
-          }
-          if (stop === n) {
-            row.style.color = '#fff';
-            track.style.boxShadow = '0 0 0 2px rgba(255,165,0,0.35)';
-          }
-        });
-      }
-
-      function redraw() {
-        drawTokens(currentN);
-        drawGrid(currentN);
-      }
-
-      function pulseQuery() {
-        gsap.killTweensOf(pulseState);
-        gsap.fromTo(pulseState, { s: 1 }, { s: 1.3, duration: 0.14, ease: 'power1.out', yoyo: true, repeat: 1 });
-      }
-
-      function startSweep(n) {
-        if (sweepTween) sweepTween.kill();
-        if (reduce) { redraw(); return; }
-        const count = toyTokenCount(n);
-        sweepState.t = 0;
-        lastActiveIdx = -1;
-        // Each row takes ~0.85s, eased in/out per row rather than a linear crawl,
-        // matching the staged reveal rhythm used across the series (power1.inOut).
-        sweepTween = gsap.to(sweepState, {
-          t: count,
-          duration: count * 0.85,
-          ease: 'power1.inOut',
-          repeat: -1,
-          onUpdate: () => {
-            const idx = Math.min(count - 1, Math.floor(sweepState.t % count));
-            if (idx !== lastActiveIdx) {
-              lastActiveIdx = idx;
-              pulseQuery();
+        for (let row = 0; row < visualN; row += 1) {
+          for (let column = 0; column < visualN; column += 1) {
+            const index = row * visualN + column;
+            const x = matrixLeft + column * cell;
+            const y = matrixTop + row * cell;
+            let fill = "rgba(255,255,255,.025)";
+            if (index < completeCells) {
+              const rowComplete = completeCells >= (row + 1) * visualN;
+              fill = rowComplete
+                ? `rgba(131,193,103,${.22 + ((row + column) % 4) * .07})`
+                : `rgba(209,71,189,${.26 + ((row + column) % 4) * .07})`;
             }
-            redraw();
+            if (!finished && index === activeCell) {
+              fill = `rgba(209,71,189,${.18 + local * .62})`;
+            }
+            ctx.fillStyle = fill;
+            ctx.fillRect(x + 1, y + 1, Math.max(1, cell - 2), Math.max(1, cell - 2));
+            ctx.strokeStyle = colors.line;
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, y, cell, cell);
           }
-        });
+        }
+
+        if (!finished) {
+          const completedInRow = activeColumn + (local > .55 ? 1 : 0);
+          for (let column = 0; column < completedInRow; column += 1) {
+            const targetX = matrixLeft + (column + .5) * cell;
+            const alpha = column === activeColumn ? Math.min(1, local * 2) : .23;
+            line(queryX + 7, queryY, targetX, keyY + 5, colors.score, column === activeColumn ? 1.7 : 1, alpha);
+          }
+          line(queryX + 7, queryY, keyX, keyY + 5, colors.q, 1.2, Math.max(.25, 1 - local));
+        }
+
+        ctx.beginPath();
+        ctx.arc(queryX, queryY, compact ? 7 : 10, 0, Math.PI * 2);
+        ctx.fillStyle = finished ? "rgba(88,196,221,.25)" : colors.q;
+        ctx.fill();
+        ctx.strokeStyle = colors.q;
+        ctx.stroke();
+        ctx.fillStyle = finished ? colors.q : "#071116";
+        ctx.font = `600 ${compact ? 7 : 9}px "IBM Plex Mono", monospace`;
+        ctx.textAlign = "center";
+        ctx.fillText("Q", queryX, queryY + (compact ? 2.5 : 3));
+
+        line(queryX + 18, queryY, matrixLeft - 3, queryY, colors.q, 1, .45);
+
+        if (!finished) {
+          ctx.strokeStyle = colors.q;
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(matrixLeft, matrixTop + activeRow * cell, matrixSize, cell);
+          readout.textContent = `Query ${activeRow + 1} compares with key ${activeColumn + 1} → score cell (${activeRow + 1}, ${activeColumn + 1})`;
+        } else {
+          ctx.strokeStyle = colors.probability;
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(matrixLeft, matrixTop, matrixSize, matrixSize);
+          readout.textContent = `Complete: ${sequenceLength.toLocaleString()} query rows × ${sequenceLength.toLocaleString()} keys = ${(sequenceLength ** 2).toLocaleString()} scores per head`;
+        }
+
+        const percentage = normalized * 100;
+        progressBar.style.width = `${percentage}%`;
+        status.textContent = finished
+          ? `complete · ${totalCells} / ${totalCells} cells`
+          : `${playing ? "playing" : "paused"} · ${completeCells} / ${totalCells} cells`;
       }
 
-      function update() {
-        currentN = 2 ** Number(nSlider.value);
-        const cells = currentN * currentN;
-        const mem = memoryFor(currentN);
-        nLabel.textContent = currentN.toLocaleString();
-        eqCells.textContent = `= ${currentN.toLocaleString()} × ${currentN.toLocaleString()} = ${cells.toLocaleString()}`;
-        eqMemory.textContent = `${layers} layers × ${heads} heads × fp16 ≈ ${formatBytes(mem)}`;
-        cellsMetric.textContent = formatCount(cells);
-        memoryMetric.textContent = formatBytes(mem);
-        renderBars(currentN);
-        startSweep(currentN);
+      function tick(time) {
+        if (!playing) return;
+        if (!previousTime) previousTime = time;
+        elapsed = Math.min(totalDuration, elapsed + time - previousTime);
+        previousTime = time;
+        draw();
+        if (elapsed >= totalDuration) {
+          playing = false;
+          playButton.textContent = "Replay";
+          previousTime = 0;
+          return;
+        }
+        frameId = requestAnimationFrame(tick);
       }
 
-      nSlider.addEventListener('input', update);
+      function play() {
+        if (reduceMotion) {
+          elapsed = totalDuration;
+          draw();
+          return;
+        }
+        if (playing) {
+          playing = false;
+          cancelAnimationFrame(frameId);
+          previousTime = 0;
+          playButton.textContent = "Play";
+          draw();
+          return;
+        }
+        if (elapsed >= totalDuration) elapsed = 0;
+        playing = true;
+        previousTime = 0;
+        playButton.textContent = "Pause";
+        frameId = requestAnimationFrame(tick);
+      }
+
+      function reset() {
+        playing = false;
+        cancelAnimationFrame(frameId);
+        elapsed = reduceMotion ? totalDuration : 0;
+        previousTime = 0;
+        playButton.textContent = reduceMotion ? "Reduced motion" : "Play";
+        draw();
+      }
+
+      slider.addEventListener("input", updateSequence);
       presets.forEach(button => {
-        button.addEventListener('click', () => {
-          nSlider.value = String(Math.round(Math.log2(Number(button.dataset.n))));
-          update();
+        button.addEventListener("click", () => {
+          slider.value = String(Math.log2(Number(button.dataset.n)));
+          updateSequence();
         });
       });
-      window.addEventListener('resize', redraw);
+      playButton.addEventListener("click", play);
+      resetButton.addEventListener("click", reset);
+      window.addEventListener("resize", draw);
 
-      update();
+      if (reduceMotion) {
+        playButton.textContent = "Reduced motion";
+        playButton.disabled = true;
+      }
+      updateSequence();
+      reset();
     })();
   </script>
 </body>

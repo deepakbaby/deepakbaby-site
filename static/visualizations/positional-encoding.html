@@ -3,104 +3,231 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sinusoidal positional encoding</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <title>How sinusoidal position becomes part of a token</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Sans+3:wght@400;600&family=STIX+Two+Text:wght@500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #1c1c1c;
-      --panel: #232323;
-      --border: rgba(255,255,255,0.12);
-      --text: #ffffff;
-      --muted: #d0d0d0;
-      --active: #3ed0f0;
-      --hot: #ffa500;
-      --green: #b0f580;
-      --purple: #ff60ad;
-      --pink: #ff60ad;
+      --bg: #0e1018;
+      --line: rgba(255,255,255,.12);
+      --line-strong: rgba(255,255,255,.28);
+      --text: #f5f5f5;
+      --muted: #a9b0bb;
+      --q: #58c4dd;
+      --k: #ffff00;
+      --v: #9a72ac;
+      --prob: #83c167;
+      --score: #d147bd;
     }
+
     * { box-sizing: border-box; }
-    body {
+    html, body {
+      width: 100%;
+      height: 100%;
       margin: 0;
-      width: 100vw;
-      height: 100vh;
       overflow: hidden;
       background: var(--bg);
       color: var(--text);
-      font-family: 'Crimson Pro', serif;
     }
-    .app { height: 100vh; padding: 16px; display: grid; grid-template-rows: auto auto 1fr auto; gap: 12px; }
-    header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
-    h1 { margin: 0; font-size: clamp(17px, 2vw, 25px); letter-spacing: -0.01em; font-weight: 700; }
-    .subtitle { margin-top: 5px; color: var(--muted); font-size: 14px; max-width: 760px; line-height: 1.5; }
-    .controls { display: flex; gap: 14px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
-    .ctl { display: flex; flex-direction: column; gap: 3px; }
-    .ctl label { font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 700; }
-    .ctl .val { color: var(--hot); }
-    input[type=range] { width: 130px; accent-color: var(--hot); cursor: pointer; }
-    button {
-      border: 1px solid rgba(255,255,255,0.4);
-      background: rgba(255,255,255,0.15);
-      color: #fff;
-      border-radius: 6px;
-      padding: 8px 14px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background 0.2s ease, transform 0.2s ease;
-    }
-    button:hover { background: rgba(255,255,255,0.25); }
+    body { font-family: "Source Sans 3", sans-serif; }
+    button { font: inherit; }
 
-    .stage { min-height: 0; display: grid; grid-template-columns: 1.25fr 1fr; gap: 12px; }
-    .card {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px;
-      min-height: 0;
+    .app {
+      height: 100%;
+      padding: 13px 14px;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      gap: 9px;
+    }
+
+    header {
       display: flex;
-      flex-direction: column;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    h1 {
+      margin: 0;
+      font: 600 clamp(18px, 2.2vw, 28px)/1.05 "STIX Two Text", serif;
+      letter-spacing: -.025em;
+    }
+    .subtitle {
+      max-width: 760px;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .legend {
+      flex: 0 0 auto;
+      display: flex;
+      gap: 11px;
+      padding-top: 2px;
+      color: var(--muted);
+      font: 500 9px/1.2 "IBM Plex Mono", monospace;
+    }
+    .legend span { display: inline-flex; align-items: center; gap: 5px; }
+    .legend i { width: 8px; height: 8px; background: var(--c); }
+    .legend .q { --c: var(--q); }
+    .legend .k { --c: var(--k); }
+    .legend .v { --c: var(--v); }
+    .legend .prob { --c: var(--prob); }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      border-bottom: 1px solid var(--line);
+    }
+    .step {
+      position: relative;
+      min-width: 0;
+      padding: 7px 8px;
+      border: 0;
+      background: transparent;
+      color: #718093;
+      cursor: pointer;
+      text-align: left;
+      font: 500 9px/1.25 "IBM Plex Mono", monospace;
+    }
+    .step:hover, .step:focus-visible { color: #d8e1ec; background: rgba(255,255,255,.025); }
+    .step.active { color: var(--text); }
+    .step.active::after {
+      content: "";
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      bottom: -1px;
+      height: 2px;
+      background: var(--q);
+    }
+
+    .stage {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
       overflow: hidden;
-      transition: border-color 0.2s ease;
     }
-    .card h2 { margin: 0 0 2px; font-family: 'Crimson Pro', serif; font-style: italic; font-weight: 700; font-size: 17px; }
-    .card .hint { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
-    .heatwrap { position: relative; flex: 1; min-height: 0; }
-    canvas { display: block; width: 100%; height: 100%; border-radius: 10px; }
-    .axislabel { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .explain {
+      min-height: 72px;
+      padding: 9px 13px;
+      display: grid;
+      grid-template-columns: minmax(170px,.72fr) minmax(270px,1.25fr) minmax(260px,1fr);
+      grid-template-rows: auto auto;
+      column-gap: 20px;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+    }
+    .eyebrow {
+      grid-column: 1;
+      grid-row: 1;
+      color: var(--q);
+      font: 600 9px/1.2 "IBM Plex Mono", monospace;
+    }
+    .explain h2 {
+      grid-column: 1;
+      grid-row: 2;
+      margin: 2px 0 0;
+      font: 600 clamp(15px,1.55vw,21px)/1.1 "STIX Two Text", serif;
+      letter-spacing: -.02em;
+    }
+    .explain p {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      margin: 0;
+      color: #d1d5db;
+      font-size: 12px;
+      line-height: 1.42;
+    }
+    .formula {
+      grid-column: 3;
+      grid-row: 1;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--line);
+      font: 600 13px/1.4 "STIX Two Text", serif;
+    }
+    .detail {
+      grid-column: 3;
+      grid-row: 2;
+      margin-top: 4px;
+      color: #7f8ea2;
+      font: 400 9px/1.4 "IBM Plex Mono", monospace;
+    }
 
-    .right { display: grid; grid-template-rows: 1fr 1fr; gap: 12px; min-height: 0; }
-    .readout { display: flex; flex-direction: column; gap: 6px; min-height: 0; }
-    .readhead { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-    .chip {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px; padding: 2px 8px; border-radius: 999px;
-      background: rgba(255,165,0,0.16); color: #ffd591; font-weight: 700;
-      display: inline-block;
+    .viewport {
+      position: relative;
+      min-height: 0;
+      overflow: hidden;
     }
-    .chip.blue { background: rgba(62,208,240,0.18); color: #aeeafb; }
-    .note { font-size: 14px; color: #ececec; line-height: 1.5; margin: 0; }
-    .eq {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11.5px; color: var(--hot); background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 7px 9px;
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      outline: none;
+      touch-action: none;
     }
-    .minicanvas { flex: 1; min-height: 0; }
-    .legend { color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
-    .swatch { display: inline-flex; align-items: center; gap: 6px; }
-    .box { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+    canvas:focus-visible { box-shadow: inset 0 0 0 1px var(--q); }
+    .scene-note {
+      position: absolute;
+      right: 8px;
+      bottom: 7px;
+      color: #718093;
+      font: 400 9px/1.3 "IBM Plex Mono", monospace;
+      pointer-events: none;
+    }
 
-    @media (max-width: 880px) {
-      body { overflow: auto; }
-      .app { min-height: 100vh; height: auto; padding: 12px; }
-      .stage { grid-template-columns: 1fr; }
-      .heatwrap { height: 260px; }
-      .right { grid-template-rows: auto auto; }
-      .minicanvas { height: 150px; }
-      .controls { justify-content: flex-start; }
+    .controls { display: flex; align-items: center; gap: 6px; }
+    .control {
+      min-width: 61px;
+      padding: 6px 9px;
+      border: 1px solid var(--line-strong);
+      border-radius: 2px;
+      background: rgba(255,255,255,.035);
+      color: #dce4ed;
+      cursor: pointer;
+      font: 600 9px/1 "IBM Plex Mono", monospace;
+    }
+    .control:hover, .control:focus-visible { border-color: rgba(88,196,221,.6); }
+    .control.primary { color: #061016; background: var(--q); border-color: var(--q); }
+    .progress { flex: 1; height: 2px; margin-left: 4px; background: rgba(255,255,255,.08); }
+    .progress span { display: block; width: 25%; height: 100%; background: var(--q); transition: width .2s ease; }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 700px) {
+      .app { padding: 7px; gap: 5px; }
+      h1 { font-size: 16px; }
+      .subtitle, .legend { display: none; }
+      .step { padding: 5px 2px; font-size: 7px; text-align: center; white-space: nowrap; }
+      .step.active::after { left: 3px; right: 3px; }
+      .stage { grid-template-rows: 90px minmax(0, 1fr); }
+      .explain {
+        min-height: 0;
+        padding: 6px 8px;
+        grid-template-columns: minmax(96px,.7fr) minmax(165px,1.3fr);
+        column-gap: 9px;
+        overflow: hidden;
+      }
+      .eyebrow { font-size: 7px; }
+      .explain h2 { font-size: 12px; }
+      .explain p { font-size: 8px; line-height: 1.3; }
+      .formula, .detail { display: none; }
+      .scene-note { font-size: 7px; }
+      .controls { gap: 4px; }
+      .control { min-width: 0; padding: 5px 7px; font-size: 8px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
     }
   </style>
 </head>
@@ -108,355 +235,475 @@
   <main class="app">
     <header>
       <div>
-        <h1>Positional encoding: a fixed fingerprint for every position</h1>
-        <div class="subtitle">Self-attention is order-blind, so the Transformer <em>adds</em> a position vector to each token. Each dimension is a sine or cosine wave; low dimensions wiggle fast, high dimensions wiggle slowly. Hover the heatmap — a <strong>column</strong> picks a dimension, a <strong>row</strong> picks a position.</div>
+        <h1>Position becomes part of every token</h1>
+        <div class="subtitle">A guided look at how fast and slow sinusoidal pairs combine into a position fingerprint, then join a token embedding before attention begins.</div>
       </div>
-      <div class="controls">
-        <div class="ctl">
-          <label>d_model = <span class="val" id="dVal">32</span></label>
-          <input type="range" id="dSlider" min="8" max="64" step="2" value="32">
-        </div>
-        <div class="ctl">
-          <label>positions = <span class="val" id="pVal">40</span></label>
-          <input type="range" id="pSlider" min="12" max="64" step="1" value="40">
-        </div>
-        <button id="play">Play sweep</button>
+      <div class="legend" role="group" aria-label="Color legend">
+        <span><i class="q"></i>sine / negative</span>
+        <span><i class="k"></i>cosine / positive</span>
+        <span><i class="v"></i>token</span>
+        <span><i class="prob"></i>sum</span>
       </div>
     </header>
 
-    <div class="legend">
-      <span class="axislabel">Value</span>
-      <span class="swatch"><span class="box" style="background:#3ed0f0"></span>−1</span>
-      <span class="swatch"><span class="box" style="background:#1c1c1c;border:1px solid rgba(255,255,255,0.2)"></span>0</span>
-      <span class="swatch"><span class="box" style="background:#ffa500"></span>+1</span>
-      <span style="color:#9a9a9a">PE(pos, 2i) = sin(pos / 10000^(2i/d)) &nbsp;·&nbsp; PE(pos, 2i+1) = cos(pos / 10000^(2i/d))</span>
-    </div>
+    <nav class="timeline" id="timeline" aria-label="Positional encoding steps"></nav>
 
     <section class="stage">
-      <article class="card" id="heatCard">
-        <h2>The encoding matrix</h2>
-        <div class="hint">Rows = token positions (0 at top). Columns = embedding dimensions (fast → slow, left → right).</div>
-        <div class="heatwrap">
-          <canvas id="heat"></canvas>
-        </div>
-      </article>
-
-      <div class="right">
-        <article class="card readout">
-          <div class="readhead">
-            <h2 style="margin:0">Dimension</h2>
-            <span class="chip" id="dimChip">k = 8</span>
-            <span class="chip blue" id="waveChip">λ ≈ 0</span>
-          </div>
-          <p class="note" id="dimNote"></p>
-          <canvas class="minicanvas" id="wave"></canvas>
-        </article>
-
-        <article class="card readout">
-          <div class="readhead">
-            <h2 style="margin:0">Position</h2>
-            <span class="chip" id="posChip">pos = 5</span>
-          </div>
-          <p class="note">This token's full encoding vector — the row that gets <em>added</em> to its embedding. Two nearby positions share most of the slow (right-hand) dimensions and differ mostly in the fast ones, which is exactly what lets attention read off relative distance.</p>
-          <canvas class="minicanvas" id="vec"></canvas>
-        </article>
+      <aside class="explain" aria-live="polite">
+        <div class="eyebrow" id="eyebrow"></div>
+        <h2 id="stepTitle">The first pair turns quickly</h2>
+        <p id="copy"></p>
+        <div class="formula" id="formula"></div>
+        <div class="detail" id="detail"></div>
+      </aside>
+      <div class="viewport">
+        <canvas id="scene" tabindex="0" role="img" aria-label="Guided visualization of sinusoidal positional encoding"></canvas>
+        <div class="scene-note" id="sceneNote"></div>
+        <div class="sr-only" id="status" aria-live="polite"></div>
       </div>
     </section>
 
-    <div class="legend" id="footnote" style="color:#9a9a9a">
-      Intuition: it is a smooth, continuous cousin of a binary counter — the low bit (dimension 0) flips every step, higher bits flip ever more slowly, so every position gets a unique, learnable-to-read code with no extra parameters.
+    <div class="controls">
+      <button class="control" id="prev" type="button">Previous</button>
+      <button class="control primary" id="play" type="button">Play</button>
+      <button class="control" id="next" type="button">Next</button>
+      <button class="control" id="reset" type="button">Reset</button>
+      <div class="progress" aria-hidden="true"><span id="progress"></span></div>
     </div>
   </main>
 
   <script>
-  (function () {
-    const heat = document.getElementById('heat');
-    const wave = document.getElementById('wave');
-    const vec = document.getElementById('vec');
-    const hctx = heat.getContext('2d');
-    const wctx = wave.getContext('2d');
-    const vctx = vec.getContext('2d');
+  (() => {
+    "use strict";
 
-    const dSlider = document.getElementById('dSlider');
-    const pSlider = document.getElementById('pSlider');
-    const dVal = document.getElementById('dVal');
-    const pVal = document.getElementById('pVal');
-    const dimChip = document.getElementById('dimChip');
-    const waveChip = document.getElementById('waveChip');
-    const dimNote = document.getElementById('dimNote');
-    const posChip = document.getElementById('posChip');
-    const playBtn = document.getElementById('play');
+    const D = 32;
+    const P = 48;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const canvas = document.getElementById("scene");
+    const ctx = canvas.getContext("2d");
+    const timeline = document.getElementById("timeline");
+    const playButton = document.getElementById("play");
+    const progress = document.getElementById("progress");
+    const status = document.getElementById("status");
+    const sceneNote = document.getElementById("sceneNote");
+    const colors = {
+      bg: "#0e1018",
+      line: "rgba(255,255,255,.12)",
+      lineStrong: "rgba(255,255,255,.28)",
+      text: "#f5f5f5",
+      muted: "#8995a6",
+      q: "#58c4dd",
+      k: "#ffff00",
+      v: "#9a72ac",
+      prob: "#83c167",
+      score: "#d147bd"
+    };
 
-    let D = +dSlider.value;       // d_model
-    let P = +pSlider.value;       // positions
-    let selDim = 8;
-    let selPos = 5;
-    let timer = null;
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let width = 1;
+    let height = 1;
+    let index = 0;
+    let selectedPosition = 12;
+    let selectedDimension = 8;
+    let animationFrame = 0;
+    let animationStarted = 0;
+    let animationDuration = 1100;
+    let animationProgress = 1;
+    let playbackTimer = 0;
+    let playing = false;
+    let heatBounds = null;
 
-    function pe(pos, k) {
-      const i2 = 2 * Math.floor(k / 2);
-      const div = Math.pow(10000, i2 / D);
-      const ang = pos / div;
-      return (k % 2 === 0) ? Math.sin(ang) : Math.cos(ang);
+    function pe(position, dimension) {
+      const twoI = 2 * Math.floor(dimension / 2);
+      const denominator = Math.pow(10000, twoI / D);
+      const angle = position / denominator;
+      return dimension % 2 === 0 ? Math.sin(angle) : Math.cos(angle);
     }
 
-    // diverging colour: cyan (neg) → background grey (0) → orange (pos)
-    function colour(v) {
-      const t = Math.max(-1, Math.min(1, v));
-      const a = Math.abs(t);
-      let r, g, b;
-      if (t >= 0) { r = 255; g = 165; b = 0; }         // orange (attention)
-      else { r = 62; g = 208; b = 240; }               // cyan (encoder)
-      const br = 28; // background grey (#1c1c1c)
-      return `rgb(${Math.round(br + (r - br) * a)},${Math.round(br + (g - br) * a)},${Math.round(br + (b - br) * a)})`;
+    function wavelength(dimension) {
+      return 2 * Math.PI * Math.pow(10000, (2 * Math.floor(dimension / 2)) / D);
     }
 
-    function dpr() { return window.devicePixelRatio || 1; }
-    function fit(cv) {
-      const r = cv.getBoundingClientRect();
-      const k = dpr();
-      cv.width = Math.max(1, Math.round(r.width * k));
-      cv.height = Math.max(1, Math.round(r.height * k));
-      return { w: r.width, h: r.height, k };
+    function tokenValue(dimension) {
+      return .48 * Math.sin((dimension + 1) * .71) + .2 * Math.cos((dimension + 2) * .27);
     }
 
-    // ---- reveal / pulse state driven by GSAP tweens ----
-    const heatReveal = { rows: 0 };       // rows of the heatmap painted in, top to bottom
-    const waveReveal = { t: 1 };          // 0..1 fraction of the wave curve drawn
-    const vecReveal = { t: 1 };           // 0..1 scale applied to the vector bars
-    const marker = { r: 4 };              // pulse radius for the dot on the wave chart
-    let heatTween = null, waveTween = null, vecTween = null, markerTween = null;
+    const steps = [
+      {
+        short: "Fast pair",
+        eyebrow: "1 / 4 · High frequency",
+        title: "The first pair turns quickly",
+        copy: "Dimensions 0 and 1 share one angle: sine and cosine place the same rotation on two axes. With no denominator growth yet, the pair changes sharply from one position to the next.",
+        formula: "PE(pos, 0) = sin(pos) &nbsp;·&nbsp; PE(pos, 1) = cos(pos)",
+        detail: "Pair i = 0 · wavelength λ = 2π ≈ 6.28 positions",
+        duration: 3900
+      },
+      {
+        short: "Slow pair",
+        eyebrow: "2 / 4 · Low frequency",
+        title: "Later pairs turn slowly",
+        copy: "The exponent grows with the pair index, enlarging the denominator. High dimensions therefore preserve broad positional structure while low dimensions capture fine changes.",
+        formula: "PE(pos, 2i) = sin(pos / 10000<sup>2i/d<sub>model</sub></sup>)",
+        detail: "Shown: dimensions 28–29 · same amplitude, much longer wavelength",
+        duration: 3900
+      },
+      {
+        short: "Fingerprint",
+        eyebrow: "3 / 4 · All frequencies",
+        title: "Every row is a position fingerprint",
+        copy: "Stack every pair as columns. Fast bands vary on the left; slow bands settle on the right. Hover or tap a cell to inspect one value, and use arrow keys while the scene is focused.",
+        formula: "PE(pos, 2i+1) = cos(pos / 10000<sup>2i/d<sub>model</sub></sup>)",
+        detail: "Rows = positions · columns = embedding dimensions · cyan −1 · yellow +1",
+        duration: 5200
+      },
+      {
+        short: "Add to token",
+        eyebrow: "4 / 4 · Enter attention",
+        title: "Add position, then attend",
+        copy: "The position fingerprint has the same width as the learned token embedding, so addition is element by element. The resulting vector carries both token meaning and order into the Q, K, and V projections.",
+        formula: "x<sub>input</sub> = x<sub>token</sub> + PE(pos)",
+        detail: "No concatenation · dimensionality stays d_model · position shown: 12",
+        duration: 4700
+      }
+    ];
 
-    function drawHeat(revealRows) {
-      const rows = (typeof revealRows === 'number') ? revealRows : P;
-      const { w, h, k } = fit(heat);
-      hctx.setTransform(k, 0, 0, k, 0, 0);
-      hctx.clearRect(0, 0, w, h);
-      const cw = w / D, ch = h / P;
-      const full = Math.floor(rows);
-      const partial = rows - full;
-      for (let p = 0; p < P; p++) {
-        for (let d = 0; d < D; d++) {
-          let alpha = 1;
-          if (p > full) alpha = 0;
-          else if (p === full) alpha = partial;
-          if (alpha <= 0) continue;
-          hctx.globalAlpha = alpha;
-          hctx.fillStyle = colour(pe(p, d));
-          hctx.fillRect(d * cw, p * ch, cw + 0.6, ch + 0.6);
+    function mix(a, b, amount) {
+      return a.map((value, i) => Math.round(value + (b[i] - value) * amount));
+    }
+
+    function heatColor(value) {
+      const base = [14, 16, 24];
+      const target = value < 0 ? [88, 196, 221] : [255, 255, 0];
+      const rgb = mix(base, target, Math.abs(value) * .92);
+      return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+    }
+
+    function label(text, x, y, options = {}) {
+      const { color = colors.muted, size = 10, align = "left", weight = 500, font = "IBM Plex Mono" } = options;
+      ctx.fillStyle = color;
+      ctx.textAlign = align;
+      ctx.textBaseline = "middle";
+      ctx.font = `${weight} ${size}px "${font}"`;
+      ctx.fillText(text, x, y);
+    }
+
+    function line(x1, y1, x2, y2, color = colors.line, lineWidth = 1) {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineWidth;
+      ctx.stroke();
+    }
+
+    function drawWavePair(pairDimension, reveal) {
+      const compact = width < 560;
+      const left = compact ? 32 : 62;
+      const right = width - (compact ? 18 : 36);
+      const top = compact ? 23 : 34;
+      const bottom = height - (compact ? 30 : 43);
+      const mid = (top + bottom) / 2;
+      const amplitude = Math.max(24, (bottom - top) * .39);
+      const shown = Math.max(.02, reveal);
+      const pair = pairDimension % 2 === 0 ? pairDimension : pairDimension - 1;
+
+      line(left, mid, right, mid);
+      line(left, top, left, bottom);
+      label("+1", left - 8, mid - amplitude, { align: "right", size: compact ? 8 : 9 });
+      label("0", left - 8, mid, { align: "right", size: compact ? 8 : 9 });
+      label("−1", left - 8, mid + amplitude, { align: "right", size: compact ? 8 : 9 });
+      label("position", right, bottom + 18, { align: "right", size: compact ? 8 : 9 });
+
+      [{ d: pair, color: colors.q }, { d: pair + 1, color: colors.k }].forEach(curve => {
+        ctx.beginPath();
+        const samples = Math.max(80, Math.floor((right - left) * shown));
+        for (let n = 0; n <= samples; n++) {
+          const fraction = (n / samples) * shown;
+          const position = fraction * (P - 1);
+          const x = left + fraction * (right - left);
+          const y = mid - pe(position, curve.d) * amplitude;
+          n === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = curve.color;
+        ctx.lineWidth = compact ? 1.6 : 2.2;
+        ctx.stroke();
+      });
+
+      const markerPosition = shown * (P - 1);
+      const markerX = left + shown * (right - left);
+      [pair, pair + 1].forEach((dimension, i) => {
+        const y = mid - pe(markerPosition, dimension) * amplitude;
+        ctx.beginPath();
+        ctx.arc(markerX, y, compact ? 2.5 : 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = i ? colors.k : colors.q;
+        ctx.fill();
+      });
+
+      const lambda = wavelength(pair);
+      label(`dimensions ${pair}–${pair + 1}`, left, top - 12, { color: colors.text, size: compact ? 9 : 11, weight: 600 });
+      label(`λ ≈ ${lambda > 999 ? lambda.toExponential(1) : lambda.toFixed(1)} positions`, right, top - 12, { align: "right", size: compact ? 8 : 10 });
+      label("sin", left + 4, bottom + 18, { color: colors.q, size: compact ? 8 : 10 });
+      label("cos", left + 44, bottom + 18, { color: colors.k, size: compact ? 8 : 10 });
+    }
+
+    function drawHeatmap(reveal) {
+      const compact = width < 560;
+      const left = compact ? 28 : 56;
+      const top = compact ? 18 : 28;
+      const right = width - (compact ? 12 : 26);
+      const bottom = height - (compact ? 34 : 46);
+      const mapWidth = right - left;
+      const mapHeight = bottom - top;
+      const cellWidth = mapWidth / D;
+      const cellHeight = mapHeight / P;
+      const revealedRows = Math.ceil(P * reveal);
+      heatBounds = { left, top, right, bottom, cellWidth, cellHeight };
+
+      for (let position = 0; position < revealedRows; position++) {
+        for (let dimension = 0; dimension < D; dimension++) {
+          ctx.fillStyle = heatColor(pe(position, dimension));
+          ctx.fillRect(left + dimension * cellWidth, top + position * cellHeight, cellWidth + .4, cellHeight + .4);
         }
       }
-      hctx.globalAlpha = 1;
-      // highlight selected column + row (only once the sweep has reached them)
-      if (rows >= P) {
-        hctx.lineWidth = 2;
-        hctx.strokeStyle = 'rgba(255,255,255,0.9)';
-        hctx.strokeRect(selDim * cw, 0, cw, h);
-        hctx.strokeStyle = 'rgba(255,96,173,0.95)';
-        hctx.strokeRect(0, selPos * ch, w, ch);
+
+      if (reveal >= .99) {
+        ctx.strokeStyle = colors.score;
+        ctx.lineWidth = compact ? 1 : 1.5;
+        ctx.strokeRect(left, top + selectedPosition * cellHeight, mapWidth, cellHeight);
+        ctx.strokeStyle = colors.text;
+        ctx.strokeRect(left + selectedDimension * cellWidth, top, cellWidth, mapHeight);
+      }
+
+      label("position", left - 8, top - 9, { align: "right", size: compact ? 7 : 9 });
+      label("0", left - 8, top + cellHeight / 2, { align: "right", size: compact ? 7 : 9 });
+      label(String(P - 1), left - 8, bottom - cellHeight / 2, { align: "right", size: compact ? 7 : 9 });
+      label("fast dimensions", left, bottom + 17, { size: compact ? 7 : 9 });
+      label("slow dimensions", right, bottom + 17, { align: "right", size: compact ? 7 : 9 });
+
+      if (reveal >= .99) {
+        const value = pe(selectedPosition, selectedDimension);
+        const type = selectedDimension % 2 ? "cos" : "sin";
+        label(
+          `pos ${selectedPosition} · dim ${selectedDimension} · ${type} = ${value.toFixed(3)} · λ ≈ ${wavelength(selectedDimension).toFixed(1)}`,
+          width / 2,
+          height - 9,
+          { align: "center", color: colors.text, size: compact ? 7 : 10, weight: 600 }
+        );
       }
     }
 
-    function drawWave(revealT) {
-      const t = (typeof revealT === 'number') ? revealT : 1;
-      const { w, h, k } = fit(wave);
-      wctx.setTransform(k, 0, 0, k, 0, 0);
-      wctx.clearRect(0, 0, w, h);
-      const pad = 6, mid = h / 2;
-      // zero axis
-      wctx.strokeStyle = 'rgba(255,255,255,0.12)';
-      wctx.lineWidth = 1;
-      wctx.beginPath(); wctx.moveTo(pad, mid); wctx.lineTo(w - pad, mid); wctx.stroke();
-
-      // curve across positions for selected dimension, drawn in up to fraction t
-      const shownSpan = (P - 1) * Math.max(0, Math.min(1, t));
-      wctx.strokeStyle = '#ffa500';
-      wctx.lineWidth = 2;
-      wctx.beginPath();
-      let last = null;
-      for (let p = 0; p <= shownSpan; p++) {
-        const x = pad + (w - 2 * pad) * (p / (P - 1));
-        const y = mid - pe(p, selDim) * (h / 2 - pad);
-        p === 0 ? wctx.moveTo(x, y) : wctx.lineTo(x, y);
-        last = { x, y };
-      }
-      // draw the fractional last segment so the tip isn't jagged
-      if (shownSpan < P - 1 && last) {
-        const pFrac = shownSpan;
-        const x = pad + (w - 2 * pad) * (pFrac / (P - 1));
-        const y = mid - pe(pFrac, selDim) * (h / 2 - pad);
-        wctx.lineTo(x, y);
-        last = { x, y };
-      }
-      wctx.stroke();
-
-      // leading dot at the tip of the drawn curve while revealing
-      if (last && t < 1) {
-        wctx.fillStyle = '#fff';
-        wctx.beginPath(); wctx.arc(last.x, last.y, 3, 0, Math.PI * 2); wctx.fill();
-      }
-
-      // marker at selected position (only meaningful once curve is fully drawn, or always if not animating in)
-      if (t >= 1) {
-        const mx = pad + (w - 2 * pad) * (selPos / (P - 1));
-        const my = mid - pe(selPos, selDim) * (h / 2 - pad);
-        wctx.fillStyle = '#ff60ad';
-        wctx.beginPath(); wctx.arc(mx, my, marker.r, 0, Math.PI * 2); wctx.fill();
-      }
-    }
-
-    function drawVec(revealT) {
-      const t = (typeof revealT === 'number') ? revealT : 1;
-      const { w, h, k } = fit(vec);
-      vctx.setTransform(k, 0, 0, k, 0, 0);
-      vctx.clearRect(0, 0, w, h);
-      const pad = 6, mid = h / 2, bw = (w - 2 * pad) / D;
-      vctx.strokeStyle = 'rgba(255,255,255,0.12)';
-      vctx.lineWidth = 1;
-      vctx.beginPath(); vctx.moveTo(pad, mid); vctx.lineTo(w - pad, mid); vctx.stroke();
-      for (let d = 0; d < D; d++) {
-        const v = pe(selPos, d);
-        const x = pad + d * bw;
-        const bh = v * (h / 2 - pad) * Math.max(0, Math.min(1, t));
-        vctx.fillStyle = (d === selDim) ? '#ffffff' : colour(v);
-        vctx.fillRect(x + 0.5, mid - Math.max(0, bh), Math.max(1, bw - 1), Math.abs(bh));
-      }
-    }
-
-    function updateReadouts() {
-      const div = Math.pow(10000, (2 * Math.floor(selDim / 2)) / D);
-      const wavelen = 2 * Math.PI * div;
-      dimChip.textContent = `k = ${selDim} (${selDim % 2 === 0 ? 'sin' : 'cos'})`;
-      waveChip.textContent = `λ ≈ ${wavelen < 1000 ? wavelen.toFixed(1) : wavelen.toExponential(1)} positions`;
-      const pair = `2i = ${2 * Math.floor(selDim / 2)}`;
-      dimNote.innerHTML = `Dimension <b>${selDim}</b> is a <b>${selDim % 2 === 0 ? 'sine' : 'cosine'}</b> wave with ${pair}. Its wavelength is about <b>${wavelen < 1000 ? wavelen.toFixed(0) : wavelen.toExponential(1)}</b> positions: ${wavelen < P ? 'it completes full cycles inside this window (a fast dimension).' : 'it barely turns across the whole window (a slow dimension).'}`;
-      posChip.textContent = `pos = ${selPos}`;
-    }
-
-    function pulseChip(el) {
-      if (reduce || !window.gsap) return;
-      gsap.killTweensOf(el);
-      gsap.fromTo(el, { scale: 1.18 }, { scale: 1, duration: 0.22, ease: 'power2.out', transformOrigin: '50% 50%' });
-    }
-
-    function animateWaveReveal() {
-      if (reduce || !window.gsap) { drawWave(1); return; }
-      if (waveTween) waveTween.kill();
-      waveReveal.t = 0;
-      waveTween = gsap.to(waveReveal, { t: 1, duration: 0.55, ease: 'power1.inOut', onUpdate: () => drawWave(waveReveal.t) });
-    }
-
-    function animateVecReveal() {
-      if (reduce || !window.gsap) { drawVec(1); return; }
-      if (vecTween) vecTween.kill();
-      vecReveal.t = 0;
-      vecTween = gsap.to(vecReveal, { t: 1, duration: 0.4, ease: 'power2.out', onUpdate: () => drawVec(vecReveal.t) });
-    }
-
-    function pulseMarker() {
-      if (reduce || !window.gsap) return;
-      if (markerTween) markerTween.kill();
-      marker.r = 7;
-      markerTween = gsap.to(marker, { r: 4, duration: 0.3, ease: 'power2.out', onUpdate: () => drawWave(1) });
-    }
-
-    function redraw() { drawHeat(P); drawWave(1); drawVec(1); updateReadouts(); }
-
-    // pointer interaction on heatmap
-    let lastDim = selDim;
-    function pickFromHeat(ev) {
-      const r = heat.getBoundingClientRect();
-      const x = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left;
-      const y = (ev.touches ? ev.touches[0].clientY : ev.clientY) - r.top;
-      const newDim = Math.max(0, Math.min(D - 1, Math.floor(x / (r.width / D))));
-      const newPos = Math.max(0, Math.min(P - 1, Math.floor(y / (r.height / P))));
-      const dimChanged = newDim !== selDim;
-      const posChanged = newPos !== selPos;
-      selDim = newDim;
-      selPos = newPos;
-      if (!dimChanged && !posChanged) return;
-      drawHeat(P);
-      updateReadouts();
-      if (dimChanged) {
-        animateWaveReveal();
-        pulseChip(dimChip);
-        pulseChip(waveChip);
-      } else {
-        drawWave(1);
-        pulseMarker();
-      }
-      animateVecReveal();
-      pulseChip(posChip);
-    }
-    heat.addEventListener('mousemove', e => { if (!timer) pickFromHeat(e); });
-    heat.addEventListener('click', pickFromHeat);
-    heat.addEventListener('touchmove', e => { e.preventDefault(); pickFromHeat(e); }, { passive: false });
-
-    dSlider.addEventListener('input', () => {
-      D = +dSlider.value; dVal.textContent = D;
-      selDim = Math.min(selDim, D - 1); redraw();
-    });
-    pSlider.addEventListener('input', () => {
-      P = +pSlider.value; pVal.textContent = P;
-      selPos = Math.min(selPos, P - 1); redraw();
-    });
-
-    playBtn.addEventListener('click', () => {
-      if (timer) { clearInterval(timer); timer = null; playBtn.textContent = 'Play sweep'; return; }
-      playBtn.textContent = 'Stop';
-      timer = setInterval(() => {
-        selPos = (selPos + 1) % P;
-        drawHeat(P);
-        drawWave(1);
-        animateVecReveal();
-        pulseMarker();
-        updateReadouts();
-      }, reduce ? 600 : 280);
-    });
-
-    window.addEventListener('resize', redraw);
-
-    // ---- entrance choreography: heatmap paints in, then two illustrative
-    // dimensions (a fast one, a slow one) draw themselves before settling on
-    // the default selection. Gives the page life before any interaction. ----
-    function playIntro() {
-      updateReadouts();
-      if (reduce || !window.gsap) { redraw(); return; }
-
-      drawWave(0);
-      drawVec(0);
-
-      if (heatTween) heatTween.kill();
-      heatReveal.rows = 0;
-      heatTween = gsap.to(heatReveal, {
-        rows: P,
-        duration: 0.9,
-        ease: 'power1.out',
-        onUpdate: () => drawHeat(heatReveal.rows),
-        onComplete: () => {
-          drawHeat(P);
-          const tl = gsap.timeline();
-          // illustrative fast wave first
-          tl.call(() => { selDim = 0; updateReadouts(); drawHeat(P); animateWaveReveal(); animateVecReveal(); })
-            .to({}, { duration: 0.9 })
-            // then an illustrative slow wave
-            .call(() => { selDim = Math.min(D - 1, D - 2); updateReadouts(); drawHeat(P); animateWaveReveal(); animateVecReveal(); })
-            .to({}, { duration: 0.9 })
-            // settle on the default pedagogical example
-            .call(() => {
-              selDim = 8 % D;
-              selPos = 5 % P;
-              updateReadouts();
-              drawHeat(P);
-              animateWaveReveal();
-              animateVecReveal();
-            });
+    function drawVectorRow(values, y, color, title, reveal, outlined = false) {
+      const compact = width < 560;
+      const left = compact ? 52 : 112;
+      const right = width - (compact ? 12 : 28);
+      const rowWidth = right - left;
+      const cellWidth = rowWidth / D;
+      const cellHeight = Math.max(10, Math.min(compact ? 20 : 29, height / 8));
+      label(title, left - 9, y, { align: "right", color, size: compact ? 7 : 10, weight: 600 });
+      values.forEach((value, dimension) => {
+        const x = left + dimension * cellWidth;
+        const visible = dimension / D <= reveal;
+        if (!visible) return;
+        ctx.globalAlpha = .25 + .75 * Math.min(1, Math.abs(value));
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y - cellHeight / 2, Math.max(1, cellWidth - 1), cellHeight);
+        ctx.globalAlpha = 1;
+        if (outlined) {
+          ctx.strokeStyle = colors.lineStrong;
+          ctx.strokeRect(x, y - cellHeight / 2, Math.max(1, cellWidth - 1), cellHeight);
         }
       });
+      label("d₀", left, y + cellHeight / 2 + 11, { size: compact ? 6 : 8 });
+      label(`d${D - 1}`, right, y + cellHeight / 2 + 11, { align: "right", size: compact ? 6 : 8 });
     }
 
-    playIntro();
+    function drawAddition(reveal) {
+      heatBounds = null;
+      const position = selectedPosition;
+      const token = Array.from({ length: D }, (_, d) => tokenValue(d));
+      const positional = Array.from({ length: D }, (_, d) => pe(position, d));
+      const combined = token.map((value, d) => value + positional[d]);
+      const compact = width < 560;
+      const center = height / 2;
+      const gap = compact ? Math.max(35, height * .23) : Math.max(48, height * .22);
+      const rowReveal = Math.min(1, reveal * 1.7);
+      drawVectorRow(token, center - gap, colors.v, compact ? "token" : "token embedding", rowReveal);
+      drawVectorRow(positional, center, colors.q, compact ? "+ pos" : `+ position ${position}`, rowReveal);
+      line(compact ? 48 : 107, center + gap * .42, width - 20, center + gap * .42, colors.lineStrong);
+      drawVectorRow(combined, center + gap, colors.prob, compact ? "= input" : "= input to attention", Math.max(0, (reveal - .38) / .62), true);
+      label("+", compact ? 18 : 52, center - gap / 2, { color: colors.text, size: compact ? 15 : 20, weight: 600, font: "STIX Two Text" });
+      label("elementwise addition preserves d_model", width / 2, height - 10, { align: "center", size: compact ? 7 : 9 });
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = colors.bg;
+      ctx.fillRect(0, 0, width, height);
+      heatBounds = null;
+      if (index === 0) drawWavePair(0, animationProgress);
+      if (index === 1) drawWavePair(28, animationProgress);
+      if (index === 2) drawHeatmap(animationProgress);
+      if (index === 3) drawAddition(animationProgress);
+    }
+
+    function animate(now) {
+      animationProgress = Math.min(1, (now - animationStarted) / animationDuration);
+      const eased = 1 - Math.pow(1 - animationProgress, 3);
+      animationProgress = eased;
+      render();
+      if (animationProgress < .999) animationFrame = requestAnimationFrame(animate);
+      else {
+        animationProgress = 1;
+        render();
+      }
+    }
+
+    function startStepAnimation() {
+      cancelAnimationFrame(animationFrame);
+      if (reduceMotion) {
+        animationProgress = 1;
+        render();
+        return;
+      }
+      animationProgress = 0;
+      animationStarted = performance.now();
+      animationFrame = requestAnimationFrame(animate);
+    }
+
+    function announceSelection() {
+      const value = pe(selectedPosition, selectedDimension);
+      status.textContent = `Position ${selectedPosition}, dimension ${selectedDimension}, value ${value.toFixed(3)}.`;
+    }
+
+    function renderStep(nextIndex, animateStep = true) {
+      index = Math.max(0, Math.min(steps.length - 1, nextIndex));
+      const step = steps[index];
+      document.getElementById("eyebrow").textContent = step.eyebrow;
+      document.getElementById("stepTitle").textContent = step.title;
+      document.getElementById("copy").textContent = step.copy;
+      document.getElementById("formula").innerHTML = step.formula;
+      document.getElementById("detail").textContent = index === 3
+        ? `No concatenation · dimensionality stays d_model · position shown: ${selectedPosition}`
+        : step.detail;
+      [...timeline.children].forEach((button, i) => {
+        button.classList.toggle("active", i === index);
+        if (i === index) button.setAttribute("aria-current", "step");
+        else button.removeAttribute("aria-current");
+      });
+      progress.style.width = `${((index + 1) / steps.length) * 100}%`;
+      sceneNote.textContent = index === 2 ? "Hover or tap · arrow keys move selection" : "";
+      canvas.setAttribute("aria-label", index === 2
+        ? "Heatmap of positional encodings. Use pointer or arrow keys to inspect cells."
+        : step.title);
+      if (animateStep) startStepAnimation();
+      else {
+        animationProgress = 1;
+        render();
+      }
+    }
+
+    steps.forEach((step, stepIndex) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "step";
+      button.textContent = `${stepIndex + 1}. ${step.short}`;
+      button.addEventListener("click", () => {
+        stopPlayback();
+        renderStep(stepIndex);
+      });
+      timeline.appendChild(button);
+    });
+
+    function stopPlayback() {
+      clearTimeout(playbackTimer);
+      playbackTimer = 0;
+      playing = false;
+      playButton.textContent = "Play";
+    }
+
+    function scheduleNext() {
+      clearTimeout(playbackTimer);
+      playbackTimer = setTimeout(() => {
+        if (!playing) return;
+        if (index === steps.length - 1) {
+          stopPlayback();
+          return;
+        }
+        renderStep(index + 1);
+        scheduleNext();
+      }, reduceMotion ? 1800 : steps[index].duration);
+    }
+
+    playButton.addEventListener("click", () => {
+      if (playing) {
+        stopPlayback();
+        return;
+      }
+      playing = true;
+      playButton.textContent = "Pause";
+      renderStep(index);
+      scheduleNext();
+    });
+    document.getElementById("prev").addEventListener("click", () => {
+      stopPlayback();
+      renderStep(index - 1);
+    });
+    document.getElementById("next").addEventListener("click", () => {
+      stopPlayback();
+      renderStep(index + 1);
+    });
+    document.getElementById("reset").addEventListener("click", () => {
+      stopPlayback();
+      selectedPosition = 12;
+      selectedDimension = 8;
+      renderStep(0);
+    });
+
+    function pickCell(clientX, clientY) {
+      if (index !== 2 || !heatBounds) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+      if (x < heatBounds.left || x >= heatBounds.right || y < heatBounds.top || y >= heatBounds.bottom) return;
+      selectedDimension = Math.max(0, Math.min(D - 1, Math.floor((x - heatBounds.left) / heatBounds.cellWidth)));
+      selectedPosition = Math.max(0, Math.min(P - 1, Math.floor((y - heatBounds.top) / heatBounds.cellHeight)));
+      animationProgress = 1;
+      render();
+      announceSelection();
+    }
+
+    canvas.addEventListener("pointermove", event => {
+      if (event.pointerType === "mouse") pickCell(event.clientX, event.clientY);
+    });
+    canvas.addEventListener("pointerdown", event => {
+      pickCell(event.clientX, event.clientY);
+      canvas.focus({ preventScroll: true });
+    });
+    canvas.addEventListener("keydown", event => {
+      if (index !== 2 || !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
+      event.preventDefault();
+      if (event.key === "ArrowLeft") selectedDimension = Math.max(0, selectedDimension - 1);
+      if (event.key === "ArrowRight") selectedDimension = Math.min(D - 1, selectedDimension + 1);
+      if (event.key === "ArrowUp") selectedPosition = Math.max(0, selectedPosition - 1);
+      if (event.key === "ArrowDown") selectedPosition = Math.min(P - 1, selectedPosition + 1);
+      animationProgress = 1;
+      render();
+      announceSelection();
+    });
+
+    function resize() {
+      const rect = canvas.getBoundingClientRect();
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      width = Math.max(1, rect.width);
+      height = Math.max(1, rect.height);
+      canvas.width = Math.round(width * ratio);
+      canvas.height = Math.round(height * ratio);
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      render();
+    }
+
+    window.addEventListener("resize", resize);
+    resize();
+    renderStep(0);
   })();
   </script>
 </body>

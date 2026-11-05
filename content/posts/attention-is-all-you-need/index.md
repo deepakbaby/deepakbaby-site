@@ -52,9 +52,9 @@ The equation is that lookup in matrix form, and it is the same softmax-weighted 
 
 Concretely, let $X$ be the input matrix. It has shape `[N, d_model]`: one row per token. Three learned projections produce:
 
-- `Q = X·Wq` → `[N, d_k]`
-- `K = X·Wk` → `[N, d_k]`
-- `V = X·Wv` → `[N, d_v]`
+- `Q = X·W_Q` → `[N, d_k]`
+- `K = X·W_K` → `[N, d_k]`
+- `V = X·W_V` → `[N, d_v]`
 
 Then the attention step is just three operations:
 
@@ -64,25 +64,16 @@ Then the attention step is just three operations:
 
 ### Why Divide by the Square Root of the Head Dimension?
 
-The division by $\sqrt{d_k}$ is easy to miss, but it matters. Assume query and key components are independent with mean 0 and variance 1; then their dot product has mean 0 and variance $d_k$. Scores therefore grow with head width, and large scores push softmax toward one-hot, into the region where its gradients nearly vanish. Dividing by $\sqrt{d_k}$ restores unit variance:
+The division by $\sqrt{d_k}$ is easy to miss, but it matters. If query and key components have variance 1, their dot product has variance $d_k$. Wider heads therefore produce larger scores. Large scores make softmax nearly one-hot, leaving weak gradients for almost every key. Dividing by $\sqrt{d_k}$ brings the score variance back near 1.
 
-| Head dimension $d_k$ | Raw dot-product std. dev. ($\sqrt{d_k}$) | After dividing by $\sqrt{d_k}$ |
-|---:|---:|---:|
-| 4 | 2.0 | 1.0 |
-| 64 | 8.0 | 1.0 |
-| 512 | 22.6 | 1.0 |
+For one query with $d_k=64$, $\sqrt{d_k}=8$:
 
-### A Tiny Numerical Trace
+| | Scores entering softmax | Softmax probabilities |
+|---|---|---|
+| Without scaling | $[2,\ 8,\ 1,\ 3]$ | $[0.002,\ 0.990,\ 0.001,\ 0.007]$ |
+| Divide by 8 | $[0.25,\ 1,\ 0.125,\ 0.375]$ | $[0.19,\ 0.41,\ 0.17,\ 0.22]$ |
 
-Suppose one query produces these raw scores against four tokens:
-
-$$[2.0,\ 8.0,\ 1.0,\ 3.0]$$
-
-Here $d_k = 64$, so $\sqrt{d_k}=8$. After dividing by 8, the scores become:
-
-$$[0.25,\ 1.0,\ 0.125,\ 0.375]$$
-
-Softmax now gives a useful spread: roughly $[0.19,\ 0.41,\ 0.17,\ 0.22]$. The second token gets the most attention, but the others still matter. Without scaling, softmax gives roughly $[0.002,\ 0.990,\ 0.001,\ 0.007]$. Almost everything goes to the second token, so the model has a much weaker learning signal for the rest.
+Scaling keeps the second token strongest without erasing the learning signal from the other three.
 
 Here is the readable reference implementation — no fused kernels, just the math (Part 3 of this series will show why this exact loop is slow on real hardware):
 
@@ -111,11 +102,10 @@ Step through a live 4-token example below — every cell is the exact value prod
 .embedded-html-wrapper {
   position: relative;
   margin: 2rem 0;
-  border-radius: 14px;
+  border-radius: 2px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.05), rgba(10, 10, 10, 0.85));
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #0e1018;
 }
 
 .embedded-html-toolbar {
@@ -123,28 +113,26 @@ Step through a live 4-token example below — every cell is the exact value prod
   align-items: center;
   justify-content: flex-end;
   gap: 0.5rem;
-  padding: 0.75rem 0.9rem;
-  background: rgba(4, 4, 4, 0.95);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  padding: 0.55rem 0.75rem;
+  background: #0e1018;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
   color: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(8px);
 }
 
 .embedded-html-toolbar-label {
   margin-right: auto;
-  font-size: 0.9rem;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: #a7a7a7;
+  font-size: 0.72rem;
+  letter-spacing: 0.01em;
+  color: #b8b8b8;
 }
 
 .embedded-html-toolbar-button {
   background: rgba(255, 255, 255, 0.08);
   color: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 8px;
-  padding: 0.35rem 0.7rem;
+  border-radius: 2px;
+  padding: 0.3rem 0.55rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -152,20 +140,14 @@ Step through a live 4-token example below — every cell is the exact value prod
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.18s ease, background 0.18s ease;
   line-height: 1;
   position: relative;
-  backdrop-filter: blur(6px);
 }
 
 .embedded-html-toolbar-button:hover {
-  background: rgba(255, 255, 255, 0.16);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
-}
-
-.embedded-html-toolbar-button:active {
-  transform: translateY(0);
+  background: rgba(88, 196, 221, 0.08);
+  border-color: rgba(88, 196, 221, 0.55);
 }
 
 .embedded-html-toolbar-button svg {
@@ -215,19 +197,19 @@ Step through a live 4-token example below — every cell is the exact value prod
 }
 </style>
 
-<div class="embedded-html-wrapper" data-src="/visualizations/qkv-walkthrough.html">
+<div class="embedded-html-wrapper" data-src="/visualizations/attention-qkv-3d.html">
   <div class="embedded-html-toolbar">
-    <span class="embedded-html-toolbar-label">QKV walkthrough on a 4-token example</span>
-    <button type="button" class="embedded-html-toolbar-button" data-action="open-new-tab" aria-label="Open the QKV walkthrough in a new tab">
+    <span class="embedded-html-toolbar-label">Build one attention head in 3D</span>
+    <button type="button" class="embedded-html-toolbar-button" data-action="open-new-tab" aria-label="Open the 3D attention walkthrough in a new tab">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7h-2V6.414l-9.293 9.293-1.414-1.414L17.586 5H14V3zM5 5h5v2H6v11h11v-4h2v5H5V5z" /></svg>
-      <span class="sr-only">Open QKV walkthrough in new tab</span>
+      <span class="sr-only">Open 3D attention walkthrough in new tab</span>
     </button>
-    <button type="button" class="embedded-html-toolbar-button" data-action="fullscreen" data-label-base="Enter fullscreen view for the QKV walkthrough" data-label-active="Exit fullscreen view for the QKV walkthrough" aria-label="Enter fullscreen view for the QKV walkthrough">
+    <button type="button" class="embedded-html-toolbar-button" data-action="fullscreen" data-label-base="Enter fullscreen view for the 3D attention walkthrough" data-label-active="Exit fullscreen view for the 3D attention walkthrough" aria-label="Enter fullscreen view for the 3D attention walkthrough">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v2H6v4H4V4zm10 0h6v6h-2V6h-4V4zm6 10v6h-6v-2h4v-4h2zm-10 6H4v-6h2v4h4v2z" /></svg>
-      <span class="sr-only">Toggle fullscreen for QKV walkthrough</span>
+      <span class="sr-only">Toggle fullscreen for 3D attention walkthrough</span>
     </button>
   </div>
-  <iframe src="/visualizations/qkv-walkthrough.html" loading="lazy" allowfullscreen frameborder="0" scrolling="no" title="QKV walkthrough on a 4-token example"></iframe>
+  <iframe src="/visualizations/attention-qkv-3d.html" loading="lazy" allowfullscreen frameborder="0" scrolling="no" title="Interactive 3D walkthrough of one attention head"></iframe>
 </div>
 
 ## Multi-Head Self-Attention
@@ -250,7 +232,7 @@ The base Transformer uses $d_{\text{model}}=512$ and $h=8$ heads, so each head w
 
 Head count is a tradeoff at fixed $d_{\text{model}}$. Too few, and different relationships compete for the same attention pattern. Too many, and each head gets too narrow to form useful queries and keys — 512 dimensions split 32 ways leaves only 16 each — with some heads going redundant.
 
-The visualization below shows four heads over one sentence; toggle heads and click a token to isolate its outgoing attention.
+The visualization below steps through four illustrative heads over the same sentence, then shows how their outputs are concatenated and projected.
 
 <div class="embedded-html-wrapper" data-src="/visualizations/attention-multihead-self.html">
   <div class="embedded-html-toolbar">
@@ -289,7 +271,7 @@ $$PE(pos, 2i) = \sin\!\left(\frac{pos}{10000^{\,2i/d_{\text{model}}}}\right), \q
 
 Think of each dimension as a wave. Some waves change quickly, so they help tell nearby positions apart. Other waves change slowly, so they help track broader position. Together, the waves form a fingerprint for each position. A useful analogy is a binary counter: low bits change fast, high bits change slowly. Positional encoding does something similar, but with smooth waves instead of bits.
 
-Explore it below: hover the heatmap to pick a **dimension** (a column → see its wave across positions) or a **position** (a row → see the full vector that gets added to that token).
+Step through a fast wave pair, a slow pair, the full position fingerprint, and the final addition to a token embedding. On the heatmap step, hover or tap a cell to inspect one position and dimension.
 
 <div class="embedded-html-wrapper" data-src="/visualizations/positional-encoding.html">
   <div class="embedded-html-toolbar">
@@ -330,21 +312,21 @@ A useful way to read the block is:
 > **Attention is communication. FFN is computation.**  
 > Each layer says: look around, then think locally.
 
-The visualization below traces the same signal path through all three architectures from this series — the seq2seq bottleneck, Bahdanau's per-step reads, and the Transformer's all-pairs parallel mixing.
+The visualization below assembles the original encoder-decoder Transformer one sub-layer at a time. It also separates the work that runs in parallel during training and prefill from autoregressive generation, which still emits one token at a time.
 
-<div class="embedded-html-wrapper" data-src="/visualizations/seq2seq-vs-bahdanau-vs-transformer.html">
+<div class="embedded-html-wrapper" data-src="/visualizations/transformer-block-walkthrough.html">
   <div class="embedded-html-toolbar">
-    <span class="embedded-html-toolbar-label">Seq2Seq vs Bahdanau vs Transformer</span>
-    <button type="button" class="embedded-html-toolbar-button" data-action="open-new-tab" aria-label="Open the architecture comparison in a new tab">
+    <span class="embedded-html-toolbar-label">Build the 2017 Transformer</span>
+    <button type="button" class="embedded-html-toolbar-button" data-action="open-new-tab" aria-label="Open the Transformer block walkthrough in a new tab">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7h-2V6.414l-9.293 9.293-1.414-1.414L17.586 5H14V3zM5 5h5v2H6v11h11v-4h2v5H5V5z" /></svg>
-      <span class="sr-only">Open architecture comparison in new tab</span>
+      <span class="sr-only">Open Transformer block walkthrough in new tab</span>
     </button>
-    <button type="button" class="embedded-html-toolbar-button" data-action="fullscreen" data-label-base="Enter fullscreen view for the architecture comparison" data-label-active="Exit fullscreen view for the architecture comparison" aria-label="Enter fullscreen view for the architecture comparison">
+    <button type="button" class="embedded-html-toolbar-button" data-action="fullscreen" data-label-base="Enter fullscreen view for the Transformer block walkthrough" data-label-active="Exit fullscreen view for the Transformer block walkthrough" aria-label="Enter fullscreen view for the Transformer block walkthrough">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v2H6v4H4V4zm10 0h6v6h-2V6h-4V4zm6 10v6h-6v-2h4v-4h2zm-10 6H4v-6h2v4h4v2z" /></svg>
-      <span class="sr-only">Toggle fullscreen for architecture comparison</span>
+      <span class="sr-only">Toggle fullscreen for Transformer block walkthrough</span>
     </button>
   </div>
-  <iframe src="/visualizations/seq2seq-vs-bahdanau-vs-transformer.html" loading="lazy" allowfullscreen frameborder="0" scrolling="no" title="Seq2Seq vs Bahdanau vs Transformer architectures"></iframe>
+  <iframe src="/visualizations/transformer-block-walkthrough.html" loading="lazy" allowfullscreen frameborder="0" scrolling="no" title="Guided walkthrough of the original Transformer encoder and decoder blocks"></iframe>
 </div>
 
 ### What It Cost in 2017
