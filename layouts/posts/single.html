@@ -13,6 +13,7 @@
 {{ end }}
 
 {{ define "content" }}
+{{ $showTOC := and site.Params.features.toc.enable ( .Params.enableTOC | default true ) (gt (len .Fragments.Headings) 0) }}
 <style>
     /* Override default wrapper styles for posts */
     .type-posts .container-fluid.wrapper {
@@ -20,17 +21,17 @@
         width: 100% !important;
         padding: 0 !important;
         margin: 0 !important;
-        overflow-x: hidden !important;
+        overflow-x: clip !important;
     }
 
     body.type-posts {
-        overflow-x: hidden !important;
+        overflow-x: clip !important;
         width: 100vw !important;
         max-width: 100vw !important;
     }
 
     html {
-        overflow-x: hidden !important;
+        overflow-x: clip !important;
     }
 </style>
 <div class="modern-post-wrapper">
@@ -90,7 +91,18 @@
 
     <!-- Main Content Area -->
     <div class="post-content-container">
-        <div class="post-content-grid">
+        <div class="post-content-grid{{ if $showTOC }} has-toc{{ end }}">
+            {{ if $showTOC }}
+            <aside class="post-toc-panel" aria-label="On this page">
+                <div class="post-toc-sticky">
+                    <div class="post-toc-title"><span aria-hidden="true">›</span> On this page</div>
+                    <div class="post-toc-links">
+                        {{ .TableOfContents }}
+                    </div>
+                </div>
+            </aside>
+            {{ end }}
+
             <!-- Main Article Content -->
             <article class="post-article-content">
                 <div class="prose-content" id="post-content">
@@ -214,7 +226,7 @@
         padding-top: 5rem;
         width: 100vw;
         max-width: 100vw;
-        overflow-x: hidden;
+        overflow-x: clip;
         margin: 0;
         padding-left: 0;
         padding-right: 0;
@@ -911,4 +923,51 @@
         strict: false
     });"></script>
 {{ end }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const panel = document.querySelector('.post-toc-sticky');
+    const links = Array.from(document.querySelectorAll('.post-toc-links a[href^="#"]'));
+    if (!panel || !links.length) return;
+
+    const sections = links
+        .map(function (link) {
+            const id = decodeURIComponent(link.getAttribute('href').slice(1));
+            return { link: link, heading: document.getElementById(id) };
+        })
+        .filter(function (item) { return item.heading; });
+
+    let activeLink = null;
+    let ticking = false;
+
+    function updateActiveSection() {
+        ticking = false;
+        let current = sections[0];
+        sections.forEach(function (item) {
+            if (item.heading.getBoundingClientRect().top <= 150) current = item;
+        });
+        if (!current || current.link === activeLink) return;
+
+        links.forEach(function (link) {
+            link.classList.toggle('active', link === current.link);
+            if (link === current.link) link.setAttribute('aria-current', 'location');
+            else link.removeAttribute('aria-current');
+        });
+        activeLink = current.link;
+
+        const linkTop = activeLink.offsetTop;
+        const linkBottom = linkTop + activeLink.offsetHeight;
+        if (linkTop < panel.scrollTop || linkBottom > panel.scrollTop + panel.clientHeight) {
+            panel.scrollTo({ top: Math.max(0, linkTop - panel.clientHeight / 3), behavior: 'smooth' });
+        }
+    }
+
+    window.addEventListener('scroll', function () {
+        if (ticking) return;
+        ticking = true;
+        window.requestAnimationFrame(updateActiveSection);
+    }, { passive: true });
+
+    updateActiveSection();
+});
+</script>
 {{ end }}
