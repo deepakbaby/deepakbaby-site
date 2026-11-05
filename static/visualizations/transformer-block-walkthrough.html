@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Build the 2017 Transformer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Sans+3:wght@400;600&family=STIX+Two+Text:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0e1018;
+      --line: rgba(255, 255, 255, .13);
+      --line-strong: rgba(255, 255, 255, .28);
+      --text: #f5f5f5;
+      --muted: #a6afbd;
+      --dim: #667386;
+      --q: #58c4dd;
+      --k: #ffff00;
+      --v: #9a72ac;
+      --prob: #83c167;
+      --score: #d147bd;
+      --encoder: #58c4dd;
+      --decoder: #9a72ac;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    body {
+      font-family: "Source Sans 3", sans-serif;
+      background:
+        radial-gradient(circle at 28% 52%, rgba(88, 196, 221, .035), transparent 34%),
+        radial-gradient(circle at 73% 52%, rgba(154, 114, 172, .04), transparent 34%),
+        var(--bg);
+    }
+
+    button { font: inherit; }
+
+    .app {
+      width: 100%;
+      height: 100%;
+      padding: 14px;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      gap: 9px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 24px;
+    }
+
+    h1 {
+      margin: 0;
+      font: 600 clamp(18px, 2.2vw, 28px)/1.05 "STIX Two Text", serif;
+      letter-spacing: -.025em;
+    }
+
+    .subtitle {
+      max-width: 760px;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .legend {
+      display: flex;
+      justify-content: flex-end;
+      gap: 11px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font: 500 11px/1.2 "IBM Plex Mono", monospace;
+    }
+
+    .legend span { display: inline-flex; align-items: center; gap: 5px; }
+    .legend i { width: 7px; height: 7px; border-radius: 50%; background: var(--c); }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      border-bottom: 1px solid var(--line);
+    }
+
+    .step {
+      position: relative;
+      min-width: 0;
+      padding: 7px 6px 8px;
+      border: 0;
+      color: #728094;
+      background: transparent;
+      cursor: pointer;
+      text-align: left;
+      font: 500 11px/1.25 "IBM Plex Mono", monospace;
+    }
+
+    .step:hover, .step:focus-visible { color: #dce5ef; background: rgba(255, 255, 255, .025); }
+    .step.active { color: var(--text); }
+    .step.active::after {
+      content: "";
+      position: absolute;
+      left: 6px;
+      right: 6px;
+      bottom: -1px;
+      height: 2px;
+      background: var(--accent, var(--q));
+      box-shadow: 0 0 10px color-mix(in srgb, var(--accent, var(--q)) 55%, transparent);
+    }
+
+    .stage {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      overflow: hidden;
+    }
+
+    .explain {
+      min-height: 86px;
+      padding: 9px 13px 10px;
+      display: grid;
+      grid-template-columns: minmax(180px, .75fr) minmax(280px, 1.35fr) minmax(240px, 1fr);
+      grid-template-rows: auto auto;
+      column-gap: 22px;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .eyebrow {
+      grid-column: 1;
+      grid-row: 1;
+      color: var(--accent, var(--q));
+      font: 600 11px/1.2 "IBM Plex Mono", monospace;
+    }
+
+    .explain h2 {
+      grid-column: 1;
+      grid-row: 2;
+      margin: 3px 0 0;
+      font: 600 clamp(17px, 1.6vw, 23px)/1.08 "STIX Two Text", serif;
+      letter-spacing: -.02em;
+    }
+
+    .explain p {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      margin: 0;
+      color: #d1d5dc;
+      font-size: 14px;
+      line-height: 1.43;
+    }
+
+    .math {
+      grid-column: 3;
+      grid-row: 1;
+      padding-bottom: 5px;
+      border-bottom: 1px solid var(--line);
+      color: #f4f7fb;
+      font: 600 14px/1.4 "STIX Two Text", serif;
+    }
+
+    .note {
+      grid-column: 3;
+      grid-row: 2;
+      margin-top: 4px;
+      color: #7f8da0;
+      font: 400 11px/1.45 "IBM Plex Mono", monospace;
+    }
+
+    .q { color: var(--q); }
+    .k { color: var(--k); }
+    .v { color: var(--v); }
+    .prob { color: var(--prob); }
+    .score { color: var(--score); }
+
+    .viewport {
+      position: relative;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+    }
+
+    svg text { font-family: "IBM Plex Mono", monospace; }
+    .guide { stroke: var(--line); stroke-width: 1; vector-effect: non-scaling-stroke; }
+    .flow { fill: none; stroke: #8190a4; stroke-width: 1.4; marker-end: url(#arrow); vector-effect: non-scaling-stroke; }
+    .residual { fill: none; stroke: #dce4ec; stroke-width: 1; stroke-dasharray: 4 4; opacity: .58; marker-end: url(#arrowWhite); vector-effect: non-scaling-stroke; }
+    .cross-line { fill: none; stroke-width: 1.6; vector-effect: non-scaling-stroke; }
+    .stack-shell { fill: rgba(255,255,255,.012); stroke: var(--line); vector-effect: non-scaling-stroke; }
+    .block { fill: #111722; stroke: rgba(255,255,255,.22); stroke-width: 1; vector-effect: non-scaling-stroke; }
+    .block.encoder { stroke: rgba(88,196,221,.52); }
+    .block.decoder { stroke: rgba(154,114,172,.6); }
+    .block.norm { fill: #151923; stroke: rgba(255,255,255,.3); }
+    .block.ffn { fill: #131823; stroke: rgba(209,71,189,.46); }
+    .block.output { fill: #131a18; stroke: rgba(131,193,103,.55); }
+    .label { fill: #eef2f6; font-size: 15px; font-weight: 600; text-anchor: middle; }
+    .small { fill: #8e9bad; font-size: 11px; text-anchor: middle; }
+    .tiny { fill: #718095; font-size: 10px; text-anchor: middle; }
+    .stack-title { font-size: 14px; font-weight: 600; letter-spacing: .09em; text-anchor: middle; }
+    .token { fill: #151c28; stroke: rgba(255,255,255,.22); vector-effect: non-scaling-stroke; }
+    .token-text { fill: #cad4df; font-size: 11px; text-anchor: middle; }
+    .plus { fill: #0e1018; stroke: rgba(255,255,255,.46); vector-effect: non-scaling-stroke; }
+    .plus-text { fill: #fff; font-size: 15px; text-anchor: middle; }
+    .layer {
+      opacity: .1;
+      transition: opacity .34s ease, filter .34s ease;
+    }
+    .layer.visible { opacity: .45; }
+    .layer.current { opacity: 1; filter: drop-shadow(0 0 7px rgba(255,255,255,.08)); }
+    .res-path { opacity: .06; transition: opacity .34s ease; }
+    .res-path.visible { opacity: 1; }
+    .matrix-cell { stroke: rgba(14,16,24,.8); stroke-width: 1; vector-effect: non-scaling-stroke; }
+    .parallel-bracket { fill: none; stroke: var(--prob); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
+    .generation-path { fill: none; stroke: var(--score); stroke-width: 1.6; stroke-dasharray: 5 4; marker-end: url(#arrowScore); vector-effect: non-scaling-stroke; }
+
+    .run .current .block,
+    .run .current .token,
+    .run .current .matrix-cell {
+      animation: arrive .62s cubic-bezier(.2,.8,.2,1) both;
+    }
+
+    .run .current .flow,
+    .run .current .cross-line,
+    .run .current .residual,
+    .run .current .parallel-bracket,
+    .run .current .generation-path {
+      stroke-dasharray: 900;
+      stroke-dashoffset: 900;
+      animation: draw .9s ease-out .12s forwards;
+    }
+
+    .run .current .stagger-2 { animation-delay: .12s; }
+    .run .current .stagger-3 { animation-delay: .22s; }
+    .run .current .stagger-4 { animation-delay: .32s; }
+
+    @keyframes arrive {
+      from { opacity: 0; transform: translateY(13px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes draw { to { stroke-dashoffset: 0; } }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .control {
+      min-width: 62px;
+      padding: 7px 10px;
+      border: 1px solid var(--line-strong);
+      border-radius: 2px;
+      color: #dce4ed;
+      background: rgba(255,255,255,.035);
+      cursor: pointer;
+      font: 600 11px/1 "IBM Plex Mono", monospace;
+    }
+
+    .control:hover, .control:focus-visible { border-color: rgba(88,196,221,.58); background: rgba(88,196,221,.07); }
+    .control.primary { border-color: var(--q); color: #061016; background: var(--q); }
+    .progress { flex: 1; height: 2px; margin-left: 3px; overflow: hidden; background: rgba(255,255,255,.08); }
+    .progress span { display: block; width: 0; height: 100%; background: linear-gradient(90deg, var(--q), var(--v)); transition: width .3s ease; }
+
+    @media (max-width: 760px) {
+      .app { padding: 7px; gap: 5px; }
+      header { display: block; }
+      h1 { font-size: 16px; }
+      .subtitle, .legend { display: none; }
+      .timeline {
+        grid-template-columns: repeat(8, minmax(76px, 1fr));
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+      .timeline::-webkit-scrollbar { display: none; }
+      .step { padding: 5px 4px 6px; font-size: 8px; text-align: center; letter-spacing: -.02em; white-space: nowrap; }
+      .explain {
+        min-height: 102px;
+        padding: 6px 8px;
+        grid-template-columns: minmax(105px, .72fr) minmax(175px, 1.28fr);
+        column-gap: 9px;
+      }
+      .eyebrow { font-size: 8px; }
+      .explain h2 { font-size: 14px; }
+      .explain p { font-size: 10px; line-height: 1.3; }
+      .math, .note { display: none; }
+      .viewport { overflow-x: auto; overflow-y: hidden; }
+      svg { width: max(100%, 700px); }
+      .control { min-width: 0; padding: 5px 7px; font-size: 9px; }
+      .controls { gap: 4px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-delay: 0ms !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <h1>Build the original Transformer</h1>
+        <div class="subtitle">Assemble one encoder layer and one decoder layer from “Attention Is All You Need” (2017). The complete model repeats each layer N times.</div>
+      </div>
+      <div class="legend" aria-label="Color legend">
+        <span><i style="--c:var(--q)"></i>query</span>
+        <span><i style="--c:var(--k)"></i>key</span>
+        <span><i style="--c:var(--v)"></i>value</span>
+        <span><i style="--c:var(--prob)"></i>probability</span>
+        <span><i style="--c:var(--score)"></i>score</span>
+      </div>
+    </header>
+
+    <nav class="timeline" id="timeline" aria-label="Transformer construction steps"></nav>
+
+    <section class="stage">
+      <aside class="explain" aria-live="polite">
+        <div class="eyebrow" id="eyebrow"></div>
+        <h2 id="step-title"></h2>
+        <p id="copy"></p>
+        <div class="math" id="math"></div>
+        <div class="note" id="note"></div>
+      </aside>
+
+      <div class="viewport">
+        <svg id="diagram" viewBox="0 0 1200 600" role="img" aria-labelledby="svg-title svg-desc" preserveAspectRatio="xMidYMid meet">
+          <title id="svg-title">A guided diagram of the original encoder-decoder Transformer</title>
+          <desc id="svg-desc">Source tokens move up the encoder stack on the left. Shifted target tokens move up the decoder stack on the right. Residual paths bypass every sublayer, and decoder cross-attention reads keys and values from the encoder output.</desc>
+          <defs>
+            <marker id="arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#8190a4"/></marker>
+            <marker id="arrowWhite" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#dce4ec"/></marker>
+            <marker id="arrowQ" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#58c4dd"/></marker>
+            <marker id="arrowK" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#ffff00"/></marker>
+            <marker id="arrowV" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#9a72ac"/></marker>
+            <marker id="arrowScore" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#d147bd"/></marker>
+          </defs>
+
+          <line class="guide" x1="600" y1="34" x2="600" y2="572"/>
+          <text class="stack-title" x="340" y="28" fill="#58c4dd">ENCODER STACK · N×</text>
+          <text class="stack-title" x="860" y="28" fill="#9a72ac">DECODER STACK · N×</text>
+          <rect class="stack-shell" x="120" y="40" width="440" height="516" rx="4"/>
+          <rect class="stack-shell" x="640" y="40" width="440" height="516" rx="4"/>
+
+          <g class="layer" data-step="0">
+            <text class="small" x="340" y="580">source tokens</text>
+            <rect class="token stagger-2" x="205" y="536" width="54" height="25" rx="2"/><text class="token-text" x="232" y="552">The</text>
+            <rect class="token stagger-3" x="267" y="536" width="54" height="25" rx="2"/><text class="token-text" x="294" y="552">cat</text>
+            <rect class="token stagger-4" x="329" y="536" width="54" height="25" rx="2"/><text class="token-text" x="356" y="552">sat</text>
+            <rect class="token stagger-4" x="391" y="536" width="72" height="25" rx="2"/><text class="token-text" x="427" y="552">down</text>
+            <rect class="block encoder" x="205" y="487" width="258" height="32" rx="2"/>
+            <text class="label" x="334" y="507">embedding + position</text>
+            <path class="flow" d="M334 536 L334 520"/>
+
+            <text class="small" x="860" y="580">shifted target tokens</text>
+            <rect class="token stagger-2" x="718" y="536" width="62" height="25" rx="2"/><text class="token-text" x="749" y="552">〈BOS〉</text>
+            <rect class="token stagger-3" x="788" y="536" width="54" height="25" rx="2"/><text class="token-text" x="815" y="552">Le</text>
+            <rect class="token stagger-4" x="850" y="536" width="54" height="25" rx="2"/><text class="token-text" x="877" y="552">chat</text>
+            <rect class="token stagger-4" x="912" y="536" width="72" height="25" rx="2"/><text class="token-text" x="948" y="552">s'est</text>
+            <rect class="block decoder" x="718" y="487" width="266" height="32" rx="2"/>
+            <text class="label" x="851" y="507">embedding + position</text>
+            <path class="flow" d="M851 536 L851 520"/>
+            <path class="parallel-bracket" d="M196 568 L196 572 L472 572 L472 568 M709 568 L709 572 L993 572 L993 568"/>
+            <text class="tiny" x="600" y="592" fill="#83c167">whole token rows enter together</text>
+          </g>
+
+          <g class="layer" data-step="1">
+            <path class="flow" d="M334 487 L334 457"/>
+            <rect class="block encoder" x="205" y="398" width="258" height="58" rx="2"/>
+            <text class="label" x="334" y="422">multi-head self-attention</text>
+            <text class="small" x="334" y="441"><tspan fill="#58c4dd">Q</tspan><tspan> · </tspan><tspan fill="#ffff00">K</tspan><tspan> · </tspan><tspan fill="#9a72ac">V</tspan><tspan> all from encoder input</tspan></text>
+            <g transform="translate(474 404)">
+              <rect class="matrix-cell" x="0" y="0" width="10" height="10" fill="#83c167" opacity=".85"/>
+              <rect class="matrix-cell" x="11" y="0" width="10" height="10" fill="#83c167" opacity=".34"/>
+              <rect class="matrix-cell" x="22" y="0" width="10" height="10" fill="#83c167" opacity=".52"/>
+              <rect class="matrix-cell" x="0" y="11" width="10" height="10" fill="#83c167" opacity=".28"/>
+              <rect class="matrix-cell" x="11" y="11" width="10" height="10" fill="#83c167" opacity=".9"/>
+              <rect class="matrix-cell" x="22" y="11" width="10" height="10" fill="#83c167" opacity=".42"/>
+              <rect class="matrix-cell" x="0" y="22" width="10" height="10" fill="#83c167" opacity=".4"/>
+              <rect class="matrix-cell" x="11" y="22" width="10" height="10" fill="#83c167" opacity=".38"/>
+              <rect class="matrix-cell" x="22" y="22" width="10" height="10" fill="#83c167" opacity=".88"/>
+            </g>
+          </g>
+
+          <g class="layer res-path" data-step="2">
+            <path class="flow" d="M334 398 L334 369"/>
+            <rect class="block norm" x="205" y="338" width="258" height="30" rx="2"/>
+            <text class="label" x="334" y="358">Add &amp; Norm</text>
+            <path class="residual" d="M205 475 C156 475 156 353 204 353"/>
+            <circle class="plus" cx="205" cy="353" r="10"/><text class="plus-text" x="205" y="358">+</text>
+            <text class="tiny" x="159" y="417">residual</text>
+          </g>
+
+          <g class="layer" data-step="3">
+            <path class="flow" d="M334 338 L334 308"/>
+            <rect class="block ffn" x="205" y="249" width="258" height="58" rx="2"/>
+            <text class="label" x="334" y="273">position-wise feed-forward</text>
+            <text class="small" x="334" y="292">same MLP · applied to every position</text>
+            <path d="M252 284 L274 268 L296 288 L318 262 L340 281" fill="none" stroke="#d147bd" stroke-width="1.5" opacity=".72"/>
+          </g>
+
+          <g class="layer res-path" data-step="4">
+            <path class="flow" d="M334 249 L334 220"/>
+            <rect class="block norm" x="205" y="189" width="258" height="30" rx="2"/>
+            <text class="label" x="334" y="209">Add &amp; Norm</text>
+            <path class="residual" d="M205 326 C156 326 156 204 204 204"/>
+            <circle class="plus" cx="205" cy="204" r="10"/><text class="plus-text" x="205" y="209">+</text>
+            <path class="flow" d="M334 189 L334 154"/>
+            <rect class="block encoder" x="240" y="118" width="188" height="35" rx="2"/>
+            <text class="label" x="334" y="140">encoder output</text>
+            <text class="tiny" x="165" y="272">residual</text>
+          </g>
+
+          <g class="layer" data-step="5">
+            <path class="flow" d="M851 487 L851 457"/>
+            <rect class="block decoder" x="718" y="398" width="266" height="58" rx="2"/>
+            <text class="label" x="851" y="422">masked multi-head self-attention</text>
+            <text class="small" x="851" y="441">each position sees only earlier target tokens</text>
+            <g transform="translate(995 404)">
+              <rect class="matrix-cell" x="0" y="0" width="10" height="10" fill="#83c167" opacity=".9"/>
+              <rect class="matrix-cell" x="11" y="0" width="10" height="10" fill="#2b303b"/>
+              <rect class="matrix-cell" x="22" y="0" width="10" height="10" fill="#2b303b"/>
+              <rect class="matrix-cell" x="0" y="11" width="10" height="10" fill="#83c167" opacity=".42"/>
+              <rect class="matrix-cell" x="11" y="11" width="10" height="10" fill="#83c167" opacity=".85"/>
+              <rect class="matrix-cell" x="22" y="11" width="10" height="10" fill="#2b303b"/>
+              <rect class="matrix-cell" x="0" y="22" width="10" height="10" fill="#83c167" opacity=".3"/>
+              <rect class="matrix-cell" x="11" y="22" width="10" height="10" fill="#83c167" opacity=".45"/>
+              <rect class="matrix-cell" x="22" y="22" width="10" height="10" fill="#83c167" opacity=".9"/>
+            </g>
+            <path class="flow" d="M851 398 L851 375"/>
+            <rect class="block norm" x="718" y="344" width="266" height="30" rx="2"/>
+            <text class="label" x="851" y="364">Add &amp; Norm</text>
+            <path class="residual" d="M718 475 C674 475 674 359 717 359"/>
+            <circle class="plus" cx="718" cy="359" r="10"/><text class="plus-text" x="718" y="364">+</text>
+          </g>
+
+          <g class="layer" data-step="6">
+            <path class="flow" d="M851 344 L851 321"/>
+            <rect class="block decoder" x="718" y="254" width="266" height="66" rx="2"/>
+            <text class="label" x="851" y="278">encoder–decoder attention</text>
+            <text class="small" x="851" y="298"><tspan fill="#58c4dd">Q</tspan><tspan> from decoder · </tspan><tspan fill="#ffff00">K</tspan><tspan>, </tspan><tspan fill="#9a72ac">V</tspan><tspan> from encoder</tspan></text>
+            <path class="cross-line" d="M428 136 C585 136 604 268 717 277" stroke="#ffff00" marker-end="url(#arrowK)"/>
+            <path class="cross-line stagger-2" d="M428 143 C575 160 604 291 717 296" stroke="#9a72ac" marker-end="url(#arrowV)"/>
+            <path class="cross-line stagger-3" d="M851 344 L851 321" stroke="#58c4dd" marker-end="url(#arrowQ)"/>
+            <text class="tiny" x="586" y="193" fill="#ffff00">K</text>
+            <text class="tiny" x="608" y="219" fill="#9a72ac">V</text>
+            <path class="flow" d="M851 254 L851 232"/>
+            <rect class="block norm" x="718" y="201" width="266" height="30" rx="2"/>
+            <text class="label" x="851" y="221">Add &amp; Norm</text>
+            <path class="residual" d="M718 332 C674 332 674 216 717 216"/>
+            <circle class="plus" cx="718" cy="216" r="10"/><text class="plus-text" x="718" y="221">+</text>
+          </g>
+
+          <g class="layer" data-step="7">
+            <path class="flow" d="M851 201 L851 181"/>
+            <rect class="block ffn" x="718" y="133" width="266" height="47" rx="2"/>
+            <text class="label" x="851" y="154">position-wise feed-forward</text>
+            <text class="small" x="851" y="170">same MLP at every target position</text>
+            <path class="flow" d="M851 133 L851 115"/>
+            <rect class="block norm" x="718" y="84" width="266" height="30" rx="2"/>
+            <text class="label" x="851" y="104">Add &amp; Norm</text>
+            <path class="residual" d="M718 190 C674 190 674 99 717 99"/>
+            <circle class="plus" cx="718" cy="99" r="10"/><text class="plus-text" x="718" y="104">+</text>
+            <path class="flow" d="M851 84 L851 66"/>
+            <rect class="block output" x="718" y="39" width="266" height="26" rx="2"/>
+            <text class="label" x="851" y="57">linear + softmax → next-token probabilities</text>
+            <path class="parallel-bracket" d="M1015 456 L1030 456 L1030 519 L1015 519"/>
+            <text class="tiny" x="1053" y="477" fill="#83c167">training / prefill</text>
+            <text class="tiny" x="1053" y="491" fill="#83c167">positions parallel</text>
+            <path class="generation-path" d="M985 52 C1098 52 1100 524 985 548"/>
+            <text class="tiny" x="1118" y="288" fill="#d147bd" transform="rotate(90 1118 288)">generation: one new token, then loop</text>
+          </g>
+        </svg>
+      </div>
+    </section>
+
+    <div class="controls" aria-label="Playback controls">
+      <button class="control" id="prev" type="button">Previous</button>
+      <button class="control primary" id="play" type="button">Play</button>
+      <button class="control" id="next" type="button">Next</button>
+      <button class="control" id="reset" type="button">Reset</button>
+      <div class="progress" aria-hidden="true"><span id="progress"></span></div>
+    </div>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const steps = [
+        {
+          short: "Embed",
+          eyebrow: "1 / 8 · Two sequence entrances",
+          title: "Give tokens order",
+          copy: "Source tokens and shifted target tokens enter through separate learned embeddings. A positional signal is added so identical words at different positions do not look identical.",
+          math: "zᵢ = E(tokenᵢ) + PE(i)",
+          note: "The 2017 model uses sinusoidal positional encodings.",
+          accent: "#58c4dd",
+          duration: 4300
+        },
+        {
+          short: "Enc. attention",
+          eyebrow: "2 / 8 · Encoder sublayer one",
+          title: "Every source position can look at every other",
+          copy: "Encoder self-attention makes queries, keys, and values from the same source sequence. Each row of green weights mixes information from all source positions.",
+          math: "<span class='prob'>A</span> = softmax(<span class='q'>Q</span><span class='k'>K</span>ᵀ / √dₖ), &nbsp; output = <span class='prob'>A</span><span class='v'>V</span>",
+          note: "Multiple heads repeat this calculation with different learned projections.",
+          accent: "#58c4dd",
+          duration: 5000
+        },
+        {
+          short: "Enc. add",
+          eyebrow: "3 / 8 · Encoder residual path",
+          title: "Keep the input, then normalize",
+          copy: "The curved bypass carries the sublayer input forward unchanged. Add it to the attention result, then normalize the sum. This short path helps information and gradients travel through a deep stack.",
+          math: "y = LayerNorm(x + SelfAttention(x))",
+          note: "In the original 2017 Transformer, normalization follows the addition.",
+          accent: "#f5f5f5",
+          duration: 4000
+        },
+        {
+          short: "Enc. FFN",
+          eyebrow: "4 / 8 · Encoder sublayer two",
+          title: "Transform each position independently",
+          copy: "A two-layer feed-forward network expands and contracts every token vector. The same weights are used at every position; positions do not mix inside this sublayer.",
+          math: "FFN(x) = max(0, xW₁ + b₁)W₂ + b₂",
+          note: "Attention mixes positions; the FFN reshapes features within each position.",
+          accent: "#d147bd",
+          duration: 4300
+        },
+        {
+          short: "Enc. output",
+          eyebrow: "5 / 8 · Encoder layer complete",
+          title: "Close the encoder layer",
+          copy: "A second residual path and Add & Norm complete one encoder layer. The original base model stacks six copies. Its final output becomes memory for every decoder layer.",
+          math: "encoder memory H ∈ ℝⁿˣᵈ",
+          note: "The diagram shows one layer; N× marks the repeated stack.",
+          accent: "#58c4dd",
+          duration: 4300
+        },
+        {
+          short: "Masked self",
+          eyebrow: "6 / 8 · Decoder sublayer one",
+          title: "Look left, never ahead",
+          copy: "Decoder self-attention uses a causal mask. A target position can read itself and earlier target positions, but future entries are blocked. Add & Norm wraps the sublayer.",
+          math: "<span class='score'>scores</span>ᵢⱼ = −∞ when j &gt; i",
+          note: "During teacher-forced training, all masked rows are still computed together.",
+          accent: "#9a72ac",
+          duration: 5100
+        },
+        {
+          short: "Cross-attend",
+          eyebrow: "7 / 8 · Decoder reads encoder memory",
+          title: "Ask the source for what matters now",
+          copy: "Decoder states supply queries. Encoder output supplies keys and values. This cross-attention bridge lets each target position retrieve the source information it needs, followed by Add & Norm.",
+          math: "<span class='q'>Q</span> = YW<sub>Q</sub>, &nbsp; <span class='k'>K</span> = HW<sub>K</sub>, &nbsp; <span class='v'>V</span> = HW<sub>V</sub>",
+          note: "H is reused as encoder memory at every decoding position.",
+          accent: "#ffff00",
+          duration: 5400
+        },
+        {
+          short: "Decode",
+          eyebrow: "8 / 8 · Complete decoder and output",
+          title: "Parallel layers, sequential generation",
+          copy: "The decoder FFN, final Add & Norm, linear map, and softmax produce next-token probabilities. Training with shifted known targets—and prompt prefill—processes positions in parallel within each layer. Autoregressive generation must emit one new token, append it, then run again.",
+          math: "p(tokenₜ | token₍&lt;t₎, source) = softmax(Wₒyₜ)",
+          note: "Parallel attention does not make autoregressive token emission parallel.",
+          accent: "#83c167",
+          duration: 7000
+        }
+      ];
+
+      const timeline = document.getElementById("timeline");
+      const diagram = document.getElementById("diagram");
+      const viewport = document.querySelector(".viewport");
+      const eyebrow = document.getElementById("eyebrow");
+      const title = document.getElementById("step-title");
+      const copy = document.getElementById("copy");
+      const math = document.getElementById("math");
+      const note = document.getElementById("note");
+      const play = document.getElementById("play");
+      const progress = document.getElementById("progress");
+      const layerGroups = [...diagram.querySelectorAll(".layer")];
+      let index = 0;
+      let timer = null;
+      let playing = false;
+
+      steps.forEach((step, i) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "step";
+        button.textContent = `${i + 1}. ${step.short}`;
+        button.setAttribute("aria-label", `Step ${i + 1}: ${step.title}`);
+        button.addEventListener("click", () => {
+          stop();
+          render(i);
+        });
+        timeline.appendChild(button);
+      });
+
+      function replayMotion() {
+        diagram.classList.remove("run");
+        if (!reduceMotion) {
+          void diagram.getBoundingClientRect();
+          diagram.classList.add("run");
+        }
+      }
+
+      function render(nextIndex) {
+        index = Math.max(0, Math.min(steps.length - 1, nextIndex));
+        const step = steps[index];
+        document.documentElement.style.setProperty("--accent", step.accent);
+        eyebrow.textContent = step.eyebrow;
+        title.textContent = step.title;
+        copy.textContent = step.copy;
+        math.innerHTML = step.math;
+        note.textContent = step.note;
+
+        layerGroups.forEach(group => {
+          const groupStep = Number(group.dataset.step);
+          group.classList.toggle("visible", groupStep <= index);
+          group.classList.toggle("current", groupStep === index);
+        });
+
+        let activeButton;
+        [...timeline.children].forEach((button, i) => {
+          button.classList.toggle("active", i === index);
+          if (i === index) button.setAttribute("aria-current", "step");
+          else button.removeAttribute("aria-current");
+          button.style.setProperty("--accent", step.accent);
+          if (i === index) activeButton = button;
+        });
+        progress.style.width = `${((index + 1) / steps.length) * 100}%`;
+        if (window.innerWidth <= 760) {
+          const stepLeft = activeButton.offsetLeft - (timeline.clientWidth - activeButton.offsetWidth) / 2;
+          timeline.scrollTo({ left: Math.max(0, stepLeft), behavior: reduceMotion ? "auto" : "smooth" });
+          viewport.scrollTo({
+            left: index >= 5 ? viewport.scrollWidth - viewport.clientWidth : 0,
+            behavior: reduceMotion ? "auto" : "smooth"
+          });
+        }
+        replayMotion();
+      }
+
+      function stop() {
+        if (timer) window.clearTimeout(timer);
+        timer = null;
+        playing = false;
+        play.textContent = "Play";
+        play.setAttribute("aria-label", "Play walkthrough");
+      }
+
+      function schedule() {
+        if (!playing) return;
+        timer = window.setTimeout(() => {
+          if (index >= steps.length - 1) {
+            stop();
+            return;
+          }
+          render(index + 1);
+          schedule();
+        }, reduceMotion ? 1200 : steps[index].duration);
+      }
+
+      play.addEventListener("click", () => {
+        if (playing) {
+          stop();
+          return;
+        }
+        if (index === steps.length - 1) render(0);
+        playing = true;
+        play.textContent = "Pause";
+        play.setAttribute("aria-label", "Pause walkthrough");
+        schedule();
+      });
+
+      document.getElementById("prev").addEventListener("click", () => {
+        stop();
+        render(index - 1);
+      });
+
+      document.getElementById("next").addEventListener("click", () => {
+        stop();
+        render(index + 1);
+      });
+
+      document.getElementById("reset").addEventListener("click", () => {
+        stop();
+        render(0);
+      });
+
+      document.addEventListener("keydown", event => {
+        if (event.key === "ArrowLeft") {
+          stop();
+          render(index - 1);
+        } else if (event.key === "ArrowRight") {
+          stop();
+          render(index + 1);
+        } else if (event.key === " " && event.target === document.body) {
+          event.preventDefault();
+          play.click();
+        }
+      });
+
+      render(0);
+    })();
+  </script>
+</body>
+</html>

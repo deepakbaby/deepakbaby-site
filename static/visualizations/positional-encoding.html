@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How sinusoidal position becomes part of a token</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Sans+3:wght@400;600&family=STIX+Two+Text:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0e1018;
+      --line: rgba(255,255,255,.12);
+      --line-strong: rgba(255,255,255,.28);
+      --text: #f5f5f5;
+      --muted: #a9b0bb;
+      --q: #58c4dd;
+      --k: #ffff00;
+      --v: #9a72ac;
+      --prob: #83c167;
+      --score: #d147bd;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+    }
+    body { font-family: "Source Sans 3", sans-serif; }
+    button { font: inherit; }
+
+    .app {
+      height: 100%;
+      padding: 13px 14px;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      gap: 9px;
+    }
+
+    header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    h1 {
+      margin: 0;
+      font: 600 clamp(18px, 2.2vw, 28px)/1.05 "STIX Two Text", serif;
+      letter-spacing: -.025em;
+    }
+    .subtitle {
+      max-width: 760px;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    .legend {
+      flex: 0 0 auto;
+      display: flex;
+      gap: 11px;
+      padding-top: 2px;
+      color: var(--muted);
+      font: 500 11px/1.2 "IBM Plex Mono", monospace;
+    }
+    .legend span { display: inline-flex; align-items: center; gap: 5px; }
+    .legend i { width: 8px; height: 8px; background: var(--c); }
+    .legend .q { --c: var(--q); }
+    .legend .k { --c: var(--k); }
+    .legend .v { --c: var(--v); }
+    .legend .prob { --c: var(--prob); }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      border-bottom: 1px solid var(--line);
+    }
+    .step {
+      position: relative;
+      min-width: 0;
+      padding: 7px 8px;
+      border: 0;
+      background: transparent;
+      color: #718093;
+      cursor: pointer;
+      text-align: left;
+      font: 500 11px/1.25 "IBM Plex Mono", monospace;
+    }
+    .step:hover, .step:focus-visible { color: #d8e1ec; background: rgba(255,255,255,.025); }
+    .step.active { color: var(--text); }
+    .step.active::after {
+      content: "";
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      bottom: -1px;
+      height: 2px;
+      background: var(--q);
+    }
+
+    .stage {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      overflow: hidden;
+    }
+    .explain {
+      min-height: 72px;
+      padding: 9px 13px;
+      display: grid;
+      grid-template-columns: minmax(170px,.72fr) minmax(270px,1.25fr) minmax(260px,1fr);
+      grid-template-rows: auto auto;
+      column-gap: 20px;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+    }
+    .eyebrow {
+      grid-column: 1;
+      grid-row: 1;
+      color: var(--q);
+      font: 600 11px/1.2 "IBM Plex Mono", monospace;
+    }
+    .explain h2 {
+      grid-column: 1;
+      grid-row: 2;
+      margin: 2px 0 0;
+      font: 600 clamp(17px,1.55vw,23px)/1.1 "STIX Two Text", serif;
+      letter-spacing: -.02em;
+    }
+    .explain p {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      margin: 0;
+      color: #d1d5db;
+      font-size: 14px;
+      line-height: 1.42;
+    }
+    .formula {
+      grid-column: 3;
+      grid-row: 1;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--line);
+      font: 600 15px/1.4 "STIX Two Text", serif;
+    }
+    .detail {
+      grid-column: 3;
+      grid-row: 2;
+      margin-top: 4px;
+      color: #7f8ea2;
+      font: 400 11px/1.4 "IBM Plex Mono", monospace;
+    }
+
+    .viewport {
+      position: relative;
+      min-height: 0;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      outline: none;
+      touch-action: none;
+    }
+    canvas:focus-visible { box-shadow: inset 0 0 0 1px var(--q); }
+    .scene-note {
+      position: absolute;
+      right: 8px;
+      bottom: 7px;
+      color: #718093;
+      font: 400 11px/1.3 "IBM Plex Mono", monospace;
+      pointer-events: none;
+    }
+
+    .controls { display: flex; align-items: center; gap: 6px; }
+    .control {
+      min-width: 61px;
+      padding: 6px 9px;
+      border: 1px solid var(--line-strong);
+      border-radius: 2px;
+      background: rgba(255,255,255,.035);
+      color: #dce4ed;
+      cursor: pointer;
+      font: 600 11px/1 "IBM Plex Mono", monospace;
+    }
+    .control:hover, .control:focus-visible { border-color: rgba(88,196,221,.6); }
+    .control.primary { color: #061016; background: var(--q); border-color: var(--q); }
+    .progress { flex: 1; height: 2px; margin-left: 4px; background: rgba(255,255,255,.08); }
+    .progress span { display: block; width: 25%; height: 100%; background: var(--q); transition: width .2s ease; }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 700px) {
+      .app { padding: 7px; gap: 5px; }
+      h1 { font-size: 16px; }
+      .subtitle, .legend { display: none; }
+      .step { padding: 5px 2px; font-size: 8px; text-align: center; white-space: nowrap; }
+      .step.active::after { left: 3px; right: 3px; }
+      .stage { grid-template-rows: 104px minmax(0, 1fr); }
+      .explain {
+        min-height: 0;
+        padding: 6px 8px;
+        grid-template-columns: minmax(96px,.7fr) minmax(165px,1.3fr);
+        column-gap: 9px;
+        overflow: hidden;
+      }
+      .eyebrow { font-size: 8px; }
+      .explain h2 { font-size: 14px; }
+      .explain p { font-size: 10px; line-height: 1.3; }
+      .formula, .detail { display: none; }
+      .scene-note { font-size: 9px; }
+      .controls { gap: 4px; }
+      .control { min-width: 0; padding: 5px 7px; font-size: 9px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <h1>Position becomes part of every token</h1>
+        <div class="subtitle">A guided look at how fast and slow sinusoidal pairs combine into a position fingerprint, then join a token embedding before attention begins.</div>
+      </div>
+      <div class="legend" role="group" aria-label="Color legend">
+        <span><i class="q"></i>sine / negative</span>
+        <span><i class="k"></i>cosine / positive</span>
+        <span><i class="v"></i>token</span>
+        <span><i class="prob"></i>sum</span>
+      </div>
+    </header>
+
+    <nav class="timeline" id="timeline" aria-label="Positional encoding steps"></nav>
+
+    <section class="stage">
+      <aside class="explain" aria-live="polite">
+        <div class="eyebrow" id="eyebrow"></div>
+        <h2 id="stepTitle">The first pair turns quickly</h2>
+        <p id="copy"></p>
+        <div class="formula" id="formula"></div>
+        <div class="detail" id="detail"></div>
+      </aside>
+      <div class="viewport">
+        <canvas id="scene" tabindex="0" role="img" aria-label="Guided visualization of sinusoidal positional encoding"></canvas>
+        <div class="scene-note" id="sceneNote"></div>
+        <div class="sr-only" id="status" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <div class="controls">
+      <button class="control" id="prev" type="button">Previous</button>
+      <button class="control primary" id="play" type="button">Play</button>
+      <button class="control" id="next" type="button">Next</button>
+      <button class="control" id="reset" type="button">Reset</button>
+      <div class="progress" aria-hidden="true"><span id="progress"></span></div>
+    </div>
+  </main>
+
+  <script>
+  (() => {
+    "use strict";
+
+    const D = 32;
+    const P = 48;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const canvas = document.getElementById("scene");
+    const ctx = canvas.getContext("2d");
+    const timeline = document.getElementById("timeline");
+    const playButton = document.getElementById("play");
+    const progress = document.getElementById("progress");
+    const status = document.getElementById("status");
+    const sceneNote = document.getElementById("sceneNote");
+    const colors = {
+      bg: "#0e1018",
+      line: "rgba(255,255,255,.12)",
+      lineStrong: "rgba(255,255,255,.28)",
+      text: "#f5f5f5",
+      muted: "#8995a6",
+      q: "#58c4dd",
+      k: "#ffff00",
+      v: "#9a72ac",
+      prob: "#83c167",
+      score: "#d147bd"
+    };
+
+    let width = 1;
+    let height = 1;
+    let index = 0;
+    let selectedPosition = 12;
+    let selectedDimension = 8;
+    let animationFrame = 0;
+    let animationStarted = 0;
+    let animationDuration = 1100;
+    let animationProgress = 1;
+    let playbackTimer = 0;
+    let playing = false;
+    let heatBounds = null;
+
+    function pe(position, dimension) {
+      const twoI = 2 * Math.floor(dimension / 2);
+      const denominator = Math.pow(10000, twoI / D);
+      const angle = position / denominator;
+      return dimension % 2 === 0 ? Math.sin(angle) : Math.cos(angle);
+    }
+
+    function wavelength(dimension) {
+      return 2 * Math.PI * Math.pow(10000, (2 * Math.floor(dimension / 2)) / D);
+    }
+
+    function tokenValue(dimension) {
+      return .48 * Math.sin((dimension + 1) * .71) + .2 * Math.cos((dimension + 2) * .27);
+    }
+
+    const steps = [
+      {
+        short: "Fast pair",
+        eyebrow: "1 / 4 · High frequency",
+        title: "The first pair turns quickly",
+        copy: "Dimensions 0 and 1 share one angle: sine and cosine place the same rotation on two axes. With no denominator growth yet, the pair changes sharply from one position to the next.",
+        formula: "PE(pos, 0) = sin(pos) &nbsp;·&nbsp; PE(pos, 1) = cos(pos)",
+        detail: "Pair i = 0 · wavelength λ = 2π ≈ 6.28 positions",
+        duration: 3900
+      },
+      {
+        short: "Slow pair",
+        eyebrow: "2 / 4 · Low frequency",
+        title: "Later pairs turn slowly",
+        copy: "The exponent grows with the pair index, enlarging the denominator. High dimensions therefore preserve broad positional structure while low dimensions capture fine changes.",
+        formula: "PE(pos, 2i) = sin(pos / 10000<sup>2i/d<sub>model</sub></sup>)",
+        detail: "Shown: dimensions 28–29 · same amplitude, much longer wavelength",
+        duration: 3900
+      },
+      {
+        short: "Fingerprint",
+        eyebrow: "3 / 4 · All frequencies",
+        title: "Every row is a position fingerprint",
+        copy: "Stack every pair as columns. Fast bands vary on the left; slow bands settle on the right. Hover or tap a cell to inspect one value, and use arrow keys while the scene is focused.",
+        formula: "PE(pos, 2i+1) = cos(pos / 10000<sup>2i/d<sub>model</sub></sup>)",
+        detail: "Rows = positions · columns = embedding dimensions · cyan −1 · yellow +1",
+        duration: 5200
+      },
+      {
+        short: "Add to token",
+        eyebrow: "4 / 4 · Enter attention",
+        title: "Add position, then attend",
+        copy: "The position fingerprint has the same width as the learned token embedding, so addition is element by element. The resulting vector carries both token meaning and order into the Q, K, and V projections.",
+        formula: "x<sub>input</sub> = x<sub>token</sub> + PE(pos)",
+        detail: "No concatenation · dimensionality stays d_model · position shown: 12",
+        duration: 4700
+      }
+    ];
+
+    function mix(a, b, amount) {
+      return a.map((value, i) => Math.round(value + (b[i] - value) * amount));
+    }
+
+    function heatColor(value) {
+      const base = [14, 16, 24];
+      const target = value < 0 ? [88, 196, 221] : [255, 255, 0];
+      const rgb = mix(base, target, Math.abs(value) * .92);
+      return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+    }
+
+    function label(text, x, y, options = {}) {
+      const { color = colors.muted, size = 10, align = "left", weight = 500, font = "IBM Plex Mono" } = options;
+      ctx.fillStyle = color;
+      ctx.textAlign = align;
+      ctx.textBaseline = "middle";
+      ctx.font = `${weight} ${size}px "${font}"`;
+      ctx.fillText(text, x, y);
+    }
+
+    function line(x1, y1, x2, y2, color = colors.line, lineWidth = 1) {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineWidth;
+      ctx.stroke();
+    }
+
+    function drawWavePair(pairDimension, reveal) {
+      const compact = width < 560;
+      const left = compact ? 32 : 62;
+      const right = width - (compact ? 18 : 36);
+      const top = compact ? 23 : 34;
+      const bottom = height - (compact ? 30 : 43);
+      const mid = (top + bottom) / 2;
+      const amplitude = Math.max(24, (bottom - top) * .39);
+      const shown = Math.max(.02, reveal);
+      const pair = pairDimension % 2 === 0 ? pairDimension : pairDimension - 1;
+
+      line(left, mid, right, mid);
+      line(left, top, left, bottom);
+      label("+1", left - 8, mid - amplitude, { align: "right", size: compact ? 8 : 9 });
+      label("0", left - 8, mid, { align: "right", size: compact ? 8 : 9 });
+      label("−1", left - 8, mid + amplitude, { align: "right", size: compact ? 8 : 9 });
+      label("position", right, bottom + 18, { align: "right", size: compact ? 8 : 9 });
+
+      [{ d: pair, color: colors.q }, { d: pair + 1, color: colors.k }].forEach(curve => {
+        ctx.beginPath();
+        const samples = Math.max(80, Math.floor((right - left) * shown));
+        for (let n = 0; n <= samples; n++) {
+          const fraction = (n / samples) * shown;
+          const position = fraction * (P - 1);
+          const x = left + fraction * (right - left);
+          const y = mid - pe(position, curve.d) * amplitude;
+          n === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = curve.color;
+        ctx.lineWidth = compact ? 1.6 : 2.2;
+        ctx.stroke();
+      });
+
+      const markerPosition = shown * (P - 1);
+      const markerX = left + shown * (right - left);
+      [pair, pair + 1].forEach((dimension, i) => {
+        const y = mid - pe(markerPosition, dimension) * amplitude;
+        ctx.beginPath();
+        ctx.arc(markerX, y, compact ? 2.5 : 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = i ? colors.k : colors.q;
+        ctx.fill();
+      });
+
+      const lambda = wavelength(pair);
+      label(`dimensions ${pair}–${pair + 1}`, left, top - 12, { color: colors.text, size: compact ? 9 : 11, weight: 600 });
+      label(`λ ≈ ${lambda > 999 ? lambda.toExponential(1) : lambda.toFixed(1)} positions`, right, top - 12, { align: "right", size: compact ? 8 : 10 });
+      label("sin", left + 4, bottom + 18, { color: colors.q, size: compact ? 8 : 10 });
+      label("cos", left + 44, bottom + 18, { color: colors.k, size: compact ? 8 : 10 });
+    }
+
+    function drawHeatmap(reveal) {
+      const compact = width < 560;
+      const left = compact ? 28 : 56;
+      const top = compact ? 18 : 28;
+      const right = width - (compact ? 12 : 26);
+      const bottom = height - (compact ? 34 : 46);
+      const mapWidth = right - left;
+      const mapHeight = bottom - top;
+      const cellWidth = mapWidth / D;
+      const cellHeight = mapHeight / P;
+      const revealedRows = Math.ceil(P * reveal);
+      heatBounds = { left, top, right, bottom, cellWidth, cellHeight };
+
+      for (let position = 0; position < revealedRows; position++) {
+        for (let dimension = 0; dimension < D; dimension++) {
+          ctx.fillStyle = heatColor(pe(position, dimension));
+          ctx.fillRect(left + dimension * cellWidth, top + position * cellHeight, cellWidth + .4, cellHeight + .4);
+        }
+      }
+
+      if (reveal >= .99) {
+        ctx.strokeStyle = colors.score;
+        ctx.lineWidth = compact ? 1 : 1.5;
+        ctx.strokeRect(left, top + selectedPosition * cellHeight, mapWidth, cellHeight);
+        ctx.strokeStyle = colors.text;
+        ctx.strokeRect(left + selectedDimension * cellWidth, top, cellWidth, mapHeight);
+      }
+
+      label("position", left - 8, top - 9, { align: "right", size: compact ? 7 : 9 });
+      label("0", left - 8, top + cellHeight / 2, { align: "right", size: compact ? 7 : 9 });
+      label(String(P - 1), left - 8, bottom - cellHeight / 2, { align: "right", size: compact ? 7 : 9 });
+      label("fast dimensions", left, bottom + 17, { size: compact ? 7 : 9 });
+      label("slow dimensions", right, bottom + 17, { align: "right", size: compact ? 7 : 9 });
+
+      if (reveal >= .99) {
+        const value = pe(selectedPosition, selectedDimension);
+        const type = selectedDimension % 2 ? "cos" : "sin";
+        label(
+          `pos ${selectedPosition} · dim ${selectedDimension} · ${type} = ${value.toFixed(3)} · λ ≈ ${wavelength(selectedDimension).toFixed(1)}`,
+          width / 2,
+          height - 9,
+          { align: "center", color: colors.text, size: compact ? 7 : 10, weight: 600 }
+        );
+      }
+    }
+
+    function drawVectorRow(values, y, color, title, reveal, outlined = false) {
+      const compact = width < 560;
+      const left = compact ? 52 : 112;
+      const right = width - (compact ? 12 : 28);
+      const rowWidth = right - left;
+      const cellWidth = rowWidth / D;
+      const cellHeight = Math.max(10, Math.min(compact ? 20 : 29, height / 8));
+      label(title, left - 9, y, { align: "right", color, size: compact ? 7 : 10, weight: 600 });
+      values.forEach((value, dimension) => {
+        const x = left + dimension * cellWidth;
+        const visible = dimension / D <= reveal;
+        if (!visible) return;
+        ctx.globalAlpha = .25 + .75 * Math.min(1, Math.abs(value));
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y - cellHeight / 2, Math.max(1, cellWidth - 1), cellHeight);
+        ctx.globalAlpha = 1;
+        if (outlined) {
+          ctx.strokeStyle = colors.lineStrong;
+          ctx.strokeRect(x, y - cellHeight / 2, Math.max(1, cellWidth - 1), cellHeight);
+        }
+      });
+      label("d₀", left, y + cellHeight / 2 + 11, { size: compact ? 6 : 8 });
+      label(`d${D - 1}`, right, y + cellHeight / 2 + 11, { align: "right", size: compact ? 6 : 8 });
+    }
+
+    function drawAddition(reveal) {
+      heatBounds = null;
+      const position = selectedPosition;
+      const token = Array.from({ length: D }, (_, d) => tokenValue(d));
+      const positional = Array.from({ length: D }, (_, d) => pe(position, d));
+      const combined = token.map((value, d) => value + positional[d]);
+      const compact = width < 560;
+      const center = height / 2;
+      const gap = compact ? Math.max(35, height * .23) : Math.max(48, height * .22);
+      const rowReveal = Math.min(1, reveal * 1.7);
+      drawVectorRow(token, center - gap, colors.v, compact ? "token" : "token embedding", rowReveal);
+      drawVectorRow(positional, center, colors.q, compact ? "+ pos" : `+ position ${position}`, rowReveal);
+      line(compact ? 48 : 107, center + gap * .42, width - 20, center + gap * .42, colors.lineStrong);
+      drawVectorRow(combined, center + gap, colors.prob, compact ? "= input" : "= input to attention", Math.max(0, (reveal - .38) / .62), true);
+      label("+", compact ? 18 : 52, center - gap / 2, { color: colors.text, size: compact ? 15 : 20, weight: 600, font: "STIX Two Text" });
+      label("elementwise addition preserves d_model", width / 2, height - 10, { align: "center", size: compact ? 7 : 9 });
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = colors.bg;
+      ctx.fillRect(0, 0, width, height);
+      heatBounds = null;
+      if (index === 0) drawWavePair(0, animationProgress);
+      if (index === 1) drawWavePair(28, animationProgress);
+      if (index === 2) drawHeatmap(animationProgress);
+      if (index === 3) drawAddition(animationProgress);
+    }
+
+    function animate(now) {
+      animationProgress = Math.min(1, (now - animationStarted) / animationDuration);
+      const eased = 1 - Math.pow(1 - animationProgress, 3);
+      animationProgress = eased;
+      render();
+      if (animationProgress < .999) animationFrame = requestAnimationFrame(animate);
+      else {
+        animationProgress = 1;
+        render();
+      }
+    }
+
+    function startStepAnimation() {
+      cancelAnimationFrame(animationFrame);
+      if (reduceMotion) {
+        animationProgress = 1;
+        render();
+        return;
+      }
+      animationProgress = 0;
+      animationStarted = performance.now();
+      animationFrame = requestAnimationFrame(animate);
+    }
+
+    function announceSelection() {
+      const value = pe(selectedPosition, selectedDimension);
+      status.textContent = `Position ${selectedPosition}, dimension ${selectedDimension}, value ${value.toFixed(3)}.`;
+    }
+
+    function renderStep(nextIndex, animateStep = true) {
+      index = Math.max(0, Math.min(steps.length - 1, nextIndex));
+      const step = steps[index];
+      document.getElementById("eyebrow").textContent = step.eyebrow;
+      document.getElementById("stepTitle").textContent = step.title;
+      document.getElementById("copy").textContent = step.copy;
+      document.getElementById("formula").innerHTML = step.formula;
+      document.getElementById("detail").textContent = index === 3
+        ? `No concatenation · dimensionality stays d_model · position shown: ${selectedPosition}`
+        : step.detail;
+      [...timeline.children].forEach((button, i) => {
+        button.classList.toggle("active", i === index);
+        if (i === index) button.setAttribute("aria-current", "step");
+        else button.removeAttribute("aria-current");
+      });
+      progress.style.width = `${((index + 1) / steps.length) * 100}%`;
+      sceneNote.textContent = index === 2 ? "Hover or tap · arrow keys move selection" : "";
+      canvas.setAttribute("aria-label", index === 2
+        ? "Heatmap of positional encodings. Use pointer or arrow keys to inspect cells."
+        : step.title);
+      if (animateStep) startStepAnimation();
+      else {
+        animationProgress = 1;
+        render();
+      }
+    }
+
+    steps.forEach((step, stepIndex) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "step";
+      button.textContent = `${stepIndex + 1}. ${step.short}`;
+      button.addEventListener("click", () => {
+        stopPlayback();
+        renderStep(stepIndex);
+      });
+      timeline.appendChild(button);
+    });
+
+    function stopPlayback() {
+      clearTimeout(playbackTimer);
+      playbackTimer = 0;
+      playing = false;
+      playButton.textContent = "Play";
+    }
+
+    function scheduleNext() {
+      clearTimeout(playbackTimer);
+      playbackTimer = setTimeout(() => {
+        if (!playing) return;
+        if (index === steps.length - 1) {
+          stopPlayback();
+          return;
+        }
+        renderStep(index + 1);
+        scheduleNext();
+      }, reduceMotion ? 1800 : steps[index].duration);
+    }
+
+    playButton.addEventListener("click", () => {
+      if (playing) {
+        stopPlayback();
+        return;
+      }
+      playing = true;
+      playButton.textContent = "Pause";
+      renderStep(index);
+      scheduleNext();
+    });
+    document.getElementById("prev").addEventListener("click", () => {
+      stopPlayback();
+      renderStep(index - 1);
+    });
+    document.getElementById("next").addEventListener("click", () => {
+      stopPlayback();
+      renderStep(index + 1);
+    });
+    document.getElementById("reset").addEventListener("click", () => {
+      stopPlayback();
+      selectedPosition = 12;
+      selectedDimension = 8;
+      renderStep(0);
+    });
+
+    function pickCell(clientX, clientY) {
+      if (index !== 2 || !heatBounds) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+      if (x < heatBounds.left || x >= heatBounds.right || y < heatBounds.top || y >= heatBounds.bottom) return;
+      selectedDimension = Math.max(0, Math.min(D - 1, Math.floor((x - heatBounds.left) / heatBounds.cellWidth)));
+      selectedPosition = Math.max(0, Math.min(P - 1, Math.floor((y - heatBounds.top) / heatBounds.cellHeight)));
+      animationProgress = 1;
+      render();
+      announceSelection();
+    }
+
+    canvas.addEventListener("pointermove", event => {
+      if (event.pointerType === "mouse") pickCell(event.clientX, event.clientY);
+    });
+    canvas.addEventListener("pointerdown", event => {
+      pickCell(event.clientX, event.clientY);
+      canvas.focus({ preventScroll: true });
+    });
+    canvas.addEventListener("keydown", event => {
+      if (index !== 2 || !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
+      event.preventDefault();
+      if (event.key === "ArrowLeft") selectedDimension = Math.max(0, selectedDimension - 1);
+      if (event.key === "ArrowRight") selectedDimension = Math.min(D - 1, selectedDimension + 1);
+      if (event.key === "ArrowUp") selectedPosition = Math.max(0, selectedPosition - 1);
+      if (event.key === "ArrowDown") selectedPosition = Math.min(P - 1, selectedPosition + 1);
+      animationProgress = 1;
+      render();
+      announceSelection();
+    });
+
+    function resize() {
+      const rect = canvas.getBoundingClientRect();
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      width = Math.max(1, rect.width);
+      height = Math.max(1, rect.height);
+      canvas.width = Math.round(width * ratio);
+      canvas.height = Math.round(height * ratio);
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      render();
+    }
+
+    window.addEventListener("resize", resize);
+    resize();
+    renderStep(0);
+  })();
+  </script>
+</body>
+</html>
